@@ -1,0 +1,1 @@
+{"shift_vectors": [], "stand_dev": [], "rmsdiffs": [], "shift_vectors_sliding": []}

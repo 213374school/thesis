@@ -1,0 +1,97 @@
+compare method: sectionCompareBetter, smoothness: 12
+tolerance: 24
+method: computeFrameStateLauge
+distance for best parameter((0.05, 0.80)): 0.15
+computing segment lengths...
+distance for best parameter((0.06, 0.70)): 0.23
+computing segment lengths...
+distance for best parameter((0.08, 0.70)): 0.42
+computing segment lengths...
+distance for best parameter((0.05, 0.70)): 0.33
+computing segment lengths...
+distance for best parameter((0.05, 0.70)): 0.34
+computing segment lengths...
+param: (0.058,0.720), std. dev. (20.1, 5.6)% 
+avr. distance score: 0.29, std. dev. 32.02%
+avr. good sequence lenght: 256.7, std. dev. 195.6%, median: 75.0
+avr. bad sequence lenght: 46.9, std. dev. 148.9%, median: 29.0
+longest good sequence: 5115, shortest good sequence: 4
+longest bad sequence: 608, shortest bad sequence: 1
+computing AUC
+AUC(mean) = 0.66, std. dev. = 41.78%
+method: computeFrameStateAnders
+distance for best parameter(0.08): 0.15
+computing segment lengths...
+distance for best parameter(0.09): 0.22
+computing segment lengths...
+distance for best parameter(0.13): 0.44
+computing segment lengths...
+distance for best parameter(0.08): 0.34
+computing segment lengths...
+distance for best parameter(0.09): 0.34
+computing segment lengths...
+param: 0.094, std. dev. 19.7% 
+avr. distance score: 0.30, std. dev. 33.81%
+avr. good sequence lenght: 248.2, std. dev. 198.2%, median: 74.0
+avr. bad sequence lenght: 46.2, std. dev. 156.3%, median: 27.5
+longest good sequence: 5118, shortest good sequence: 3
+longest bad sequence: 739, shortest bad sequence: 1
+computing AUC
+AUC = 0.87
+method: computeFrameStateMagnitudeOnly
+distance for best parameter(0.05): 0.16
+computing segment lengths...
+distance for best parameter(0.06): 0.23
+computing segment lengths...
+distance for best parameter(0.07): 0.43
+computing segment lengths...
+distance for best parameter(0.05): 0.33
+computing segment lengths...
+distance for best parameter(0.05): 0.33
+computing segment lengths...
+param: 0.056, std. dev. 14.3% 
+avr. distance score: 0.29, std. dev. 32.22%
+avr. good sequence lenght: 245.7, std. dev. 199.5%, median: 72.5
+avr. bad sequence lenght: 45.0, std. dev. 143.3%, median: 28.0
+longest good sequence: 5115, shortest good sequence: 4
+longest bad sequence: 608, shortest bad sequence: 1
+computing AUC
+AUC = 0.86
+method: computeFrameStateContrastOnly
+distance for best parameter(0.47): 0.23
+computing segment lengths...
+distance for best parameter(0.46): 0.48
+computing segment lengths...
+distance for best parameter(0.47): 0.61
+computing segment lengths...
+distance for best parameter(0.47): 0.59
+computing segment lengths...
+distance for best parameter(0.47): 0.56
+computing segment lengths...
+param: 0.468, std. dev. 0.9% 
+avr. distance score: 0.49, std. dev. 28.31%
+avr. good sequence lenght: 410.5, std. dev. 289.9%, median: 81.0
+avr. bad sequence lenght: 80.4, std. dev. 201.6%, median: 32.0
+longest good sequence: 11079, shortest good sequence: 1
+longest bad sequence: 1690, shortest bad sequence: 3
+computing AUC
+AUC = 0.66
+method: computeFrameStateCubic
+distance for best parameter(0.37): 0.17
+computing segment lengths...
+distance for best parameter(0.37): 0.43
+computing segment lengths...
+distance for best parameter(0.37): 0.59
+computing segment lengths...
+distance for best parameter(0.37): 0.52
+computing segment lengths...
+distance for best parameter(0.37): 0.53
+computing segment lengths...
+param: 0.370, std. dev. 0.0% 
+avr. distance score: 0.45, std. dev. 32.62%
+avr. good sequence lenght: 364.3, std. dev. 279.9%, median: 88.5
+avr. bad sequence lenght: 75.2, std. dev. 211.0%, median: 28.0
+longest good sequence: 11078, shortest good sequence: 4
+longest bad sequence: 1692, shortest bad sequence: 3
+computing AUC
+AUC = 0.70
