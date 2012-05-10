@@ -1,9 +1,18 @@
+% https://github.com/SublimeText/LaTeXTools
+
 \documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{multirow}
 \usepackage{graphicx}
+\usepackage{array}
+\newcolumntype{!}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
+  #1\ignorespaces
+}
+
 \title{Automatic video grouping and aggregation}
 \author{by Anders Spælling (spaelling@gmail.com) \\ Lauge Starup Jepsen (laugejepsen@gmail.com)}
 \date{\today}
@@ -349,11 +358,12 @@ In the table below we have a number of different permutations of algorithms. The
 \label{tab:algoconfigs}
 \end{table}
 %
-The parameters relative standard deviation is a measure of how much the parameter generalize (a low standard deviation means high level of generalization). The distance score is explained in section \ref{sec:ph1tweaking}, and AUC in section \ref{sec:robustness}.
+The parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is explained in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) in section \ref{sec:robustness}.
 %
 \begin{table}
-  \begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
-    Label & Parameter(s) std. dev. \% & Distance score (DS) & DS std. dev. \% & AUC \\\hline
+  %\begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
+  \begin{tabular}{| !l | ^p{2.5cm} | ^p{2.5cm} | ^p{2.5cm} | ^c |}\hline
+    Label & Parameter(s) std. dev. \% & DS & DS std. dev. \% & AUC \\\hline
     ICSM1 & (7.7\%, 5.6\%) & 0.54 & 27.17\% & 0.51 (39.44\%) \\\hline
     CCSM1 & ~4.3\% & 0.54 & 27.90\% & 0.66 \\\hline
     CO1 & ~2.5\% & 0.81 & 28.10\% & 0.40 \\\hline
@@ -391,6 +401,7 @@ The parameters relative standard deviation is a measure of how much the paramete
     $\text{CSM}^{3}6$ & 18.3\% & 0.22 & 36.61\% & 0.91 \\\hline\hline
 
     ICSM7 & (14.3\%, 5.6\%) & 0.36 & 29.34\% & 0.62 (41.44\%) \\\hline
+    \rowstyle{\bfseries}
     CCSM7 & 11.9\% & 0.36 & 31.71\% & 0.82 \\\hline
     CO7 & ~1.1\% & 0.60 & 26.18\% & 0.56 \\\hline
     SO7 & 14.8\% & 0.36 & 30.14\% & 0.81 \\\hline
@@ -405,6 +416,7 @@ A good sequence length (GSL) is the number of consecutive good frames, and a bad
 %
 \begin{table}
   \begin{tabular}{| l | c | c | c | c | c | c |}\hline
+  %\begin{tabular}{| !l | ^c | ^c | ^c | ^c | ^c | c |}\hline
     Label & GSL & GSL std. dev. \% & longest GSL & BSL & BSL std. dev. \% & longest BSL  \\\hline
     ICSM1 & 205 & 217\% & 5105 & 40 & 155\% & 536 \\\hline
     CCSM1 & 214 & 214\% & 5121 & 40 & 160\% & 607 \\\hline
@@ -454,6 +466,13 @@ A good sequence length (GSL) is the number of consecutive good frames, and a bad
 \end{table}
 %
 \subsubsection{Analysis of results}
+%
+Table \ref{tab:algoperf} summarizes the primary results of our test. We cannot directly compare different configurations of the various algorithms as we expect a higher tolerance for error in some configurations, either by applying a gaussian filter (as described in Section [REFERENCE]) in the comparison method or triangular smoothing (as described in Section [REFERENCE]) of the result, or both.\\
+We therefore try to identify the configuration with the best performance mainly by comparing distance scores (low is better). Secondly the generalizability of a configuration is taken into account to break ties by looking at the relative standard deviation of the parameter(s).\\
+AUC is also mentioned in the table, but as it describes how sensitive an algorithm is to parameter-change...\\
+We did not expect the CO\textit{X} and $\text{CSM}^{3}\textit{X}$ algorithms to perform very well as the first does not take camera-movement into account, and the second ???????????????????????\\
+The 7th configuration does not apply triangular smoothing, and also uses a fairly low tolerance of 12 frames, roughly translated to a margin of error of half a second in each end of a sequence, yet it still achives a distance score of $0.36$ in 3 out of 5 algorithms and a relative standard deviation around $30\%$. We use the parameter relative standard deviation to break the tie where CCSM7 comes out on top. It also has the highest AUC, and we should therefore expect it to perform well even for other choices of parameters.\\
+The performance can generally be explained by the nature of our dataset, as there simply is very few frames where contrast is an issue. The higher relative standard deviation of SO7 could be explained by it trying to overcompensate in the few cases where a frame is classified as bad because of a low contrast.
 %
 \subsubsection{Analysis risks}
 %
