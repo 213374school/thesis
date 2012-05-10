@@ -121,7 +121,7 @@ The algorithm below illustrates how the displacement vector for two subsequent f
      yield x’,y’
 \end{verbatim}
 %
-With a frame dimension of 640\times480 and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is then highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction. Images that are symmetrical around the vertical or horizontal center, ie. two almost identical local minima, can potentially fool the method into the wrong direction due to the greedy nature of the algorithm, but that is a rare statistical anomaly.\\
+With a frame dimension of $640\times480$ and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is then highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction. Images that are symmetrical around the vertical or horizontal center, ie. two almost identical local minima, can potentially fool the method into the wrong direction due to the greedy nature of the algorithm, but that is a rare statistical anomaly.\\
 Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a simple method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting (too) dark images, it does not take ex. extremely bright images into account, or closeups of a textureless surface. To counter this downside we instead computed a measure of contrast in a frame as the standard deviation of the pixel-values in the image-matrix, where a small standard deviation would indicate little contrast/diversity in pixel intensity, and a large standard deviation would indicate a high contrast/much diversity in pixel intensity. Hence, a very dark image or very bright image would have a low contrast as would images with little or no texture. It will however not detect an image where half of it has a very low contrast, ex. an image of clear sky in the top three-quarters, nor would we necessarily want to discard frames like these.\\\\ % skal vi have et par billeder med deres std. dev. sådan at man kan se med egne øjne, eller er det ikke for simpelt?
 %
 \textbf{There are several approaches to computing the suitability for a given frame: A binary approach in which a frame is simply deemed suitable or unsuitable for watching, and an approach where a frame is rated on a scale.\\
@@ -232,11 +232,12 @@ and
 \[
 B = 2 \cdot \frac{negative_{recall} \cdot positive_{precision}}{negative_{recall} + positive_{precision}}
 \]
-We create a cost/benefit diagram, by defining the benefit as the harmonic mean of the positive precision and the negative recall and the cost as one minus the harmonic mean of the positive recall and negative precision. These values can be used to produce a diagram, which in many ways resembles a classic ROC diagram (see fig. [REFERENCE]). The resulting cost and benefits based on different parameter choices for an algorithm are plotted along the two axis and as with a normal ROC diagram we want the points to lie as close to the top left corner as possible, as this signifies a large benefit with a small cost. We calculate the distance from each point to this corner and use it as a final score, that can be used to measure how well that specific configuration performs.\\\\
+We create a cost/benefit diagram, by defining the benefit as the harmonic mean of the positive precision and the negative recall and the cost as one minus the harmonic mean of the positive recall and negative precision. These values can be used to produce a diagram, which in many ways resembles a classic ROC diagram (see fig. [REFERENCE]). The resulting cost and benefits based on different parameter choices for an algorithm are plotted along the two axis and as with a normal ROC diagram we want the points to lie as close to the top left corner as possible, as this signifies a large benefit with a small cost. We calculate the distance from each point to this corner and use it as a final score, that can be used to measure how well that specific configuration performs.
+%
 \begin{figure}
-\centering
-\includegraphics[width=0.75\textwidth]{2dcostbenefitexample2.jpg}
-\caption{An example of a 2D cost/benefit diagram, the blue configuration is the one with the lowest distance score}
+     \centering
+     \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample2.jpg}
+     \caption{An example of a 2D cost/benefit diagram, the blue configuration is the one with the lowest distance score}
 \end{figure}
 %
 \subsubsection{Testing}
@@ -252,16 +253,19 @@ On top of the ordinary tweaking and testing we also attempt to measure the overa
 All our algorithms, except one, only have one parameter. This makes them easy to tweak and test and also very straightforward to generate cost/benefit diagrams for. The \textit{ICSM} algorithm, however, has two parameters and this causes some problems. First and foremost the additional parameter makes tweaking much more computational expensive. With the other algorithms we tweak the one parameter by one percentage point in each iteration, which limits the number of configuration to a hundred. To do so with the \textit{ICSM} algorithm would require 10.000 tweak iterations, which is much too expensive even when the results of intermediate calculations are cached on disk. In order to bring this number down we start we start out by attempting to learn something about the base characteristics of the algorithm by probing it using some uniformly selected configurations. In the case of the \textit{ICSM} algorithm we see that the \textit{contrast} parameter has a huge influence on how well the algorithm is defined in the cost/benefit spectrum. For very low values of \textit{contrast} almost all results are undefined because all frames are marked as good, which makes it impossible to calculate precision and recall correctly. On the other end of the spectrum, when \textit{contrast} is large, the effect of changing it is very small, signifying that it converges toward some optimal value. Based on this information we choose to decrease the precision with which we tweak \textit{contrast} to ten percentage points per iteration. This brings the total number of tweak iterations down to 1000. This still takes a long time, but it is manageable.\\
 \\
 The second problem is encountered when generating the cost/benefit diagrams and calculating the AUC. The effect of changing more than one variable is not illustrated very well in a two-dimensional cost/benefit diagram. The points, which really belong in a higher dimensional space, are flattened into the plane resulting in several curves without any clear connection to each other. This also causes problems when calculating the AUC for the algorithm, since curves generated by bad performing configurations can be hidden below curves generated by good performing ones, which in the end results in a over-optimistic robustness score.
+%
 \begin{figure}
-\centering
-\includegraphics[width=0.75\textwidth]{2dcostbenefitexample.png}
-\caption{An example of a 2D cost/benefit diagram for an algorithm with two variables}
+     \centering
+     \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample.jpg}
+     \caption{An example of a 2D cost/benefit diagram for an algorithm with two variables}
 \end{figure}
+%
 In order to overcome this problem we simulate having only one parameter by locking the second one (contrast) to a specific value and then performing our analysis as usual. We repeat this over and over again, locking the contrast parameter to a new value in each iteration until we have covered all configuration combinations. For the robustness analysis we then add an aditional axis, representing the locked parameter, to our cost/benefit diagram and draw our points in three dimensions. The plane created illustrates the robustness of the algorithm much better. Since the choice of contrast values across all iterations are uniformly distributed, we can easily determine the AUC for the algorithm by simply calculating the individual AUCs for each selection of contrast value and compute an average.
+%
 \begin{figure}
-\centering
-\includegraphics[width=0.75\textwidth]{3dcostbenefitexample.png}
-\caption{An example of a 3D cost/benefit diagram}
+     \centering
+     \includegraphics[width=0.75\textwidth]{img/3dcostbenefitexample.jpg}
+     \caption{An example of a 3D cost/benefit diagram}
 \end{figure}
 %
 \subsubsection{Test cases} \label{sec:testcases}
@@ -283,7 +287,7 @@ P(x) =1 - MAX_{b\in B}(e^{-\frac{(x-b)^{2}}{2c^{2}}})
 The content of the \emph{MAX} clause is just a Gaussian function, \emph{x} is the position at which we want to know how much we should punish mistakes, \emph{B} is a set of all positions where a change of state happens and \emph{c} is the level of tolerance we have for mistakes in general. The further away from a change of state a misclassification is the more it is punished. See [fig reference].
 %
 \begin{figure}
-\includegraphics[width=1\textwidth]{penaltyfunction.jpg}
+\includegraphics[width=1\textwidth]{img/penaltyfunction.jpg}
 \caption{An illustration of a curve generated by the penalty function}
 \end{figure}
 %
@@ -448,12 +452,6 @@ A good sequence length (GSL) is the number of consecutive good frames, and a bad
 \caption{Sequence data}
 \label{tab:algoseq}
 \end{table}
-%
-\begin{figure}
-  \centering
-    %\includegraphics[scale=0.5]{computeFrameStateAnders\_sectionCompareBetter\_smooth0\_tol24.jpg}
-  \caption{caption}
-\end{figure}
 %
 \subsubsection{Analysis of results}
 %
