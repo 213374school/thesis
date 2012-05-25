@@ -19,7 +19,7 @@ def main():
             mode = 'faces'
         files = [filename for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v','avi']]
         for f in files:
-            command = './object_detection.py "./%s/%s %s"' % (path, f, mode)
+            command = './src/object_detection.py ./%s/%s %s' % (path, f, mode)
             os.system(command)
 
 if __name__ == "__main__":

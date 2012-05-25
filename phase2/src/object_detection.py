@@ -55,7 +55,7 @@ def object_detect(video_src, show=False, mode='faces'):
         mdpath = 'bodydetect'
     elif mode == 'profile':
         mdpath = 'profile'
-    metadata_filename = '../metadata/%s/%s.json' % (mdpath, ytid)
+    metadata_filename = './metadata/%s/%s.json' % (mdpath, ytid)
     if os.path.isfile(metadata_filename):
         f = open(metadata_filename,'r')
         content = f.read()
