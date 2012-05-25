@@ -67,7 +67,7 @@ def main():
 	for frame in frames:
 		frame_state = 'BAD' if not frame_states[index] else 'GOOD'
 		frame_value = frame_values[index]
-		draw_str(frame, (20, 20), 'time: %2.1f:%2.1f, magnitude: %2.2f%%, contrast^-1: %2.2f' % (t[index], t[-1], 100 * magnitudes[index], contrast[index]))						
+		draw_str(frame, (20, 20), 'time: %2.1f:%2.1f, magnitude: %2.2f%%, contrast^-1: %2.2f' % (t[index], t[-1], 100 * magnitudes[index], contrast[index]))
 		draw_str(frame, (20, 40), '%s (%2.3f)' % (frame_state, frame_value))
 
 		index += 1

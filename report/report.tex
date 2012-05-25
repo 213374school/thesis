@@ -1,9 +1,18 @@
+% https://github.com/SublimeText/LaTeXTools
+
 \documentclass[12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath}
 \usepackage{hyperref}
 \usepackage{multirow}
 \usepackage{graphicx}
+\usepackage{array}
+\newcolumntype{!}{>{\global\let\currentrowstyle\relax}}
+\newcolumntype{^}{>{\currentrowstyle}}
+\newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
+  #1\ignorespaces
+}
+
 \title{Automatic video grouping and aggregation}
 \author{by Anders Spælling (spaelling@gmail.com) \\ Lauge Starup Jepsen (laugejepsen@gmail.com)}
 \date{\today}
@@ -299,7 +308,7 @@ Finally, for both algorithms, we also investigate the effect of smoothing the cl
 %
 \subsubsection{Results}
 %
-In the table below we have a number of different permutations of algorithms. The parameter is the average over the 5-fold cross validation. Smoothness degree describes how much the result is smoothed using triangular smoothing. The comparison method is either frame-by-frame (FFC) or temporal (TC), see section \ref{sec:testcases}.
+In Table \ref{tab:algoconfigs} we have a number of different configurations of algorithms. The parameter is the average over the 5-fold cross validation. Smoothness degree describes how much the result is smoothed using triangular smoothing. The comparison method is either frame-by-frame (FFC) or temporal (TC), both described in section \ref{sec:testcases}.\\
 %
 \begin{table}
   \begin{tabular}{| l | l | p{2cm} | p{2cm} | c | c | }\hline
@@ -311,7 +320,7 @@ In the table below we have a number of different permutations of algorithms. The
     ICSM5 & ICSM & 12 & TC & 24 & (0.058,0.720) \\\hline
     ICSM6 & ICSM & 12 & TC & 48 & (0.064, 0.720) \\\hline
     ICSM7 & ICSM & 0 & TC & 12 & (0.056, 0.720) \\\hline\hline
-
+%
     CCSM1 & CCSM & 0 & FFC & N/A & 0.092 \\\hline
     CCSM2 & CCSM & 12 & FFC & N/A & 0.088 \\\hline
     CCSM3 & CCSM & 0 & TC & 24 & 0.100 \\\hline
@@ -319,7 +328,7 @@ In the table below we have a number of different permutations of algorithms. The
     CCSM5 & CCSM & 12 & TC & 24 & 0.094 \\\hline
     CCSM6 & CCSM & 12 & TC & 48 & 0.110 \\\hline
     CCSM7 & CCSM & 0 & TC & 12 & 0.098 \\\hline\hline
-
+%
     CO1 & CO & 0 & FFC & N/A & 0.462 \\\hline
     CO2 & CO & 12 & FFC & N/A & 0.460 \\\hline
     CO3 & CO & 0 & TC & 24 & 0.466 \\\hline
@@ -327,7 +336,7 @@ In the table below we have a number of different permutations of algorithms. The
     CO5 & CO & 12 & TC & 24 & 0.468 \\\hline
     CO6 & CO & 12 & TC & 48 & 0.474 \\\hline
     CO7 & CO & 0 & TC & 12 & 0.466 \\\hline\hline
-
+%
     SO1 & SO & 0 & FFC & N/A & 0.048 \\\hline
     SO2 & SO & 12 & FFC & N/A & 0.048 \\\hline
     SO3 & SO & 0 & TC & 24 & 0.056 \\\hline
@@ -335,7 +344,7 @@ In the table below we have a number of different permutations of algorithms. The
     SO5 & SO & 12 & TC & 24 & 0.056 \\\hline
     SO6 & SO & 12 & TC & 48 & 0.060 \\\hline
     SO7 & SO & 0 & TC & 12 & 0.054 \\\hline\hline
-
+%
     $\text{CSM}^{3}1$ & $\text{CSM}^{3}$  & 0 & FFC & N/A & 0.366 \\\hline
     $\text{CSM}^{3}2$ &$\text{CSM}^{3}$ & 12 & FFC & N/A & 0.366 \\\hline
     $\text{CSM}^{3}3$ &$\text{CSM}^{3}$ & 0 & TC & 24 & 0.370 \\\hline
@@ -343,117 +352,126 @@ In the table below we have a number of different permutations of algorithms. The
     $\text{CSM}^{3}5$ &$\text{CSM}^{3}$ & 12 & TC & 24 & 0.370 \\\hline
     $\text{CSM}^{3}6$ &$\text{CSM}^{3}$ & 12 & TC & 48 & 0.382 \\\hline
     $\text{CSM}^{3}7$ &$\text{CSM}^{3}$ & 0 & TC & 12 & 0.370 \\\hline
-  
+%
   \end{tabular}
 \caption{Algorithm configurations}
 \label{tab:algoconfigs}
 \end{table}
 %
-The parameters relative standard deviation is a measure of how much the parameter generalize (a low standard deviation means high level of generalization). The distance score is explained in section \ref{sec:ph1tweaking}, and AUC in section \ref{sec:robustness}.
+In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is described in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) is described in section \ref{sec:robustness}.\\
 %
 \begin{table}
-  \begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
-    Label & Parameter(s) std. dev. \% & Distance score (DS) & DS std. dev. \% & AUC \\\hline
+  %\begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
+  \begin{tabular}{| !l | ^p{2.5cm} | ^p{2.5cm} | ^p{2.5cm} | ^c |}\hline
+    Label & Parameter(s) std. dev. \% & DS & DS std. dev. \% & AUC \\\hline
     ICSM1 & (7.7\%, 5.6\%) & 0.54 & 27.17\% & 0.51 (39.44\%) \\\hline
     CCSM1 & ~4.3\% & 0.54 & 27.90\% & 0.66 \\\hline
     CO1 & ~2.5\% & 0.81 & 28.10\% & 0.40 \\\hline
     SO1 & 15.6\% & 0.55 & 27.08\% & 0.65 \\\hline
     $\text{CSM}^{3}1$ & ~2.2\% & 0.76 & 30.27\% & 0.44 \\\hline\hline
-
+%
     ICSM2 & (14.8\%, 5.6\%) & 0.54 & 27.52\% & 0.51 (39.69\%) \\\hline
     CCSM2 & 19.6\% & 0.54 & 27.85\% & 0.67 \\\hline
     CO2 & ~2.4\% & 0.81 & 28.21\% & 0.40 \\\hline
     SO2 & 15.6\% & 0.54 & 27.54\% & 0.65 \\\hline
     $\text{CSM}^{3}2$ & ~2.2\% & 0.76 & 30.87\% & 0.44 \\\hline\hline
-
+%
     ICSM3 & (18.3\%, 5.6\%) & 0.29 & 31.10\% & 0.66 (41.71\%) \\\hline
     CCSM3 & 15.5\% & 0.30  & 34.30\% & 0.87  \\\hline
     CO3 & ~1.1\% & 0.50  & 28.73\% & 0.66 \\\hline
     SO3 & 14.3\% & 0.30  & 31.28\% & 0.86  \\\hline
     $\text{CSM}^{3}3$ & ~0.0\% & 0.45  & 31.90\% & 0.70 \\\hline\hline
-
+%
     ICSM4 & (15.9\%, 5.6\%) & 0.21 & 34.29\% & 0.70 (42.57\%) \\\hline
     CCSM4 & 17.0\% & 0.22 & 34.24\% & 0.92 \\\hline
     CO4 & ~2.9\% & 0.39 & 18.54\% & 0.79 \\\hline
     SO4 & 18.3\% & 0.22 & 35.54\% & 0.91 \\\hline
     $\text{CSM}^{3}4$ & ~3.8\% & 0.36 & 20.37\% & 0.81 \\\hline\hline
-
+%
     ICSM5 & (20.1\%, 5.6\%) & 0.29  & 32.02\% & 0.66 (41.78\%) \\\hline
     CCSM5 & 19.7\% & 0.30  & 33.81\% & 0.87  \\\hline
     CO5 & ~0.9\% & 0.49 & 28.31\% & 0.66 \\\hline
     SO5 & 14.3\% & 0.29 & 32.22\% & 0.86 \\\hline
     $\text{CSM}^{3}5$ & ~0.0\% & 0.45 & 32.62\% & 0.70 \\\hline\hline
-
+%
     ICSM6 & (15.9\%, 5.6\%) & 0.21 & 35.18\% & 0.70 (42.62\%) \\\hline
     CCSM6 & 19.1\% & 0.22 & 35.00\% & 0.92 \\\hline
     CO6 & ~2.9\% & 0.40 & 18.65\% & 0.79 \\\hline
     SO6 & 18.3\% & 0.22 & 36.61\% & 0.91 \\\hline
     $\text{CSM}^{3}6$ & 18.3\% & 0.22 & 36.61\% & 0.91 \\\hline\hline
-
+%
     ICSM7 & (14.3\%, 5.6\%) & 0.36 & 29.34\% & 0.62 (41.44\%) \\\hline
+    \rowstyle{\bfseries}
     CCSM7 & 11.9\% & 0.36 & 31.71\% & 0.82 \\\hline
     CO7 & ~1.1\% & 0.60 & 26.18\% & 0.56 \\\hline
     SO7 & 14.8\% & 0.36 & 30.14\% & 0.81 \\\hline
-    $\text{CSM}^{3}7$ & ~0.0\% & 0.55 & 28.93\% & 0.60 \\\hline\hline
-
+    $\text{CSM}^{3}7$ & ~0.0\% & 0.55 & 28.93\% & 0.60 \\\hline
+%
   \end{tabular}
 \caption{Algorithm performance}
 \label{tab:algoperf}
 \end{table}
 %
-A good sequence length (GSL) is the number of consecutive good frames, and a bad sequence length (BSL) is the number of consecutive bad frames. Both measures is an average (over each test-set) and the relative standard deviation along with the longest GSL and BSL is also supplied in Table \ref{tab:bleh}.
+In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecutive good frames, and a Bad Sequence Length (BSL) is the number of consecutive bad frames. Both measures is an average (over each test-set) and the relative standard deviation along with the longest GSL and BSL is also supplied in Table \ref{tab:algoseq}.
 %
 \begin{table}
   \begin{tabular}{| l | c | c | c | c | c | c |}\hline
+  %\begin{tabular}{| !l | ^c | ^c | ^c | ^c | ^c | c |}\hline
     Label & GSL & GSL std. dev. \% & longest GSL & BSL & BSL std. dev. \% & longest BSL  \\\hline
     ICSM1 & 205 & 217\% & 5105 & 40 & 155\% & 536 \\\hline
     CCSM1 & 214 & 214\% & 5121 & 40 & 160\% & 607 \\\hline
     CO1 & 290 & 28\% & 11079 & 73 & 196\% & 1690 \\\hline
     SO1 & 198 & 221\% & 5105 & 40 & 157\% & 743 \\\hline
     $\text{CSM}^{3}1$ & 264 & 326\% & 11078 & 69 & 204\% & 1691 \\\hline\hline
-
+%
     ICSM2 & 248 & 199\% & 5115 & 47 & 152\% & 608 \\\hline
     CCSM2 &245 & 200\% & 5118 & 47 & 164\% & 739 \\\hline
     CO2 & 328 & 317\% & 11079 & 84 & 185\% & 1718 \\\hline
     SO2 & 231 & 206\% & 5115 & 47 & 170\% & 1087 \\\hline
     $\text{CSM}^{3}2$ & 309 & 301\% & 11078 & 80 & 190\% & 1692 \\\hline\hline
-
+%
     ICSM3 & 221 & 210\% & 5105 & 39 & 156\% & 509 \\\hline
     CCSM3 & 222 & 210\% & 5121 & 39 & 162\% & 607 \\\hline
     CO3 & 340 & 308\% & 11079 & 69 & 215\% & 1690 \\\hline
     SO3 & 209 & 214\% & 5105 & 38 & 147\% & 491 \\\hline
     $\text{CSM}^{3}3$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline\hline
-
+%
     ICSM4 & 229 & 209\% & 5122 & 39 & 149\% & 509 \\\hline
     CCSM4 & 225 & 213\% & 5123 & 38 & 154\% & 537 \\\hline
     CO4 & 378 & 316\% & 12080 & 71 & 217\% & 1690 \\\hline
     SO4 & 216 & 209\% & 5122 & 37 & 147\% & 482 \\\hline
     $\text{CSM}^{3}4$ & 388 & 280\% & 12082 & 59 & 225\% & 1687 \\\hline\hline
-
+%
     ICSM5 & 257 & 186\% & 5115 & 47 & 149\% & 608 \\\hline
     CCSM5 & 248 & 198\% & 5118 & 46 & 156\% & 739 \\\hline
     CO5 & 411 & 290\% & 11079 & 80 & 202\% & 1690 \\\hline
     SO5 & 246 & 200\% & 5115 & 45 & 143\% & 608 \\\hline
     $\text{CSM}^{3}5$ & 364 & 280\% & 11078 & 75 & 211\% & 1692 \\\hline\hline
-
+%
     ICSM6 & 266 & 198\% & 5122 & 45 & 144\% & 534 \\\hline
     CCSM6 & 260 & 200\% & 5129 & 45 & 142\% & 537 \\\hline
     CO6 & 431 & 298\% & 12080 & 82 & 201\% & 1690 \\\hline
     SO6 & 259 & 195\% & 5122 & 45 & 139\% & 482 \\\hline
     $\text{CSM}^{3}6$ & 397 & 284\% & 12082 & 74 & 215\% & 1687 \\\hline\hline
-
+%
     ICSM7 & 212 & 213\% & 5105 & 39 & 153\% & 510 \\\hline
     CCSM7 & 220 & 212\% & 5121 & 39 & 162\% & 607 \\\hline
     CO7 & 340 & 308\% & 11079 & 69 & 215\% & 1690 \\\hline
     SO7 & 208 & 214\% & 5105 & 39 & 149\% & 491 \\\hline
-    $\text{CSM}^{3}7$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline\hline
-
+    $\text{CSM}^{3}7$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline
   \end{tabular}
 \caption{Sequence data}
 \label{tab:algoseq}
 \end{table}
 %
 \subsubsection{Analysis of results}
+%
+Table \ref{tab:algoperf} summarizes the primary results of our test. We cannot directly compare different configurations of the various algorithms as we expect a higher tolerance for error in some configurations, either by applying a gaussian filter (as described in Section [REFERENCE]) in the comparison method or triangular smoothing (as described in Section [REFERENCE]) of the result, or both.\\
+We therefore try to identify the configuration with the best performance mainly by comparing distance scores (low is better). Secondly the generalizability of a configuration is taken into account to break ties by looking at the relative standard deviation of the parameter(s).\\
+AUC is also mentioned in the table, but as it describes how sensitive an algorithm is to parameter-change...\\
+We did not expect the CO\textit{X} and $\text{CSM}^{3}\textit{X}$ algorithms to perform very well as the first does not take camera-movement into account, and the second ???????????????????????\\
+The 7th configuration does not apply triangular smoothing, and also uses a fairly low tolerance of 12 frames, roughly translated to a margin of error of half a second in each end of a sequence, yet it still achives a distance score of $0.36$ in 3 out of 5 algorithms and a relative standard deviation around $30\%$. We use the parameter relative standard deviation to break the tie where CCSM7 comes out on top. It also has the highest AUC, and we should therefore expect it to perform well even for other choices of parameters.\\
+The performance can generally be explained by the nature of our dataset, as there simply is very few frames where contrast is an issue. The higher relative standard deviation of SO7 could be explained by it trying to overcompensate in the few cases where a frame is classified as bad because of a low contrast.
 %
 \subsubsection{Analysis risks}
 %
