@@ -104,13 +104,13 @@ def get_video(metadata_folder, ytid):
 				h =  int(cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT))
 	return cap, fps, w, h
 
+# rectangle that encapsulates the center of the image (any object detected within these boundaries are in focus)
 center_rectangle = ((200, 30), (440, 270))
 
 def is_in_focus_center(x,y,w,h):
 
 	ul, lr = center_rectangle
 	cx, cy = (x+w/2, y+h/2)
-	# print 'cx,cy = (%d,%d)' % (cx,cy)
 	return cx >= ul[0] and cx <= lr[0] and cy >= ul[1] and cy <= lr[1]
 
 def main():
@@ -120,9 +120,15 @@ def main():
 		print helptxt
 	else:
 		ytids_lib = get_ytids_lib(metadata_folder)
-		# print ytids_lib
+
+		### display youtube id's and their index
+		# i = 0
+		# for v in ytids_lib.get('ytids'):
+		# 	print '%d: %s' % (i, v)
+		# 	i += 1
+
 		ytids = ytids_lib.get('ytids', [])
-		ytids = [ytids[20]] # 20 = tale
+		ytids = [ytids[32]] # 10,20 = tale, 32 = tæt på i crowd
 		for ytid in ytids:
 			bd = json.loads(open('%s/bodydetect/%s.json' % (metadata_folder, ytid),'r').read())
 			fd = json.loads(open('%s/facedetect/%s.json' % (metadata_folder, ytid),'r').read())
@@ -140,13 +146,18 @@ def main():
 
 			index = 0
 			person_in_focus_frames_count = 0
-			person_frames_count = 0
+			people_in_frame_count = 0
 			# minimum number of neighboring rectangles (7 or 8 seems like a good value - there is an article where they determine that 7 is the best REF!!!)
-			n_min = 8
-			period = 6
+			n_min = 7
+
+			# setup some simple moving average instances
+			period = 4
 			sma = Simplemovingaverage(period)
 			period = 4
 			focus_sma = Simplemovingaverage(period)
+			period = 12
+			incrowd_sma = Simplemovingaverage(period)
+
 			while True:
 				ret, frame = cap.read()
 				if ret:
@@ -183,8 +194,8 @@ def main():
 
 				index += 1
 
+				# person in center focus
 				person_in_focus_center = round(focus_sma(int(person_in_focus_center)))
-				# center focus
 				color = cv.RGB(255, 0, 0) # red
 				if person_in_focus_center:
 					color = cv.RGB(0, 255, 0) # green
@@ -197,10 +208,15 @@ def main():
 				color = cv.RGB(255, 0, 0) # red
 				if people_count:
 					color = cv.RGB(0, 255, 0) # green
-					person_frames_count += 1
-				cv.PutText(img, 'mov. avr. people count: %d' % people_count, (24,24), font, color)
-				cv.PutText(img, 'people count (frames): %d' % person_frames_count, (24, vh-int(1.0*24)), font, cv.RGB(255, 255, 255))
-				cv.PutText(img, 'focus count (frames): %d (%2.1f%%)' % (person_in_focus_frames_count, 100.0 * person_in_focus_frames_count / index), (24, vh-int(0.5*24)), font, cv.RGB(255, 255, 255))
+					people_in_frame_count += 1
+
+				# are we (with)in a crowd?
+				in_crowd = round(incrowd_sma(int(people_count > 1))) == 1
+
+				cv.PutText(img, 'mov. avr. people count: %d' % people_count, (4, 16), font, color)
+				cv.PutText(img, 'in crowd: %s' % str(in_crowd), (4, 32), font, cv.RGB(0, 255, 0) if people_count > 1 else cv.RGB(255, 0, 0))
+				cv.PutText(img, 'people in frame count: %d (%2.1f%%)' % (people_in_frame_count, 100.0 * people_in_frame_count / index), (4, vh-int(1.0*24)), font, cv.RGB(255, 255, 255))
+				cv.PutText(img, 'person in focus count: %d (%2.1f%%)' % (person_in_focus_frames_count, 100.0 * person_in_focus_frames_count / index), (4, vh-int(0.5*24)), font, cv.RGB(255, 255, 255))
 
 				ShowImage("people detection demo", img)
 				cv2.waitKey(int(1000.0/fps))
