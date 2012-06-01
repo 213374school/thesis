@@ -10,6 +10,9 @@ import cv2
 from sys import stdout
 import os
 import math
+import pylab
+import numpy as np
+import numpy
 
 # Find a JSON parser
 try:
@@ -20,11 +23,50 @@ except ImportError:
 	except ImportError:
 		print 'ERROR: JSON parser not found!'
 
-helptxt = """usage:\n./peopledetect.py src_folder"""
+helptxt = """usage:\n./peopledetect.py src_folder [-v] [-p]
+-v show video
+-p show plot"""
+
 from collections import deque
  
 from collections import deque
- 
+
+def smoothTriangle(lst=[], degree=1):
+
+	if degree < 1:
+		print 'degree must be > 1'
+		return
+
+	triangle = numpy.array(range(degree)+[degree]+range(degree)[::-1])+1
+	lst = numpy.array(lst)
+	lst_lenght = len(lst)
+	tri_len = len(triangle)
+	_max = lst_lenght - degree
+	triangle_normal_sum = float(sum(triangle))
+	
+	smoothed_lst = []
+	for i in range(lst_lenght):
+
+		if i > degree and i < _max:
+			new_value = sum(triangle * lst[i-degree:i+degree+1]) / triangle_normal_sum
+		else:
+			left = degree - min(i, degree)
+			right = degree + min(degree, lst_lenght - 1 - i) + 1			
+			tri = triangle[left:right]
+			triangle_sum = sum(tri)
+
+			new_value = 0.0
+			for j in range(len(tri)):
+
+				pos = j + i + left - degree
+				new_value += tri[j] * lst[pos]
+		
+			new_value /= triangle_sum
+
+		smoothed_lst.append(new_value)
+
+	return smoothed_lst
+
 class Simplemovingaverage():
 	def __init__(self, period):
 		assert period == int(period) and period > 0, "Period must be an integer >0"
@@ -95,14 +137,16 @@ def get_video(metadata_folder, ytid):
 		exts = ['m4v', 'avi']
 		for ext in exts:
 			if os.path.isfile('%s/core%d/%s.%s' % (data_folder, i, ytid, ext)):
-				print '%s found in: "core%d"' % (ytid, i)
+				# print '%s found in: "core%d"' % (ytid, i)
 				video_src = '%s/core%d/%s.%s' % (data_folder, i, ytid, ext)
 				cap = video.create_capture(video_src)
 				capture = cv.CaptureFromFile(video_src)
 				fps = cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FPS)
 				w = int(cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_WIDTH))
 				h =  int(cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_HEIGHT))
-	return cap, fps, w, h
+				num_frames = cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FRAME_COUNT) - 3 # always 3 too many????
+
+	return cap, fps, w, h, num_frames
 
 # rectangle that encapsulates the center of the image (any object detected within these boundaries are in focus)
 center_rectangle = ((200, 30), (440, 270))
@@ -118,7 +162,23 @@ def main():
 		metadata_folder = sys.argv[1]
 	except:
 		print helptxt
+		return
 	else:
+		show_video = False
+		show_plot = False
+		try:
+			args = sys.argv[2:]
+		except:
+			args = []
+		for arg in args:
+			if arg == '-v':
+				show_video = True
+			elif arg == '-p':
+				show_plot = True
+			elif arg == '-?':
+				print helptxt
+				return
+
 		ytids_lib = get_ytids_lib(metadata_folder)
 
 		### display youtube id's and their index
@@ -128,13 +188,14 @@ def main():
 		# 	i += 1
 
 		ytids = ytids_lib.get('ytids', [])
-		ytids = [ytids[32]] # 10,20 = tale, 32 = tæt på i crowd
+		# ytids = [ytids[10]] # 10,20 = tale, 32 = tæt på i crowd, 33 = a bit of everything
 		for ytid in ytids:
+
 			bd = json.loads(open('%s/bodydetect/%s.json' % (metadata_folder, ytid),'r').read())
 			fd = json.loads(open('%s/facedetect/%s.json' % (metadata_folder, ytid),'r').read())
 			pr = json.loads(open('%s/profile/%s.json'	% (metadata_folder, ytid),'r').read())
 			
-			cap, fps, vw, vh = get_video(metadata_folder, ytid)
+			cap, fps, vw, vh, num_frames = get_video(metadata_folder, ytid)
 			font = cv.InitFont(cv.CV_FONT_HERSHEY_PLAIN, 1.0, 1.0)
 			body = bd.get('body')
 			face = fd.get('faces')
@@ -147,23 +208,30 @@ def main():
 			index = 0
 			person_in_focus_frames_count = 0
 			people_in_frame_count = 0
+			in_crowds = []
+			in_focus = []
 			# minimum number of neighboring rectangles (7 or 8 seems like a good value - there is an article where they determine that 7 is the best REF!!!)
-			n_min = 7
+			n_min = 7 # *PARAM*
 
-			# setup some simple moving average instances
-			period = 4
-			sma = Simplemovingaverage(period)
-			period = 4
+			# setup simple moving average
+			period = 4 # *PARAM*
+			ppl_cnt_sma = Simplemovingaverage(period)
+			period = 4 # *PARAM*
 			focus_sma = Simplemovingaverage(period)
-			period = 12
+			period = 12 # *PARAM*
 			incrowd_sma = Simplemovingaverage(period)
 
+			imgs = []
 			while True:
 				ret, frame = cap.read()
 				if ret:
 					img = cv.fromarray(frame)
 				else:
 					break
+
+				# nice to know :D
+				stdout.write('computing: %2.2f%%\r' % (100.0 * index / num_frames))
+				stdout.flush()
 
 				people_count = 0
 				person_in_focus_center = False
@@ -204,22 +272,68 @@ def main():
 				cv.Rectangle(img, ul, lr, color)
 
 				# people count
-				people_count = sma(people_count)
+				people_count = ppl_cnt_sma(people_count)
 				color = cv.RGB(255, 0, 0) # red
 				if people_count:
 					color = cv.RGB(0, 255, 0) # green
 					people_in_frame_count += 1
 
-				# are we (with)in a crowd?
+				# are we (with)in a crowd? *PARAM*
 				in_crowd = round(incrowd_sma(int(people_count > 1))) == 1
+
+				cv.PutText(img, '%02d:%02d of %02d:%02d' % (index / fps / 60, (index / fps) % 60, num_frames / fps / 60, (num_frames / fps) % 60), (vw - 130, 16), font, cv.RGB(0, 0, 0))
 
 				cv.PutText(img, 'mov. avr. people count: %d' % people_count, (4, 16), font, color)
 				cv.PutText(img, 'in crowd: %s' % str(in_crowd), (4, 32), font, cv.RGB(0, 255, 0) if people_count > 1 else cv.RGB(255, 0, 0))
 				cv.PutText(img, 'people in frame count: %d (%2.1f%%)' % (people_in_frame_count, 100.0 * people_in_frame_count / index), (4, vh-int(1.0*24)), font, cv.RGB(255, 255, 255))
 				cv.PutText(img, 'person in focus count: %d (%2.1f%%)' % (person_in_focus_frames_count, 100.0 * person_in_focus_frames_count / index), (4, vh-int(0.5*24)), font, cv.RGB(255, 255, 255))
 
-				ShowImage("people detection demo", img)
-				cv2.waitKey(int(1000.0/fps))
+				if show_video:
+					imgs.append(img)
+				in_crowds.append(int(in_crowd))
+				in_focus.append(person_in_focus_center)
+
+			out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus))
+			# do not write a file if json parser fails
+			if out:
+				# write to disc
+				f = open('%s/peopledetect/%s.json' % (metadata_folder, ytid),'w') 
+				f.write(out)
+				f.close()
+
+			stdout.write('computing: %2.2f%% done\r' % 100.0)
+			stdout.flush()
+			print ''
+
+			if show_video:
+				for img in imgs:
+					ShowImage("people detection demo, %s" % ytid, img)
+					cv2.waitKey(int(1000.0/fps))
+
+			if show_plot:
+
+				t = np.linspace(0, num_frames/fps, num_frames)
+
+				pylab.figure(figsize=(10,10))		
+				pylab.suptitle('%s' % ytid, fontsize=16)
+
+				in_crowds_smooth = smoothTriangle(in_crowds, 6)
+				pylab.subplot(2,1,1, title='in crowd')
+				pylab.plot(t, in_crowds_smooth,".k")  
+				pylab.plot(t, in_crowds_smooth,"-k")  
+				pylab.axis([0,t[-1],0,1.1])
+				pylab.xlabel('secs.')
+				pylab.grid(True)
+
+				in_focus_smooth = smoothTriangle(in_focus, 6)
+				pylab.subplot(2,1,2, title='in focus')
+				pylab.plot(t, in_focus_smooth,".k")  
+				pylab.plot(t, in_focus_smooth,"-k")  
+				pylab.axis([0,t[-1],0,1.1])
+				pylab.xlabel('secs.')
+				pylab.grid(True)
+
+				pylab.show()			
 
 # ./src/peopledetect.py "metadata"
 if __name__ == "__main__":
