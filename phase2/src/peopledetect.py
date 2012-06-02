@@ -23,9 +23,10 @@ except ImportError:
 	except ImportError:
 		print 'ERROR: JSON parser not found!'
 
-helptxt = """usage:\n./peopledetect.py src_folder [-v] [-p]
+helptxt = """usage:\n./peopledetect.py src_folder [-v] [-p] [ytid]
 -v show video
--p show plot"""
+-p show plot
+ytid YouTube ID"""
 
 from collections import deque
  
@@ -178,6 +179,8 @@ def main():
 			elif arg == '-?':
 				print helptxt
 				return
+			else:
+				ytid = arg
 
 		ytids_lib = get_ytids_lib(metadata_folder)
 
@@ -188,6 +191,8 @@ def main():
 		# 	i += 1
 
 		ytids = ytids_lib.get('ytids', [])
+		if ytid:
+			ytids = [ytid]
 		# ytids = [ytids[10]] # 10,20 = tale, 32 = tæt på i crowd, 33 = a bit of everything
 		for ytid in ytids:
 
