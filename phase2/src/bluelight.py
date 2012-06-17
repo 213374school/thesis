@@ -94,23 +94,23 @@ def get_local_minmax(data):
 	lmax = (diff(sign(diff(data))) < 0).nonzero()[0] + 1 # local max
 
 	# is very first datapoint a local maxima or minima?
-	if diff(data[:2])[0] > 0:
-		lmin_start = np.array([0])
-		lmax_start = np.array([], dtype=np.int64)
-	else:
-		lmin_start = np.array([], dtype=np.int64)
-		lmax_start = np.array([0])
+	# if diff(data[:2])[0] > 0:
+	# 	lmin_start = np.array([0])
+	# 	lmax_start = np.array([], dtype=np.int64)
+	# else:
+	# 	lmin_start = np.array([], dtype=np.int64)
+	# 	lmax_start = np.array([0])
 
-	# is very last datapoint a local maxima or minima?
-	if diff(data[-2:])[0] > 0:
-		lmin_end = np.array([], dtype=np.int64)
-		lmax_end = np.array([len(data)-1])
-	else:
-		lmin_end = np.array([len(data)-1])
-		lmax_end = np.array([], dtype=np.int64)
+	# # is very last datapoint a local maxima or minima?
+	# if diff(data[-2:])[0] > 0:
+	# 	lmin_end = np.array([], dtype=np.int64)
+	# 	lmax_end = np.array([len(data)-1])
+	# else:
+	# 	lmin_end = np.array([len(data)-1])
+	# 	lmax_end = np.array([], dtype=np.int64)
 
-	lmin = np.concatenate((lmin_start, lmin, lmin_end))
-	lmax = np.concatenate((lmax_start, lmax, lmax_end))
+	# lmin = np.concatenate((lmin_start, lmin, lmin_end))
+	# lmax = np.concatenate((lmax_start, lmax, lmax_end))
 
 	return lmin, lmax
 
@@ -200,137 +200,97 @@ def main():
 		# for x,c in dist_minima_coefficients:
 		# 	print '%d: %2.2f' % (x,c)
 
-		# TODO: only looking at distances between local minima
 		z = []
-		w = []
+		# minimum and maximum distance between local minima and maxima
+		HM_MIN_LIM = 2.0 # 2.0
+		HM_MAX_LIM = 11 # 11
+		# ratio values must be between 1-v and 1+v
+		v = 0.25 # 0.25
+
+		# for formating output
+		red = '\033[91m'
+		green = '\033[92m'
+
+		# save interval(s) to this
+		ffs = []
 		for i in range(1, min(len(lmax), len(lmin))-1):
-			x1 = lmin[i-1]
-			x2 = lmin[i]			
-			x3 = lmin[i+1]
-			x4 = lmax[i-1]
-			x5 = lmax[i]			
-			x6 = lmax[i+1]
-			h1 = abs(blue_mean_smooth[x1] - blue_mean_smooth[x4])
-			h2 = abs(blue_mean_smooth[x3] - blue_mean_smooth[x6])
-			d1, d2, d3, d4 = abs(x1-x2), abs(x2-x3), abs(x4-x5), abs(x5-x6)
-			# within X% of each other
-			b = False
-			if d2 < d1 * 1.10 and d2 > d1 * 0.90 and np.mean([h1, h2]) > 1.00:
-				# print '%2.2f' % np.mean([h1, h2])
-				b = True
-				z.append((x1,x3))
-			if d4 < d3 * 1.10 and d4 > d3 * 0.90 and np.mean([h1, h2]) > 1.00:
-				# print '%2.2f' % np.mean([h1, h2])
-				# print x4,d3
-				# print x6,d4
-				b = True
-				w.append((x4,x6))
-			if not b:
-				# more than a single pair
-				if len(z) > 1 or len(w) > 1:
-					f1, f2 = min(min(z+w)), max(max(z+w))
-					ff = abs(f1-f2)
-					f1 -= ff * 0.10
-					f2 += ff * 0.10
-					print '%2.2f->%2.2f' % (f1/fps, f2/fps)
+			a1 = lmin[i-1]
+			a2 = lmin[i]			
+			a3 = lmin[i+1]
+			b1 = lmax[i-1]
+			b2 = lmax[i]			
+			b3 = lmax[i+1]
+			# distance between each respective local minima and local maxima
+			h1 = abs(blue_mean_smooth[a1] - blue_mean_smooth[b1])
+			h2 = abs(blue_mean_smooth[a2] - blue_mean_smooth[b2])
+			h3 = abs(blue_mean_smooth[a3] - blue_mean_smooth[b3])
+			# distance between each local minima/maxima
+			# d1, d2, d3, d4 = abs(a1-a2), abs(a2-a3), abs(b1-b2), abs(b2-b3)
+			# these values should be close to 1
+			w1, w2 = float(abs(a1-a2)) / abs(a2-a3), float(abs(b1-b2)) / abs(b2-b3)
+			# smallest value must be larger than HM_MIN_LIM and largest must be less than HM_MAX_LIM
+			hm_min = min([h1, h2, h3])
+			hm_max = max([h1, h2, h3])
+			zz = []
+			# these values should be close to 1
+			h1h2 = float(h1) / h2
+			h2h3 = float(h2) / h3
+			h1h3 = float(h1) / h3
+
+			args = ((green if hm_max < HM_MAX_LIM else red), hm_max, (green if hm_min > HM_MIN_LIM else red), hm_min, (green if w1 > (1-v) and w1 < (1+v) else red), w1, (green if w2 > (1-v) and w2 < (1+v) else red), w2, (green if h1h2 < (1+v) and h1h2 > (1-v) else red), h1h2, (green if h2h3 < (1+v) and h2h3 > (1-v) else red), h2h3, (green if h1h3 < (1+v) and h1h3 > (1-v) else red), h1h3)
+			print 'hm_max: %s%2.1f\033[0m, hm_min: %s%2.1f\033[0m, w1: %s%2.1f\033[0m, w2: %s%2.1f\033[0m, h1h2: %s%2.1f\033[0m, h2h3: %s%2.1f\033[0m, h1h3: %s%2.1f\033[0m' % args
+
+			if hm_min > HM_MIN_LIM and hm_max < HM_MAX_LIM and w1 > (1-v) and w1 < (1+v) and h1h2 < (1+v) and h1h2 > (1-v) and h2h3 < (1+v) and h2h3 > (1-v) and h1h3 < (1+v) and h1h3 > (1-v):
+				zz.append((a1,a3))
+
+			if hm_min > HM_MIN_LIM and hm_max < HM_MAX_LIM and w2 > (1-v) and w2 < (1+v) and h1h2 < (1+v) and h1h2 > (1-v) and h2h3 < (1+v) and h2h3 > (1-v) and h1h3 < (1+v) and h1h3 > (1-v):
+				zz.append((b1,b3))
+
+			# if zz is not empty append the smallest and largest values to z
+			if zz:
+				z.append((min(min(zz)), max(max(zz))))
+			elif z:
+				# f1,f2 is respectively the smallest and largest value in z, which is the interval we are looking for
+				f1, f2 = min(min(z)), max(max(z))
+				# expand the interval abit and print it
+				ff = abs(f1-f2)
+				f1 -= ff * 0.10
+				f1 = max(f1, 0)
+				f2 += ff * 0.10
+				ffs.append((f1,f2))
+				# print '%2.2f->%2.2f' % (f1/fps, f2/fps)
+				# clear z for next interval
 				z = []
-				w = []
+		if z:
+			# f1,f2 is respectively the smallest and largest value in z, which is the interval we are looking for
+			f1, f2 = min(min(z)), max(max(z))
+			# expand the interval abit and print it
+			ff = abs(f1-f2)
+			f1 -= ff * 0.10
+			f1 = max(f1, 0)
+			f2 += ff * 0.10
+			ffs.append((f1,f2))
+			# print '%2.2f->%2.2f' % (f1/fps, f2/fps)
+
+		for f1,f2 in ffs:
+			# TODO: format to minutes:seconds
+			print '%sInterval with police presence: %2.2f->%2.2f\033[0m' % (green, f1/fps, f2/fps)
+
 
 		t = np.linspace(0, num_frames/fps, num_frames)
 
 		pylab.subplot(1,1,1, title='')
-		# pylab.plot(t, blue_mean_smooth,".b")
 		pylab.plot(t, blue_mean_smooth,"-k")  
 		pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
 		pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
 		pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
+		# x1,x2,y1,y2 = 440, 445.5, 150, 165
+		# axis = [x1, x2, y1,y2]
+		# pylab.axis(axis)
 		pylab.xlabel('secs.')
 		pylab.grid(True)
 
-		# pylab.subplot(2,1,2, title='')
-		# x, dist_minima_coefficients = zip(*dist_minima_coefficients)
-		# t = np.linspace(x[0]/fps, x[-1]/fps, len(x))
-		# pylab.plot(t, dist_minima_coefficients,"or")
-		# pylab.plot(t, dist_minima_coefficients,"-r")
-		# # x, dist_maxima = zip(*dist_maxima)
-		# # t = np.linspace(x[0]/fps, x[-1]/fps, len(x))		
-		# # pylab.plot(t, dist_maxima,"ob")
-		# # pylab.plot(t, dist_maxima,"-b")
-		# # pylab.axis([-1, t[-1]+1, min(dist_minima + dist_maxima) - 1, max(dist_minima + dist_maxima) + 1])
-		# pylab.axis()
-		# pylab.xlabel('secs.')
-		# pylab.grid(True)
-
-		# pylab.subplot(2,1,2, title='')
-		# x, dist_minima = zip(*dist_minima)
-		# t = np.linspace(x[0]/fps, x[-1]/fps, len(x))
-		# pylab.plot(t, dist_minima,"or")
-		# pylab.plot(t, dist_minima,"-r")
-		# x, dist_maxima = zip(*dist_maxima)
-		# t = np.linspace(x[0]/fps, x[-1]/fps, len(x))		
-		# pylab.plot(t, dist_maxima,"ob")
-		# pylab.plot(t, dist_maxima,"-b")
-		# pylab.axis([-1, t[-1]+1, min(dist_minima + dist_maxima) - 1, max(dist_minima + dist_maxima) + 1])
-		# pylab.xlabel('secs.')
-		# pylab.grid(True)
-
 		pylab.show()
-
-		# pylab.plot(dist_minima,".b")  
-		# pylab.plot(dist_minima,"-b")
-		# pylab.plot(dist_maxima,".r")  
-		# pylab.plot(dist_maxima,"-r")
-
-		# p = []
-		# n = []
-		# x = []
-		# i = 0
-		# for d in diffs:
-		# 	if abs(d) < 6: # within acceptable range
-		# 		if n:
-		# 			# plot values outside acceptable range and reset
-		# 			pylab.plot(x, n, ".r")  
-		# 			pylab.plot(x, n, "-r")
-		# 			n = []
-		# 			x = []					
-		# 		p.append(d)
-		# 		x.append(i)					
-			
-		# 	else:
-		# 		if p: # outside acceptable range
-		# 			# plot values in acceptable range and reset
-		# 			if len(p) > 2:
-		# 				pylab.plot(x, p, ".g")  
-		# 				pylab.plot(x, p, "-g")
-		# 				print 'frames with bluelight: %d to %d' % (x[0], x[-1])
-		# 			else:
-		# 				pylab.plot(x, p, ".r")  
-		# 				pylab.plot(x, p, "-r")						
-		# 			p = []
-		# 			x = []
-		# 		n.append(d)
-		# 		x.append(i)
-
-		# 	i += 1
-
-		# # plot remaining values
-		# if p:			
-		# 	if len(p) > 2:
-		# 		pylab.plot(x, p, ".g")  
-		# 		pylab.plot(x, p, "-g")
-		# 		print 'frames with bluelight: %d to %d' % (x[0], x[-1])
-		# 	else:
-		# 		pylab.plot(x, p, ".r")  
-		# 		pylab.plot(x, p, "-r")
-		# elif n:
-		# 	pylab.plot(n,".r")  
-		# 	pylab.plot(n,"-r")
-
-		# pylab.axis()
-		# pylab.xlabel('secs.')
-		# pylab.grid(True)
-
-		# pylab.show()
 
 if __name__ == "__main__":
 	 main()
