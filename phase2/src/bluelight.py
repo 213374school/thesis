@@ -155,6 +155,11 @@ def main():
 					# order of channels is reversed in opencv
 					blue_chan = frame[:,:,0]
 					blue_mean.append(np.mean(blue_chan))
+					index += 1
+
+					stdout.write('detecting bluelight in %s: %2.2f%% done -> (mm:ss): %02d:%02d\r' % (video_src, 100.0 * index / num_frames, (index/24)/60, (index/24)%60))
+					stdout.flush()
+
 			bclib['blue_mean'] = blue_mean
 			content = json.dumps(bclib)
 
@@ -238,7 +243,7 @@ def main():
 			h1h3 = float(h1) / h3
 
 			args = ((green if hm_max < HM_MAX_LIM else red), hm_max, (green if hm_min > HM_MIN_LIM else red), hm_min, (green if w1 > (1-v) and w1 < (1+v) else red), w1, (green if w2 > (1-v) and w2 < (1+v) else red), w2, (green if h1h2 < (1+v) and h1h2 > (1-v) else red), h1h2, (green if h2h3 < (1+v) and h2h3 > (1-v) else red), h2h3, (green if h1h3 < (1+v) and h1h3 > (1-v) else red), h1h3)
-			print 'hm_max: %s%2.1f\033[0m, hm_min: %s%2.1f\033[0m, w1: %s%2.1f\033[0m, w2: %s%2.1f\033[0m, h1h2: %s%2.1f\033[0m, h2h3: %s%2.1f\033[0m, h1h3: %s%2.1f\033[0m' % args
+			# print 'hm_max: %s%2.1f\033[0m, hm_min: %s%2.1f\033[0m, w1: %s%2.1f\033[0m, w2: %s%2.1f\033[0m, h1h2: %s%2.1f\033[0m, h2h3: %s%2.1f\033[0m, h1h3: %s%2.1f\033[0m' % args
 
 			if hm_min > HM_MIN_LIM and hm_max < HM_MAX_LIM and w1 > (1-v) and w1 < (1+v) and h1h2 < (1+v) and h1h2 > (1-v) and h2h3 < (1+v) and h2h3 > (1-v) and h1h3 < (1+v) and h1h3 > (1-v):
 				zz.append((a1,a3))
@@ -277,20 +282,20 @@ def main():
 			print '%sInterval with police presence: %2.2f->%2.2f\033[0m' % (green, f1/fps, f2/fps)
 
 
-		t = np.linspace(0, num_frames/fps, num_frames)
+		# t = np.linspace(0, num_frames/fps, num_frames)
 
-		pylab.subplot(1,1,1, title='')
-		pylab.plot(t, blue_mean_smooth,"-k")  
-		pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
-		pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
-		pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
-		# x1,x2,y1,y2 = 440, 445.5, 150, 165
-		# axis = [x1, x2, y1,y2]
-		# pylab.axis(axis)
-		pylab.xlabel('secs.')
-		pylab.grid(True)
+		# pylab.subplot(1,1,1, title='')
+		# pylab.plot(t, blue_mean_smooth,"-k")  
+		# pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
+		# pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
+		# pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
+		# # x1,x2,y1,y2 = 440, 445.5, 150, 165
+		# # axis = [x1, x2, y1,y2]
+		# # pylab.axis(axis)
+		# pylab.xlabel('secs.')
+		# pylab.grid(True)
 
-		pylab.show()
+		# pylab.show()
 
 if __name__ == "__main__":
 	 main()
