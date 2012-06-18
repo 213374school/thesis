@@ -172,9 +172,6 @@ def main():
 		else:
 			blue_mean = bclib.get('blue_mean')
 
-		pylab.figure(figsize=(10,10))		
-		pylab.suptitle('%s' % video_src, fontsize=16)
-
 		# need to make it a numpy array to index it with another numpy array
 		# also smooth the data abit
 		blue_mean_smooth = np.array(smoothTriangle(blue_mean, 5))
@@ -205,97 +202,152 @@ def main():
 		# for x,c in dist_minima_coefficients:
 		# 	print '%d: %2.2f' % (x,c)
 
+
 		z = []
 		# minimum and maximum distance between local minima and maxima
-		HM_MIN_LIM = 2.0 # 2.0
-		HM_MAX_LIM = 11 # 11
+		# HM_MIN_LIM = 2.0 # 2.0
+		# HM_MAX_LIM = 11 # 11
 		# ratio values must be between 1-v and 1+v
-		v = 0.25 # 0.25
+		v = 0.10 # 0.25
 
 		# for formating output
 		red = '\033[91m'
 		green = '\033[92m'
+		black = '\033[0m'
 
 		# save interval(s) to this
 		ffs = []
+		zz = []
+		out = 1
 		for i in range(1, min(len(lmax), len(lmin))-1):
-			a1 = lmin[i-1]
-			a2 = lmin[i]			
-			a3 = lmin[i+1]
-			b1 = lmax[i-1]
-			b2 = lmax[i]			
-			b3 = lmax[i+1]
-			# distance between each respective local minima and local maxima
-			h1 = abs(blue_mean_smooth[a1] - blue_mean_smooth[b1])
-			h2 = abs(blue_mean_smooth[a2] - blue_mean_smooth[b2])
-			h3 = abs(blue_mean_smooth[a3] - blue_mean_smooth[b3])
-			# distance between each local minima/maxima
-			# d1, d2, d3, d4 = abs(a1-a2), abs(a2-a3), abs(b1-b2), abs(b2-b3)
-			# these values should be close to 1
-			w1, w2 = float(abs(a1-a2)) / abs(a2-a3), float(abs(b1-b2)) / abs(b2-b3)
-			# smallest value must be larger than HM_MIN_LIM and largest must be less than HM_MAX_LIM
-			hm_min = min([h1, h2, h3])
-			hm_max = max([h1, h2, h3])
+			mi1 = lmin[i-1]
+			mi2 = lmin[i]			
+			mi3 = lmin[i+1]
+			ma1 = lmax[i-1]
+			ma2 = lmax[i]			
+			ma3 = lmax[i+1]
+			
+			# we want the two minimas between ma1 and ma3
+			if mi1 < ma1:
+				mi1 = mi2
+				mi2 = mi3
+
+			# x1, y1 = ma1, blue_mean_smooth[ma1]
+			# x2, y2 = mi1, blue_mean_smooth[mi1]
+			# x3, y3 = ma2, blue_mean_smooth[ma2]
+			# x4, y4 = mi2, blue_mean_smooth[mi2]
+			# x5, y5 = ma3, blue_mean_smooth[ma3]
+
+			x1,x2,x3,x4,x5 = ma1,mi1,ma2,mi2,ma3
+			y1,y2,y3,y4,y5 = blue_mean_smooth[np.array([x1,x2,x3,x4,x5])]
+
+			# the following must now be true
+			assert(x1 < x2)
+			assert(x2 < x3)
+			assert(x3 < x4)
+			assert(x4 < x5)
+
+			# print x1,y1
+			# print x2,y2
+			# print x3,y3
+			# print x4,y4
+			# print x5,y5
+
+			# compute vector magnitudes
+			sqrt = math.sqrt
+			a = sqrt((x1-x2)**2 + (y1-y2)**2)
+			b = sqrt((x2-x3)**2 + (y2-y3)**2)
+			c = sqrt((x3-x4)**2 + (y3-y4)**2)
+			d = sqrt((x4-x5)**2 + (y4-y5)**2)
+
+			# print a,b,c,d
+
+			# if the graph is oscillating then a/b ~ b/c ~ c/d ~ 1 => atleast 3 comparisons, easiest one is to substract 1.0 from all of them
+			# ab = a/b
+			# bc = b/c
+			# cd = c/d
+
+			# abcd = np.array([ab,bc,cd])
+
 			zz = []
-			# these values should be close to 1
-			h1h2 = float(h1) / h2
-			h2h3 = float(h2) / h3
-			h1h3 = float(h1) / h3
+			# if (np.fabs(abcd-1.0) < v).all():
+			# if the relative standard deviation for all 4 vectors is less than v then we accept the "two triangles"
+			if np.std([a,b,c,d]) / np.mean([a,b,c,d]) < v:
+				zz.append((x1,x5))
 
-			args = ((green if hm_max < HM_MAX_LIM else red), hm_max, (green if hm_min > HM_MIN_LIM else red), hm_min, (green if w1 > (1-v) and w1 < (1+v) else red), w1, (green if w2 > (1-v) and w2 < (1+v) else red), w2, (green if h1h2 < (1+v) and h1h2 > (1-v) else red), h1h2, (green if h2h3 < (1+v) and h2h3 > (1-v) else red), h2h3, (green if h1h3 < (1+v) and h1h3 > (1-v) else red), h1h3)
-			# print 'hm_max: %s%2.1f\033[0m, hm_min: %s%2.1f\033[0m, w1: %s%2.1f\033[0m, w2: %s%2.1f\033[0m, h1h2: %s%2.1f\033[0m, h2h3: %s%2.1f\033[0m, h1h3: %s%2.1f\033[0m' % args
+				print green
+				print 'vector magnitudes: ',a,b,c,d
+				print 'a/b, b/c, c/d: ', ab, bc, cd
+				# for x in [x1,x2,x3,x4,x5]:
+				# 	print x,' -> ',x/fps
+				for x in [x1,x2,x3,x4,x5]:
+					print '(%2.2f,%2.2f)' % (float(x)/fps,blue_mean_smooth[x])
+				print black
+				print 'std.dev. %2.2f%%' % float(100.0 * np.std([a,b,c,d]) / np.mean([a,b,c,d]))
 
-			if hm_min > HM_MIN_LIM and hm_max < HM_MAX_LIM and w1 > (1-v) and w1 < (1+v) and h1h2 < (1+v) and h1h2 > (1-v) and h2h3 < (1+v) and h2h3 > (1-v) and h1h3 < (1+v) and h1h3 > (1-v):
-				zz.append((a1,a3))
+				# pylab.figure(figsize=(10,10))
+				# pylab.suptitle('%s' % video_src, fontsize=16)
+				# pylab.subplot(1,1,1, title='')
+				# t = np.linspace(0, num_frames/fps, num_frames)		
+				# pylab.plot(t, blue_mean_smooth,"-k")
+				# pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
+				# pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")	
+				# pylab.xlabel('secs.')
+				# pylab.grid(True)
+				# axis = [float(x1)/fps-.1, float(x5)/fps+.1, min([y2,y4])-.1, max([y1,y3,y5])+0.1]
+				# pylab.axis(axis)
+				# pylab.show()
 
-			if hm_min > HM_MIN_LIM and hm_max < HM_MAX_LIM and w2 > (1-v) and w2 < (1+v) and h1h2 < (1+v) and h1h2 > (1-v) and h2h3 < (1+v) and h2h3 > (1-v) and h1h3 < (1+v) and h1h3 > (1-v):
-				zz.append((b1,b3))
-
-			# if zz is not empty append the smallest and largest values to z
 			if zz:
+				# transfer points to z
 				z.append((min(min(zz)), max(max(zz))))
 			elif z:
 				# f1,f2 is respectively the smallest and largest value in z, which is the interval we are looking for
 				f1, f2 = min(min(z)), max(max(z))
 				# expand the interval abit and print it
-				ff = abs(f1-f2)
-				f1 -= ff * 0.10
-				f1 = max(f1, 0)
-				f2 += ff * 0.10
+				# ff = abs(f1-f2)
+				# f1 -= ff * 0.10
+				# f1 = max(f1, 0)
+				# f2 += ff * 0.10
 				ffs.append((f1,f2))
 				# print '%2.2f->%2.2f' % (f1/fps, f2/fps)
 				# clear z for next interval
 				z = []
+
 		if z:
 			# f1,f2 is respectively the smallest and largest value in z, which is the interval we are looking for
 			f1, f2 = min(min(z)), max(max(z))
 			# expand the interval abit and print it
-			ff = abs(f1-f2)
-			f1 -= ff * 0.10
-			f1 = max(f1, 0)
-			f2 += ff * 0.10
+			# ff = abs(f1-f2)
+			# f1 -= ff * 0.10
+			# f1 = max(f1, 0)
+			# f2 += ff * 0.10
 			ffs.append((f1,f2))
 			# print '%2.2f->%2.2f' % (f1/fps, f2/fps)
 
+		if ffs:
+			print 'police presence in %s:' % video_src
 		for f1,f2 in ffs:
-			# TODO: format to minutes:seconds
-			print '%sInterval with police presence: %2.2f->%2.2f\033[0m' % (green, f1/fps, f2/fps)
+			print '%s%02d:%02d->%02d:%02d\033[0m' % (green, f1/fps/60, int(f1/fps) % 60, f2/fps/60, int(f2/fps) % 60)
+			if out:
+				print '%2.2f->%2.2f\n' % (f1/fps, f2/fps)
+			else:
+				print '\n'
 
-
-		# t = np.linspace(0, num_frames/fps, num_frames)
-
-		# pylab.subplot(1,1,1, title='')
-		# pylab.plot(t, blue_mean_smooth,"-k")  
-		# pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
-		# pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
-		# pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
-		# # x1,x2,y1,y2 = 440, 445.5, 150, 165
-		# # axis = [x1, x2, y1,y2]
-		# # pylab.axis(axis)
-		# pylab.xlabel('secs.')
-		# pylab.grid(True)
-
-		# pylab.show()
+		pylab.figure(figsize=(10,10))		
+		pylab.suptitle('%s' % video_src, fontsize=16)
+		pylab.subplot(1,1,1, title='')
+		t = np.linspace(0, num_frames/fps, num_frames)		
+		pylab.plot(t, blue_mean_smooth,"-k")  
+		pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
+		pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
+		pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
+		# x1,x2,y1,y2 = 1, 6, 120, 140
+		# axis = [x1, x2, y1,y2]
+		# pylab.axis(axis)
+		pylab.xlabel('secs.')
+		pylab.grid(True)
+		pylab.show()
 
 if __name__ == "__main__":
 	 main()
