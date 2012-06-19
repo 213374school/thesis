@@ -177,38 +177,9 @@ def main():
 		blue_mean_smooth = np.array(smoothTriangle(blue_mean, 5))
 		lmin, lmax = get_local_minmax(blue_mean_smooth)
 
-		# get distance between each minima
-		# minima_mov_avr = Simplemovingaverage(1)
-		# dist_minima = []
-		# for i in range(1,len(lmin)):
-		# 	dist_minima.append(abs(lmin[i] - lmin[i-1]))
-		# dist_minima = zip(lmin, dist_minima)
-
-		# maxima_mov_avr = Simplemovingaverage(1)
-		# dist_maxima = []
-		# for i in range(1,len(lmax)):
-		# 	dist_maxima.append(abs(lmax[i] - lmax[i-1]))
-		# dist_maxima = zip(lmax, dist_maxima)
-
-		# compute linear coefficient for each point
-		# dist_minima_coefficients = []
-		# for i in range(1, len(dist_minima)):
-		# 	x1,y1 = dist_minima[i-1]
-		# 	x2,y2 = dist_minima[i]
-		# 	c = float(y1-y2) / float(x1-x2)
-		# 	dist_minima_coefficients.append((x1,c))
-
-		# print 'local minima coefficients'
-		# for x,c in dist_minima_coefficients:
-		# 	print '%d: %2.2f' % (x,c)
-
-
 		z = []
-		# minimum and maximum distance between local minima and maxima
-		# HM_MIN_LIM = 2.0 # 2.0
-		# HM_MAX_LIM = 11 # 11
-		# ratio values must be between 1-v and 1+v
-		v = 0.10 # 0.25
+		# triangle treshold
+		v = 0.125 # 0.25
 
 		# for formating output
 		red = '\033[91m'
@@ -219,6 +190,13 @@ def main():
 		ffs = []
 		zz = []
 		out = 1
+
+		def commitZ(z):
+			f1, f2 = min(min(z)), max(max(z))
+			ffs.append((f1,f2))
+			# clear z for next interval
+			del z[:]
+
 		for i in range(1, min(len(lmax), len(lmin))-1):
 			mi1 = lmin[i-1]
 			mi2 = lmin[i]			
@@ -227,74 +205,84 @@ def main():
 			ma2 = lmax[i]			
 			ma3 = lmax[i+1]
 			
-			# we want the two minimas between ma1 and ma3
+			# we want the two minimas between ma1 and ma3 (and ma2 in the middle)
 			if mi1 < ma1:
 				mi1 = mi2
 				mi2 = mi3
-
-			# x1, y1 = ma1, blue_mean_smooth[ma1]
-			# x2, y2 = mi1, blue_mean_smooth[mi1]
-			# x3, y3 = ma2, blue_mean_smooth[ma2]
-			# x4, y4 = mi2, blue_mean_smooth[mi2]
-			# x5, y5 = ma3, blue_mean_smooth[ma3]
 
 			x1,x2,x3,x4,x5 = ma1,mi1,ma2,mi2,ma3
 			y1,y2,y3,y4,y5 = blue_mean_smooth[np.array([x1,x2,x3,x4,x5])]
 
 			# the following must now be true
-			assert(x1 < x2)
-			assert(x2 < x3)
-			assert(x3 < x4)
-			assert(x4 < x5)
+			try:
+				assert(x1 < x2)
+				assert(x2 < x3)
+				assert(x3 < x4)
+				assert(x4 < x5)
+			except:
+				# print i,' of ', min(len(lmax), len(lmin))-1
+				# print red, mi1/fps, black
+				# print 'ma1,ma2,ma3, mi1,mi2,mi3: ',ma1,ma2,ma3, mi1,mi2,mi3
 
-			# print x1,y1
-			# print x2,y2
-			# print x3,y3
-			# print x4,y4
-			# print x5,y5
+				# there are some cases of multiple local minima/maxima. we will play along with this anomaly
+				# commit z if there are any values in it and continue
+				if z:
+					commitZ(z)
+				continue
 
 			# compute vector magnitudes
 			sqrt = math.sqrt
-			a = sqrt((x1-x2)**2 + (y1-y2)**2)
-			b = sqrt((x2-x3)**2 + (y2-y3)**2)
-			c = sqrt((x3-x4)**2 + (y3-y4)**2)
-			d = sqrt((x4-x5)**2 + (y4-y5)**2)
+			# a = sqrt((x1-x2)**2 + (y1-y2)**2)
+			# b = sqrt((x2-x3)**2 + (y2-y3)**2)
+			# c = sqrt((x3-x4)**2 + (y3-y4)**2)
+			# d = sqrt((x4-x5)**2 + (y4-y5)**2)
 
-			# print a,b,c,d
-
-			# if the graph is oscillating then a/b ~ b/c ~ c/d ~ 1 => atleast 3 comparisons, easiest one is to substract 1.0 from all of them
-			# ab = a/b
-			# bc = b/c
-			# cd = c/d
-
-			# abcd = np.array([ab,bc,cd])
+			z1,z2,z3,z4,z5 = np.array([x1,x2,x3,x4,x5], dtype=np.float64) / fps
+			a = sqrt((z1-z2)**2 + (y1-y2)**2)
+			b = sqrt((z2-z3)**2 + (y2-y3)**2)
+			c = sqrt((z3-z4)**2 + (y3-y4)**2)
+			d = sqrt((z4-z5)**2 + (y4-y5)**2)
 
 			zz = []
-			# if (np.fabs(abcd-1.0) < v).all():
+			
+			# basically what we want to do is to look at how much the two triangles look alike
 			# if the relative standard deviation for all 4 vectors is less than v then we accept the "two triangles"
-			if np.std([a,b,c,d]) / np.mean([a,b,c,d]) < v:
+			xx = [x3-x1, x5-x3]
+			yy = [abs(y1-y2), abs(y2-y3), abs(y3-y4), abs(y4-y5)]
+			if np.std([a,b,c,d]) / np.mean([a,b,c,d]) < v and np.std(xx) / np.mean(xx) < v/2:
 				zz.append((x1,x5))
 
-				print green
+				print 'xx: ', xx
+				print 'yy: ', yy
 				print 'vector magnitudes: ',a,b,c,d
-				print 'a/b, b/c, c/d: ', ab, bc, cd
-				# for x in [x1,x2,x3,x4,x5]:
-				# 	print x,' -> ',x/fps
-				for x in [x1,x2,x3,x4,x5]:
+				xs = [x1,x2,x3,x4,x5]
+				for x in xs:
 					print '(%2.2f,%2.2f)' % (float(x)/fps,blue_mean_smooth[x])
-				print black
-				print 'std.dev. %2.2f%%' % float(100.0 * np.std([a,b,c,d]) / np.mean([a,b,c,d]))
+				print 'vert. std.dev. %2.2f%%' % float(100.0 * np.std([a,b,c,d]) / np.mean([a,b,c,d]))
+				print 'hor. std.dev. %2.2f%%' % float(100.0 * np.std(xx) / np.mean(xx))
+
+				# plug'n'play into spotlight
+				# for i in range(len(xs)-1):
+				# 	print '((%f-%f)**2 + (%f-%f)**2)**.5' % (float(xs[i])/fps,float(xs[i+1])/fps, blue_mean_smooth[xs[i]],blue_mean_smooth[xs[i+1]])
 
 				# pylab.figure(figsize=(10,10))
 				# pylab.suptitle('%s' % video_src, fontsize=16)
 				# pylab.subplot(1,1,1, title='')
-				# t = np.linspace(0, num_frames/fps, num_frames)		
+				# # t = np.linspace(0, num_frames/fps, num_frames)		
+				# # pylab.plot(t, blue_mean_smooth,"-k")
+				# # pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
+				# # pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")	
+				# # pylab.xlabel('secs.')
+				# # axis = [float(x1)/fps-.1, float(x5)/fps+.1, min([y2,y4])-.1, max([y1,y3,y5])+0.1]
+
+				# t = np.array(range(len(blue_mean_smooth)))
 				# pylab.plot(t, blue_mean_smooth,"-k")
 				# pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
-				# pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")	
-				# pylab.xlabel('secs.')
+				# pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")				
+				# pylab.xlabel('frames')
+				# axis = [float(x1)-1, float(x5)+1, min([y2,y4])-.1, max([y1,y3,y5])+0.1]
+
 				# pylab.grid(True)
-				# axis = [float(x1)/fps-.1, float(x5)/fps+.1, min([y2,y4])-.1, max([y1,y3,y5])+0.1]
 				# pylab.axis(axis)
 				# pylab.show()
 
@@ -302,28 +290,10 @@ def main():
 				# transfer points to z
 				z.append((min(min(zz)), max(max(zz))))
 			elif z:
-				# f1,f2 is respectively the smallest and largest value in z, which is the interval we are looking for
-				f1, f2 = min(min(z)), max(max(z))
-				# expand the interval abit and print it
-				# ff = abs(f1-f2)
-				# f1 -= ff * 0.10
-				# f1 = max(f1, 0)
-				# f2 += ff * 0.10
-				ffs.append((f1,f2))
-				# print '%2.2f->%2.2f' % (f1/fps, f2/fps)
-				# clear z for next interval
-				z = []
+				commitZ(z)
 
 		if z:
-			# f1,f2 is respectively the smallest and largest value in z, which is the interval we are looking for
-			f1, f2 = min(min(z)), max(max(z))
-			# expand the interval abit and print it
-			# ff = abs(f1-f2)
-			# f1 -= ff * 0.10
-			# f1 = max(f1, 0)
-			# f2 += ff * 0.10
-			ffs.append((f1,f2))
-			# print '%2.2f->%2.2f' % (f1/fps, f2/fps)
+			commitZ(z)
 
 		if ffs:
 			print 'police presence in %s:' % video_src
