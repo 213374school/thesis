@@ -29,8 +29,6 @@ helptxt = """usage:\n./peopledetect.py src_folder [-v] [-p] [ytid]
 ytid YouTube ID"""
 
 from collections import deque
- 
-from collections import deque
 
 def smoothTriangle(lst=[], degree=1):
 
@@ -163,7 +161,6 @@ def main():
 		metadata_folder = sys.argv[1]
 	except:
 		print helptxt
-		return
 	else:
 		show_video = False
 		show_plot = False
