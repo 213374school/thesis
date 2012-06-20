@@ -15,7 +15,7 @@ def main():
     else:
         files = [filename for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v','avi']]
         for f in files:
-            command = './src/bluelight.py ./%s/%s' % (path, f)
+            command = './src/bluelight.py ./%s/%s 0' % (path, f)
             # print command
             os.system(command)
 

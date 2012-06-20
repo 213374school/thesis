@@ -25,8 +25,6 @@ except ImportError:
 
 from collections import deque
 
-helptxt = """usage:%s video_src""" % __file__
-
 def smoothTriangle(lst=[], degree=1):
 
 	if degree < 1:
@@ -119,6 +117,9 @@ def unzip(l):
 
 	return zip(*l)
 
+helptxt = """usage:%s video_src [show_plot]""" % __file__
+DEBUG_MODE = False
+
 def main():
 
 	try:
@@ -126,7 +127,17 @@ def main():
 	except:
 		print helptxt
 		return
-	else:	
+	else:
+		try:
+			sys.argv[2]
+		except:
+			show_plot = False
+		else:
+			try:
+				show_plot = int(sys.argv[2])
+			except:
+				show_plot = True
+
 		cap = video.create_capture(video_src)		
 		capture = cv.CaptureFromFile(video_src)
 		fps = cv.GetCaptureProperty(capture, cv.CV_CAP_PROP_FPS)
@@ -168,7 +179,7 @@ def main():
 				# write to disc
 				f = open(metadata_filename,'w') 
 				f.write(content)
-				f.close()					
+				f.close()
 		else:
 			blue_mean = bclib.get('blue_mean')
 
@@ -252,14 +263,15 @@ def main():
 			if np.std([a,b,c,d]) / np.mean([a,b,c,d]) < v and np.std(xx) / np.mean(xx) < v/2:
 				zz.append((x1,x5))
 
-				print 'xx: ', xx
-				print 'yy: ', yy
-				print 'vector magnitudes: ',a,b,c,d
-				xs = [x1,x2,x3,x4,x5]
-				for x in xs:
-					print '(%2.2f,%2.2f)' % (float(x)/fps,blue_mean_smooth[x])
-				print 'vert. std.dev. %2.2f%%' % float(100.0 * np.std([a,b,c,d]) / np.mean([a,b,c,d]))
-				print 'hor. std.dev. %2.2f%%' % float(100.0 * np.std(xx) / np.mean(xx))
+				if DEBUG_MODE:
+					print 'xx: ', xx
+					print 'yy: ', yy
+					print 'vector magnitudes: ',a,b,c,d
+					xs = [x1,x2,x3,x4,x5]
+					for x in xs:
+						print '(%2.2f,%2.2f)' % (float(x)/fps,blue_mean_smooth[x])
+					print 'vert. std.dev. %2.2f%%' % float(100.0 * np.std([a,b,c,d]) / np.mean([a,b,c,d]))
+					print 'hor. std.dev. %2.2f%%' % float(100.0 * np.std(xx) / np.mean(xx))
 
 				# plug'n'play into spotlight
 				# for i in range(len(xs)-1):
@@ -295,29 +307,43 @@ def main():
 		if z:
 			commitZ(z)
 
-		if ffs:
+		if ffs and DEBUG_MODE:
 			print 'police presence in %s:' % video_src
+		pp = dict()
+		pp['police_presence'] = []
 		for f1,f2 in ffs:
-			print '%s%02d:%02d->%02d:%02d\033[0m' % (green, f1/fps/60, int(f1/fps) % 60, f2/fps/60, int(f2/fps) % 60)
-			if out:
-				print '%2.2f->%2.2f\n' % (f1/fps, f2/fps)
-			else:
-				print '\n'
+			pp['police_presence'].append((int(f1),int(f2)))
+			if DEBUG_MODE:
+				print '%s%02d:%02d->%02d:%02d\033[0m' % (green, f1/fps/60, int(f1/fps) % 60, f2/fps/60, int(f2/fps) % 60)
+				if out:
+					print '%2.2f->%2.2f\n' % (f1/fps, f2/fps)
+				else:
+					print '\n'
 
-		pylab.figure(figsize=(10,10))		
-		pylab.suptitle('%s' % video_src, fontsize=16)
-		pylab.subplot(1,1,1, title='')
-		t = np.linspace(0, num_frames/fps, num_frames)		
-		pylab.plot(t, blue_mean_smooth,"-k")  
-		pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
-		pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
-		pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
-		# x1,x2,y1,y2 = 1, 6, 120, 140
-		# axis = [x1, x2, y1,y2]
-		# pylab.axis(axis)
-		pylab.xlabel('secs.')
-		pylab.grid(True)
-		pylab.show()
+		content = json.dumps(pp)
+		# do not write a file if json parser fails
+		if content:
+			metadata_filename = './metadata/police_presence/%s.json' % ytid
+			# write to disc
+			f = open(metadata_filename,'w') 
+			f.write(content)
+			f.close()
+
+		if show_plot:
+			pylab.figure(figsize=(10,10))		
+			pylab.suptitle('%s' % video_src, fontsize=16)
+			pylab.subplot(1,1,1, title='')
+			t = np.linspace(0, num_frames/fps, num_frames)		
+			pylab.plot(t, blue_mean_smooth,"-k")  
+			pylab.plot(t[lmin], blue_mean_smooth[lmin], "or", label="min")
+			pylab.plot(t[lmax], blue_mean_smooth[lmax], "og", label="max")		
+			pylab.axis([-1, t[-1]+1, min(blue_mean_smooth) - 1, max(blue_mean_smooth) + 1])
+			# x1,x2,y1,y2 = 1, 6, 120, 140
+			# axis = [x1, x2, y1,y2]
+			# pylab.axis(axis)
+			pylab.xlabel('secs.')
+			pylab.grid(True)
+			pylab.show()
 
 if __name__ == "__main__":
 	 main()
