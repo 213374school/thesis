@@ -6,7 +6,6 @@ import json
 from time import clock
 import os
 import json
-import pylab
 
 from labeller_lauge import getSVM
 from labeller_lauge import getContrast

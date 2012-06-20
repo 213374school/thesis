@@ -1,5 +1,6 @@
 import numpy as np
-import pylab
+import os
+import json
 
 def triangleSmooth(lst=[], degree=1):
 
@@ -53,20 +54,22 @@ def getContrast(ytid):
 	return []
 
 
-def isDayLabeller(metadata):
+def isDayLabeller(ytid):
 
 	threshold = 50
 
+	metadata = loadFinalMetadata(ytid)
 	data = metadata.get('brightness')
 	if np.mean(data) >= threshold:
 		return [(0,len(data))]
 	else:
 		return []
 
-def isNightLabeller(metadata):
+def isNightLabeller(ytid):
 
 	threshold = 50
 
+	metadata = loadFinalMetadata(ytid)
 	data = metadata.get('brightness')
 	if np.mean(data) < threshold:
 		return [(0,len(data))]
@@ -74,13 +77,14 @@ def isNightLabeller(metadata):
 		return []
 
 # Calc the sections where vertical oscillating movement happens
-def verticalOscillationLabeller(metadata):
+def verticalOscillationLabeller(ytid):
 
 	value_threshold = 5
 	no_bin_threshold = 2
 	std_width = 12
 	triangle_smoothing_width = 60
 
+	metadata = loadFinalMetadata(ytid)
 	bins = metadata.get('vertical_movement')
 	no_frames = len(bins[0])
 
@@ -114,12 +118,13 @@ def verticalOscillationLabeller(metadata):
 
 	return zip(startPointers, endPointers)
 
-def isOverviewLabeller(metadata):
+def isOverviewLabeller(ytid):
 
 	value_threshold = 2
 	no_bin_threshold = 7
 	triangle_smoothing_width = 60
 
+	metadata = loadFinalMetadata(ytid)
 	bins = metadata.get('mean_vector_length')
 	no_frames = len(bins[0])
 
@@ -130,14 +135,14 @@ def isOverviewLabeller(metadata):
 		bins[i] = smoothed
 
 
-	# Plot the data
-	pylab.figure(figsize=(10,10))
-	for y in [0,1,2]:
-		for x in [0,1,2]:
-			bin_no = 3 * y + x
-			pylab.subplot2grid((3,3), (y,x))
-			pylab.plot(range(no_frames), bins[bin_no], '-b', linewidth=2.0)
-	pylab.show()
+	# # Plot the data
+	# pylab.figure(figsize=(10,10))
+	# for y in [0,1,2]:
+	# 	for x in [0,1,2]:
+	# 		bin_no = 3 * y + x
+	# 		pylab.subplot2grid((3,3), (y,x))
+	# 		pylab.plot(range(no_frames), bins[bin_no], '-b', linewidth=2.0)
+	# pylab.show()
 
 
 	# Calc sections
@@ -166,17 +171,13 @@ def isOverviewLabeller(metadata):
 
 
 
-def loadMetadata(ytid):
-	print os.path.dirname(os.path.realpath(__file__)) + '/../'
-
+def loadFinalMetadata(ytid):
+	
 	# Get metadata
-	videoFileName = (video_src.split('/'))[-1]
-	filepath = '../metadata/final/' + videoFileName + '.json'
+	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../metadata/final/' + ytid + '.json'
 	if os.path.isfile(filepath):
 		f = open(filepath, 'r+')
-		metadata = json.loads(f.read())
+		return json.loads(f.read())
 	else:
 		print 'Metadata file: \'%d\', doesnt exist.' % filepath
 		return
-
-print os.path.dirname(os.path.realpath(__file__)) + '/../'
