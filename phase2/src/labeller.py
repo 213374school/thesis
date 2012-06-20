@@ -3,23 +3,27 @@
 
 import numpy as np
 import json
-import cv
-import cv2
-import video
-from common import anorm2, draw_str
 from time import clock
 import os
+import json
+import pylab
 
-# Find a JSON parser
-try:
-	import json
-	# import simplejson as json 
-except ImportError:
-	try:
-		import simplejson as json
-		# import json
-	except ImportError:
-		print 'ERROR: JSON parser not found!'
+from labeller_lauge import getSVM
+from labeller_lauge import getContrast
+
+from labeller_lauge import isDayLabeller
+from labeller_lauge import isNightLabeller
+from labeller_lauge import verticalOscillationLabeller
+from labeller_lauge import isOverviewLabeller
+
+
+from labeller_anders import getPeopleInFrame
+from labeller_anders import getPersonInFocus
+from labeller_anders import getBlueChannelMean
+
+from labeller_anders import hasPolicePresenceLabeller
+from labeller_anders import hasPersonInFocusLabeller
+
 
 
 help_message = '''
@@ -27,28 +31,62 @@ USAGE: labeller.py [<video_source>] [<labelling_to_do>]
 <labelling_to_do> options:
 is_day
 is_night
+vertical_oscillation
+is_overview
+is_in_crowd
+has_police
+has_person_in_focus
 '''
 
 
-def isDayLabeller(metadata):
+def triangleSmooth(lst=[], degree=1):
 
-	threshold = 50
+	if degree < 1:
+		print 'degree must be > 1'
+		return
 
-	data = metadata.get('brightness')
-	if np.mean(data) >= threshold:
-		return [(0,len(data))]
-	else:
-		return []
+	triangle = np.array(range(degree)+[degree]+range(degree)[::-1])+1
+	lst = np.array(lst)
+	lst_lenght = len(lst)
+	tri_len = len(triangle)
+	_max = lst_lenght - degree
+	triangle_normal_sum = float(sum(triangle))
+	
+	smoothed_lst = []
+	for i in range(lst_lenght):
 
-def isNightLabeller(metadata):
+		if i > degree and i < _max:
+			new_value = sum(triangle * lst[i-degree:i+degree+1]) / triangle_normal_sum
+		else:
+			left = degree - min(i, degree)
+			right = degree + min(degree, lst_lenght - 1 - i) + 1			
+			tri = triangle[left:right]
+			triangle_sum = sum(tri)
 
-	threshold = 50
+			new_value = 0.0
+			for j in range(len(tri)):
 
-	data = metadata.get('brightness')
-	if np.mean(data) < threshold:
-		return [(0,len(data))]
-	else:
-		return []
+				pos = j + i + left - degree
+				new_value += tri[j] * lst[pos]
+		
+			new_value /= triangle_sum
+
+		smoothed_lst.append(new_value)
+
+	return smoothed_lst
+
+def calcStd(lst, no_frames=12):
+
+	varianceList = [0] * no_frames
+	for i in range(no_frames,len(lst)):
+		subList = lst[i-no_frames:i+1]
+		varianceList.append(np.std(subList))
+	return varianceList
+
+
+def isInCrowdLabeller(ytid):
+	return []
+
 
 
 def main():
@@ -60,22 +98,28 @@ def main():
 	except:
 		return
 
-	# Get metadata
-	videoFileName = (video_src.split('/'))[-1]
-	filepath = '../metadata/final/' + videoFileName + '.json'
-	if os.path.isfile(filepath):
-		f = open(filepath, 'r+')
-		metadata = json.loads(f.read())
-	else:
-		print 'Metadata file: \'%d\', doesnt exist.' % filepath
-		return
-
+	ytid = (video_src.split('/'))[-1]
+	
 	if label == 'is_day':
-		intervals = isDayLabeller(metadata)
+		intervals = isDayLabeller(ytid)
 	elif label == 'is_night':
-		intervals = isNightLabeller(metadata)
+		intervals = isNightLabeller(ytid)
+	elif label == 'vertical_oscillation':
+		intervals = verticalOscillationLabeller(ytid)
+	elif label == 'is_overview':
+		intervals = isOverviewLabeller(ytid)
+	elif label == 'is_in_crowd':
+		intervals = isInCrowdLabeller(ytid)
+	elif label == 'has_police':
+		intervals == hasPolicePresenceLabeller(ytid)
+	elif label == 'has_person_in_focus':
+		intervals == hasPersonInFocusLabeller(ytid)
 	else:
 		intervals = []
+
+
+
+
 
 	print 'RESULTS:'
 	for interval in intervals:

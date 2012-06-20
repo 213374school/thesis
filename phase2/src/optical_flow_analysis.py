@@ -76,7 +76,7 @@ def calcStd(lst, no_frames=12):
 
 
 smoothingDegree = 100
-data_type = 'vertical_movement'	# vertical_movement, horizontal_movement, mean_vector_length or brightness
+data_type = 'mean_vector_length'	# vertical_movement, horizontal_movement, mean_vector_length or brightness
 
 videoFileName = 'gbZl6ULwBTU.m4v'
 filepath = '../metadata/final/' + videoFileName + '.json'
