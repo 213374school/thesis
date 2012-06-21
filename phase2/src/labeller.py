@@ -146,14 +146,16 @@ def main():
 		
 		if i in frame_list:
 			status = label
+			wait = 1000/24
 		else:
 			status = ''
+			wait = 1000/72
 
 		try:
 			ret, frame = cam.read()
 			cv2.putText(frame, status, (20, 40), cv2.FONT_HERSHEY_PLAIN, 2.0, (0, 255, 0), thickness = 2)
 			cv2.imshow('lk_track', frame)
-			ch = cv2.waitKey(1000/24)
+			ch = cv2.waitKey(wait)
 			if ch == 27:
 				break
 		except:
