@@ -6,6 +6,9 @@ import json
 from time import clock
 import os
 import json
+import video
+import cv2
+from common import draw_str
 
 from labeller_lauge import getSVM
 from labeller_lauge import getContrast
@@ -117,9 +120,6 @@ def main():
 		intervals = []
 
 
-
-
-
 	print 'RESULTS:'
 	for interval in intervals:
 		humanReadable = []
@@ -133,6 +133,33 @@ def main():
 			humanReadable.append('%d:%02d' % (minute,second))
 
 		print '%s to %s' % (humanReadable[0], humanReadable[1])
+
+
+	frame_list = []
+	for (start, end) in intervals:
+		for i in range(start, end):
+			frame_list.append(i)
+
+	cam = video.create_capture(video_src)
+	i = 0
+	while True:
+		
+		if i in frame_list:
+			status = label
+		else:
+			status = ''
+
+		try:
+			ret, frame = cam.read()
+			cv2.putText(frame, status, (20, 40), cv2.FONT_HERSHEY_PLAIN, 2.0, (0, 255, 0), thickness = 2)
+			cv2.imshow('lk_track', frame)
+			ch = cv2.waitKey(1000/24)
+			if ch == 27:
+				break
+		except:
+			break
+
+		i += 1
 
 if __name__ == '__main__':
 	main()

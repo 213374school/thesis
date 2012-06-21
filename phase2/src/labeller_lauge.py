@@ -2,6 +2,9 @@ import numpy as np
 import os
 import json
 
+
+# FUNCTIONS FOR DOING VARIOUS KINDS OF DATA PROCESSING
+
 def triangleSmooth(lst=[], degree=1):
 
 	if degree < 1:
@@ -46,20 +49,68 @@ def calcStd(lst, no_frames=12):
 		varianceList.append(np.std(subList))
 	return varianceList
 
+def distXY(x,y):
+	res = np.sqrt(np.sum((np.linalg.norm(x)-np.linalg.norm(y))**2))    
+	return res
+
+
+
+
+# FUNCTIONS FOR RETRIEVING METADATA
 
 def getSVM(ytid):
-	return []
+	metadata = loadPhase1MetaData(ytid)
+	shiftVectors = metadata.get('shift_vectors')
+	return [distXY((0,0),(x,y)) for [x,y] in shiftVectors]
 
 def getContrast(ytid):
-	return []
+	metadata = loadPhase1MetaData(ytid)
+	return metadata.get('stand_dev')
 
+def getBrightness(ytid):
+	metadata = loadFinalMetadata(ytid)
+	return metadata.get('brightness')
+
+def getVerticalMovement(ytid):
+	metadata = loadFinalMetadata(ytid)
+	return metadata.get('vertical_movement')
+
+def getMeanVectorLength(ytid):
+	metadata = loadFinalMetadata(ytid)
+	return metadata.get('mean_vector_length')
+
+
+def loadFinalMetadata(ytid):
+	
+	# Get metadata
+	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../metadata/final/' + ytid + '.json'
+	if os.path.isfile(filepath):
+		f = open(filepath, 'r+')
+		return json.loads(f.read())
+	else:
+		print 'Metadata file: \'%d\', doesnt exist.' % filepath
+		return
+
+def loadPhase1MetaData(ytid):
+
+	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../../phase1/DataSet/Metadata/' + ytid + '_metadata.txt'
+	if os.path.isfile(filepath):
+		f = open(filepath, 'r+')
+		return json.loads(f.read())
+	else:
+		print 'Metadata file: \'%d\', doesnt exist.' % filepath
+		return
+
+
+
+
+# THE ACTUAL LABELERS
 
 def isDayLabeller(ytid):
 
 	threshold = 50
 
-	metadata = loadFinalMetadata(ytid)
-	data = metadata.get('brightness')
+	data = getBrightness(ytid)
 	if np.mean(data) >= threshold:
 		return [(0,len(data))]
 	else:
@@ -69,14 +120,12 @@ def isNightLabeller(ytid):
 
 	threshold = 50
 
-	metadata = loadFinalMetadata(ytid)
-	data = metadata.get('brightness')
+	data = getBrightness(ytid)
 	if np.mean(data) < threshold:
 		return [(0,len(data))]
 	else:
 		return []
 
-# Calc the sections where vertical oscillating movement happens
 def verticalOscillationLabeller(ytid):
 
 	value_threshold = 5
@@ -84,8 +133,7 @@ def verticalOscillationLabeller(ytid):
 	std_width = 12
 	triangle_smoothing_width = 60
 
-	metadata = loadFinalMetadata(ytid)
-	bins = metadata.get('vertical_movement')
+	bins = getVerticalMovement(ytid)
 	no_frames = len(bins[0])
 
 	# Calculate smoothed standard deviations of the data in the bins
@@ -120,30 +168,21 @@ def verticalOscillationLabeller(ytid):
 
 def isOverviewLabeller(ytid):
 
-	value_threshold = 2
+	flow_threshold = 1
 	no_bin_threshold = 7
+
+	svm_threshold = 10
 	triangle_smoothing_width = 60
 
-	metadata = loadFinalMetadata(ytid)
-	bins = metadata.get('mean_vector_length')
-	no_frames = len(bins[0])
+	bins = getMeanVectorLength(ytid)
+	svms = getSVM(ytid)
+	no_frames = min([len(bins[0]), svms])
 
 
 	# Smooth the bin data
 	for i in range(len(bins)):
 		smoothed = triangleSmooth(bins[i], degree=triangle_smoothing_width)
 		bins[i] = smoothed
-
-
-	# # Plot the data
-	# pylab.figure(figsize=(10,10))
-	# for y in [0,1,2]:
-	# 	for x in [0,1,2]:
-	# 		bin_no = 3 * y + x
-	# 		pylab.subplot2grid((3,3), (y,x))
-	# 		pylab.plot(range(no_frames), bins[bin_no], '-b', linewidth=2.0)
-	# pylab.show()
-
 
 	# Calc sections
 	startPointers = []
@@ -152,10 +191,10 @@ def isOverviewLabeller(ytid):
 	for i in range(no_frames):
 		counter = 0
 		for bin in bins:
-			if bin[i] <= value_threshold:
+			if bin[i] <= flow_threshold:
 				counter += 1
 
-		if counter >= no_bin_threshold:
+		if counter >= no_bin_threshold and svms[i] < svm_threshold:
 			if state == 0:
 				state = 1
 				startPointers.append(i)
@@ -168,16 +207,3 @@ def isOverviewLabeller(ytid):
 		endPointers.append(no_frames)
 
 	return zip(startPointers, endPointers)
-
-
-
-def loadFinalMetadata(ytid):
-	
-	# Get metadata
-	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../metadata/final/' + ytid + '.json'
-	if os.path.isfile(filepath):
-		f = open(filepath, 'r+')
-		return json.loads(f.read())
-	else:
-		print 'Metadata file: \'%d\', doesnt exist.' % filepath
-		return
