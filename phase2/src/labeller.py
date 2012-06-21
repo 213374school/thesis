@@ -113,9 +113,9 @@ def main():
 	elif label == 'is_in_crowd':
 		intervals = isInCrowdLabeller(ytid)
 	elif label == 'has_police':
-		intervals == hasPolicePresenceLabeller(ytid)
+		intervals = hasPolicePresenceLabeller(ytid)
 	elif label == 'has_person_in_focus':
-		intervals == hasPersonInFocusLabeller(ytid)
+		intervals = hasPersonInFocusLabeller(ytid)
 	else:
 		intervals = []
 
