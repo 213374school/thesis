@@ -168,7 +168,7 @@ def verticalOscillationLabeller(ytid):
 
 def isOverviewLabeller(ytid):
 
-	flow_threshold = 1
+	flow_threshold = 2
 	no_bin_threshold = 7
 
 	svm_threshold = 10
@@ -179,7 +179,8 @@ def isOverviewLabeller(ytid):
 	no_frames = min([len(bins[0]), svms])
 
 
-	# Smooth the bin data
+	# Smooth the data
+	svms = triangleSmooth(svms, degree=triangle_smoothing_width)
 	for i in range(len(bins)):
 		smoothed = triangleSmooth(bins[i], degree=triangle_smoothing_width)
 		bins[i] = smoothed
