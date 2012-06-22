@@ -36,8 +36,8 @@ is_night
 vertical_oscillation
 is_overview
 is_in_crowd
-has_police
-has_person_in_focus
+has_police OR -p
+has_person_in_focus OR -f
 '''
 
 
@@ -112,9 +112,11 @@ def main():
 		intervals = isOverviewLabeller(ytid)
 	elif label == 'is_in_crowd':
 		intervals = isInCrowdLabeller(ytid)
-	elif label == 'has_police':
+	elif label in ['has_police', '-p']:
+		label = 'police presence'
 		intervals = hasPolicePresenceLabeller(ytid)
-	elif label == 'has_person_in_focus':
+	elif label in ['has_person_in_focus', '-f']:
+		label = 'person in focus'
 		intervals = hasPersonInFocusLabeller(ytid)
 	else:
 		intervals = []
