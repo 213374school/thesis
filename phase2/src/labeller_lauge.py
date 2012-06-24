@@ -1,6 +1,7 @@
 import numpy as np
 import os
 import json
+from labeller_anders import *
 
 
 # FUNCTIONS FOR DOING VARIOUS KINDS OF DATA PROCESSING
@@ -176,7 +177,8 @@ def isOverviewLabeller(ytid):
 
 	bins = getMeanVectorLength(ytid)
 	svms = getSVM(ytid)
-	no_frames = min([len(bins[0]), len(svms)])
+	person_in_focus = getPersonInFocus(ytid)
+	no_frames = min([len(bins[0]), len(svms), len(person_in_focus)])
 
 
 	# Smooth the data
@@ -190,12 +192,13 @@ def isOverviewLabeller(ytid):
 	endPointers = []
 	state = 0
 	for i in range(no_frames):
+		
 		counter = 0
 		for bin in bins:
 			if bin[i] <= flow_threshold:
 				counter += 1
 
-		if counter >= no_bin_threshold and svms[i] < svm_threshold:
+		if counter >= no_bin_threshold and svms[i] < svm_threshold and not person_in_focus[i]:
 			if state == 0:
 				state = 1
 				startPointers.append(i)
