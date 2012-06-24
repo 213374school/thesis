@@ -233,7 +233,7 @@ def main():
 
 			imgs = []
 			largest_bounding_rectangle_areas = []
-			people_in_frame_counts = []
+			people_counts = []
 			while True:
 				ret, frame = cap.read()
 				if ret:
@@ -242,7 +242,7 @@ def main():
 					break
 
 				# nice to know :D
-				stdout.write('computing: %2.2f%%\r' % (100.0 * index / num_frames))
+				stdout.write('computing: %2.1f%%\r' % (100.0 * index / num_frames))
 				stdout.flush()
 
 				people_count = 0
@@ -251,9 +251,9 @@ def main():
 				for (x,y,w,h),n in body[index]:
 					color = cv.RGB(25, 25, 112) # midnight blue 25-25-112
 					if n > n_min:
-						area = compute_area(w,h)
-						if area > largest_bounding_rectangle_area:
-							largest_bounding_rectangle_area = area
+						# area = compute_area(w,h)
+						# if area > largest_bounding_rectangle_area:
+						# 	largest_bounding_rectangle_area = area
 						people_count += 1
 						cv.Rectangle(img, (x,y), (x+w,y+h), color)
 						cv.PutText(img, 'B', (x+w/2,y+h/2), font, color)
@@ -302,7 +302,7 @@ def main():
 					color = cv.RGB(0, 255, 0) # green
 					people_in_frame_count += 1
 
-				people_in_frame_counts.append(people_in_frame_count)
+				people_counts.append(people_count)
 
 				# are we (with)in a crowd? *PARAM*
 				in_crowd = round(incrowd_sma(int(people_count > 1))) == 1
@@ -319,7 +319,7 @@ def main():
 				in_crowds.append(int(in_crowd))
 				in_focus.append(person_in_focus_center)
 
-			out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus, largest_bounding_rectangle_areas=largest_bounding_rectangle_areas, people_in_frame_counts=people_in_frame_counts))
+			out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus, largest_bounding_rectangle_areas=largest_bounding_rectangle_areas, people_counts=people_counts))
 			# do not write a file if json parser fails
 			if out:
 				# write to disc
@@ -327,7 +327,7 @@ def main():
 				f.write(out)
 				f.close()
 
-			stdout.write('computing: %2.2f%% done\r' % 100.0)
+			stdout.write('computing: %2.1f%% done\r' % 100.0)
 			stdout.flush()
 			print ''
 

@@ -81,7 +81,7 @@ def getPeopleInFrame(ytid):
 		f.close()
 	else:
 		_lib = dict()
-	return _lib.get('people_in_frame_counts', [])	
+	return _lib.get('people_counts', [])	
 
 def getPersonInFocus(ytid):
 
