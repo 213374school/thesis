@@ -4,7 +4,7 @@
 import sys
 import os
 
-helptxt = """usage:\n./batch_object_detection.py folder [mode=faces,body,profile]"""
+helptxt = """usage:\n%s metadata_folder [mode=faces,body,profile]""" % __file__
 
 def main():
     os.system('clear')

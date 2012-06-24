@@ -130,7 +130,7 @@ def get_ytids_lib(metadata_folder):
 def get_video(metadata_folder, ytid):
 
 	data_folder = '%s/../data' % metadata_folder
-	cap, fps = None, 0
+	cap, fps, w, h, num_frames = None, -1, -1, -1, -1
 	for i in range(1,5):
 		# check each "coreX" folder
 		exts = ['m4v', 'avi']
@@ -164,6 +164,7 @@ def main():
 	else:
 		show_video = False
 		show_plot = False
+		ytid = None
 		try:
 			args = sys.argv[2:]
 		except:
@@ -198,6 +199,10 @@ def main():
 			pr = json.loads(open('%s/profile/%s.json'	% (metadata_folder, ytid),'r').read())
 			
 			cap, fps, vw, vh, num_frames = get_video(metadata_folder, ytid)
+			if not cap:
+				print 'error in %s' % ytid
+				continue
+				
 			font = cv.InitFont(cv.CV_FONT_HERSHEY_PLAIN, 1.0, 1.0)
 			body = bd.get('body')
 			face = fd.get('faces')
@@ -223,7 +228,12 @@ def main():
 			period = 12 # *PARAM*
 			incrowd_sma = Simplemovingaverage(period)
 
+			def compute_area(w,h):
+				return w*h
+
 			imgs = []
+			largest_bounding_rectangle_areas = []
+			people_in_frame_counts = []
 			while True:
 				ret, frame = cap.read()
 				if ret:
@@ -237,9 +247,13 @@ def main():
 
 				people_count = 0
 				person_in_focus_center = False
+				largest_bounding_rectangle_area = 0
 				for (x,y,w,h),n in body[index]:
 					color = cv.RGB(25, 25, 112) # midnight blue 25-25-112
 					if n > n_min:
+						area = compute_area(w,h)
+						if area > largest_bounding_rectangle_area:
+							largest_bounding_rectangle_area = area
 						people_count += 1
 						cv.Rectangle(img, (x,y), (x+w,y+h), color)
 						cv.PutText(img, 'B', (x+w/2,y+h/2), font, color)
@@ -248,6 +262,9 @@ def main():
 				for (x,y,w,h),n in face[index]:
 					color = cv.RGB(0, 100, 0) # dark green 0-100-0
 					if n > n_min:
+						area = compute_area(w,h)
+						if area > largest_bounding_rectangle_area:
+							largest_bounding_rectangle_area = area						
 						people_count += 1
 						cv.Rectangle(img, (x,y), (x+w,y+h), color)						
 						cv.PutText(img, 'F', (x+w/2,y+h/2), font, color)
@@ -256,11 +273,16 @@ def main():
 				for (x,y,w,h),n in prof[index]:
 					color = cv.RGB(178, 34, 34) # firebrick 178-34-34
 					if n > n_min:
+						area = compute_area(w,h)
+						if area > largest_bounding_rectangle_area:
+							largest_bounding_rectangle_area = area						
 						people_count += 1
 						cv.Rectangle(img, (x,y), (x+w,y+h), color)						
 						cv.PutText(img, 'P', (x+w/2,y+h/2), font, color)
 						if not person_in_focus_center:
 							person_in_focus_center = is_in_focus_center(x,y,w,h)
+
+				largest_bounding_rectangle_areas.append(largest_bounding_rectangle_area)
 
 				index += 1
 
@@ -280,6 +302,8 @@ def main():
 					color = cv.RGB(0, 255, 0) # green
 					people_in_frame_count += 1
 
+				people_in_frame_counts.append(people_in_frame_count)
+
 				# are we (with)in a crowd? *PARAM*
 				in_crowd = round(incrowd_sma(int(people_count > 1))) == 1
 
@@ -295,7 +319,7 @@ def main():
 				in_crowds.append(int(in_crowd))
 				in_focus.append(person_in_focus_center)
 
-			out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus))
+			out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus, largest_bounding_rectangle_areas=largest_bounding_rectangle_areas, people_in_frame_counts=people_in_frame_counts))
 			# do not write a file if json parser fails
 			if out:
 				# write to disc

@@ -51,8 +51,37 @@ def calcStd(lst, no_frames=12):
 	return varianceList
 
 
+def getLargestBoundingRectangleArea(ytid):
+	try:
+		ytid = ytid.split('.')[0]
+	except Exception as e:
+		print e, ytid	
+
+	metadata_filename = '%s/metadata/peopledetect/%s.json' % (os.path.dirname(os.path.realpath(__file__)) + '/../', ytid)
+	if os.path.isfile(metadata_filename):
+		f = open(metadata_filename,'r')
+		content = f.read()
+		_lib = json.loads(content)     
+		f.close()
+	else:
+		_lib = dict()
+	return _lib.get('largest_bounding_rectangle_areas', [])
+
 def getPeopleInFrame(ytid):
-	return []
+	try:
+		ytid = ytid.split('.')[0]
+	except Exception as e:
+		print e, ytid	
+
+	metadata_filename = '%s/metadata/peopledetect/%s.json' % (os.path.dirname(os.path.realpath(__file__)) + '/../', ytid)
+	if os.path.isfile(metadata_filename):
+		f = open(metadata_filename,'r')
+		content = f.read()
+		_lib = json.loads(content)     
+		f.close()
+	else:
+		_lib = dict()
+	return _lib.get('people_in_frame_counts', [])	
 
 def getPersonInFocus(ytid):
 
