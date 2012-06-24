@@ -108,7 +108,7 @@ def loadPhase1MetaData(ytid):
 
 def isDayLabeller(ytid):
 
-	threshold = 50
+	threshold = 60
 
 	data = getBrightness(ytid)
 	if np.mean(data) >= threshold:
@@ -118,7 +118,7 @@ def isDayLabeller(ytid):
 
 def isNightLabeller(ytid):
 
-	threshold = 50
+	threshold = 60
 
 	data = getBrightness(ytid)
 	if np.mean(data) < threshold:
@@ -176,7 +176,7 @@ def isOverviewLabeller(ytid):
 
 	bins = getMeanVectorLength(ytid)
 	svms = getSVM(ytid)
-	no_frames = min([len(bins[0]), svms])
+	no_frames = min([len(bins[0]), len(svms)])
 
 
 	# Smooth the data
