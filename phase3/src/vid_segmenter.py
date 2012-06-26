@@ -145,7 +145,8 @@ def getVideoMetadata(video_src, load_video=False):
 	# if metadata is non-existing then we need to load the video anyways
 	# if not load_video and not metadata_exists:
 	# 	print '%s not found, must load video...' % metadata_filename
-	load_video = load_video or not metadata_exists
+	metadata = dict()
+	load_video = load_video or not (metadata.get('phase1', {}).get('rmsdiffs') and metadata.get('phase1', {}).get('shift_vectors') and metadata.get('phase1', {}).get('stand_dev'))
 	if load_video:
 		print 'loading video: %s' % video_src
 		while True:
@@ -156,7 +157,6 @@ def getVideoMetadata(video_src, load_video=False):
 			else:
 				break
 
-	metadata = dict()
 	# first check if metadata is already on disk
 	if metadata_exists:
 		# load from file and return that shite!
@@ -167,9 +167,9 @@ def getVideoMetadata(video_src, load_video=False):
 		# print 'loaded as json: ', d
 		f.close()
 
-	if metadata.get('phase1'):
+	if metadata.get('phase1', {}).get('rmsdiffs') and metadata.get('phase1', {}).get('shift_vectors') and metadata.get('phase1', {}).get('stand_dev'):
 		return metadata,frames
-	else:
+	elif not metadata.get('phase1', {}):
 		metadata['phase1'] = dict()
 
 	fps = cv.GetCaptureProperty(cv.CaptureFromFile(video_src), cv.CV_CAP_PROP_FPS)
@@ -303,7 +303,7 @@ def main():
 		else:
 			video_src = arg1			
 		
-	getVideoMetadata(video_src)
+	metadata, frames = getVideoMetadata(video_src)
 
 if __name__ == '__main__':
 	main()

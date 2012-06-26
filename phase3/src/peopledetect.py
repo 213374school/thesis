@@ -158,7 +158,7 @@ def is_in_focus_center(x,y,w,h):
 
 def main():
 	try:
-		metadata_folder = sys.argv[1]
+		video_src = sys.argv[1]
 	except:
 		print helptxt
 	else:
@@ -180,7 +180,7 @@ def main():
 			else:
 				ytid = arg
 
-		ytids_lib = get_ytids_lib(metadata_folder)
+		# ytids_lib = get_ytids_lib(metadata_folder)
 
 		### display youtube id's and their index
 		# i = 0
@@ -188,179 +188,185 @@ def main():
 		# 	print '%d: %s' % (i, v)
 		# 	i += 1
 
-		ytids = ytids_lib.get('ytids', [])
-		if ytid:
-			ytids = [ytid]
+		# ytids = ytids_lib.get('ytids', [])
+		# if ytid:
+		# 	ytids = [ytid]
 		# ytids = [ytids[10]] # 10,20 = tale, 32 = tæt på i crowd, 33 = a bit of everything
-		for ytid in ytids:
+		# for ytid in ytids:
 
-			bd = json.loads(open('%s/bodydetect/%s.json' % (metadata_folder, ytid),'r').read())
-			fd = json.loads(open('%s/facedetect/%s.json' % (metadata_folder, ytid),'r').read())
-			pr = json.loads(open('%s/profile/%s.json'	% (metadata_folder, ytid),'r').read())
+		filename = video_src.split('/')[-1]
+		ytid = filename.split('.')[0]
+		metadata_folder = './metadata'
+
+		bd = json.loads(open('%s/bodydetect/%s.json' % (metadata_folder, ytid),'r').read())
+		fd = json.loads(open('%s/facedetect/%s.json' % (metadata_folder, ytid),'r').read())
+		pr = json.loads(open('%s/profile/%s.json'	% (metadata_folder, ytid),'r').read())
+		
+		cap, fps, vw, vh, num_frames = get_video(metadata_folder, ytid)
+		if not cap:
+			print 'error in %s' % ytid
+			return
+			# continue
 			
-			cap, fps, vw, vh, num_frames = get_video(metadata_folder, ytid)
-			if not cap:
-				print 'error in %s' % ytid
-				continue
-				
-			font = cv.InitFont(cv.CV_FONT_HERSHEY_PLAIN, 1.0, 1.0)
-			body = bd.get('body')
-			face = fd.get('faces')
-			prof = pr.get('profile')
+		font = cv.InitFont(cv.CV_FONT_HERSHEY_PLAIN, 1.0, 1.0)
+		body = bd.get('body')
+		face = fd.get('faces')
+		prof = pr.get('profile')
 
-			# check for consistency
-			if len(body) == len(face) and len(face) == len(prof):
-				detected_objects = [body[i] + face[i] + prof[i] for i in range(len(body))]
+		# check for consistency
+		if len(body) == len(face) and len(face) == len(prof):
+			detected_objects = [body[i] + face[i] + prof[i] for i in range(len(body))]
 
-			index = 0
-			person_in_focus_frames_count = 0
-			people_in_frame_count = 0
-			in_crowds = []
-			in_focus = []
-			# minimum number of neighboring rectangles (7 or 8 seems like a good value - there is an article where they determine that 7 is the best REF!!!)
-			n_min = 7 # *PARAM*
+		index = 0
+		person_in_focus_frames_count = 0
+		people_in_frame_count = 0
+		in_crowds = []
+		in_focus = []
+		# minimum number of neighboring rectangles (7 or 8 seems like a good value - there is an article where they determine that 7 is the best REF!!!)
+		n_min = 7 # *PARAM*
 
-			# setup simple moving average
-			period = 4 # *PARAM*
-			ppl_cnt_sma = Simplemovingaverage(period)
-			period = 4 # *PARAM*
-			focus_sma = Simplemovingaverage(period)
-			period = 12 # *PARAM*
-			incrowd_sma = Simplemovingaverage(period)
+		# setup simple moving average
+		period = 4 # *PARAM*
+		ppl_cnt_sma = Simplemovingaverage(period)
+		period = 4 # *PARAM*
+		focus_sma = Simplemovingaverage(period)
+		period = 12 # *PARAM*
+		incrowd_sma = Simplemovingaverage(period)
 
-			def compute_area(w,h):
-				return w*h
+		def compute_area(w,h):
+			return w*h
 
-			imgs = []
-			largest_bounding_rectangle_areas = []
-			people_counts = []
-			while True:
-				ret, frame = cap.read()
-				if ret:
-					img = cv.fromarray(frame)
-				else:
-					break
+		imgs = []
+		largest_bounding_rectangle_areas = []
+		people_counts = []
+		while True:
+			ret, frame = cap.read()
+			if ret:
+				img = cv.fromarray(frame)
+			else:
+				break
 
-				# nice to know :D
-				stdout.write('computing: %2.1f%%\r' % (100.0 * index / num_frames))
-				stdout.flush()
-
-				people_count = 0
-				person_in_focus_center = False
-				largest_bounding_rectangle_area = 0
-				for (x,y,w,h),n in body[index]:
-					color = cv.RGB(25, 25, 112) # midnight blue 25-25-112
-					if n > n_min:
-						# area = compute_area(w,h)
-						# if area > largest_bounding_rectangle_area:
-						# 	largest_bounding_rectangle_area = area
-						people_count += 1
-						cv.Rectangle(img, (x,y), (x+w,y+h), color)
-						cv.PutText(img, 'B', (x+w/2,y+h/2), font, color)
-						if not person_in_focus_center:
-							person_in_focus_center = is_in_focus_center(x,y,w,h)
-				for (x,y,w,h),n in face[index]:
-					color = cv.RGB(0, 100, 0) # dark green 0-100-0
-					if n > n_min:
-						area = compute_area(w,h)
-						if area > largest_bounding_rectangle_area:
-							largest_bounding_rectangle_area = area						
-						people_count += 1
-						cv.Rectangle(img, (x,y), (x+w,y+h), color)						
-						cv.PutText(img, 'F', (x+w/2,y+h/2), font, color)
-						if not person_in_focus_center:
-							person_in_focus_center = is_in_focus_center(x,y,w,h)
-				for (x,y,w,h),n in prof[index]:
-					color = cv.RGB(178, 34, 34) # firebrick 178-34-34
-					if n > n_min:
-						area = compute_area(w,h)
-						if area > largest_bounding_rectangle_area:
-							largest_bounding_rectangle_area = area						
-						people_count += 1
-						cv.Rectangle(img, (x,y), (x+w,y+h), color)						
-						cv.PutText(img, 'P', (x+w/2,y+h/2), font, color)
-						if not person_in_focus_center:
-							person_in_focus_center = is_in_focus_center(x,y,w,h)
-
-				largest_bounding_rectangle_areas.append(largest_bounding_rectangle_area)
-
-				index += 1
-
-				# person in center focus
-				person_in_focus_center = round(focus_sma(int(person_in_focus_center)))
-				color = cv.RGB(255, 0, 0) # red
-				if person_in_focus_center:
-					color = cv.RGB(0, 255, 0) # green
-					person_in_focus_frames_count += 1
-				ul, lr = center_rectangle
-				cv.Rectangle(img, ul, lr, color)
-
-				# before moving avr.
-				people_counts.append(people_count)
-
-				# people count
-				people_count = ppl_cnt_sma(float(people_count))
-				color = cv.RGB(255, 0, 0) # red
-				if people_count:
-					color = cv.RGB(0, 255, 0) # green
-					people_in_frame_count += 1
-
-				# are we (with)in a crowd? *PARAM*
-				in_crowd = round(incrowd_sma(int(people_count > 1))) == 1
-
-				cv.PutText(img, '%02d:%02d of %02d:%02d' % (index / fps / 60, (index / fps) % 60, num_frames / fps / 60, (num_frames / fps) % 60), (vw - 130, 16), font, cv.RGB(0, 0, 0))
-
-				cv.PutText(img, 'mov. avr. people count: %d' % people_count, (4, 16), font, color)
-				cv.PutText(img, 'in crowd: %s' % str(in_crowd), (4, 32), font, cv.RGB(0, 255, 0) if people_count > 1 else cv.RGB(255, 0, 0))
-				cv.PutText(img, 'people in frame count: %d (%2.1f%%)' % (people_in_frame_count, 100.0 * people_in_frame_count / index), (4, vh-int(1.0*24)), font, cv.RGB(255, 255, 255))
-				cv.PutText(img, 'person in focus count: %d (%2.1f%%)' % (person_in_focus_frames_count, 100.0 * person_in_focus_frames_count / index), (4, vh-int(0.5*24)), font, cv.RGB(255, 255, 255))
-
-				if show_video:
-					imgs.append(img)
-				in_crowds.append(int(in_crowd))
-				in_focus.append(person_in_focus_center)
-
-			out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus, largest_bounding_rectangle_areas=largest_bounding_rectangle_areas, people_counts=people_counts))
-			# do not write a file if json parser fails
-			if out:
-				# write to disc
-				f = open('%s/peopledetect/%s.json' % (metadata_folder, ytid),'w') 
-				f.write(out)
-				f.close()
-
-			stdout.write('computing: %2.1f%% done\r' % 100.0)
+			# nice to know :D
+			stdout.write('computing: %2.1f%%\r' % (100.0 * index / num_frames))
 			stdout.flush()
-			print ''
+
+			people_count = 0
+			person_in_focus_center = False
+			largest_bounding_rectangle_area = 0
+			for (x,y,w,h),n in body[index]:
+				color = cv.RGB(25, 25, 112) # midnight blue 25-25-112
+				if n > n_min:
+					# area = compute_area(w,h)
+					# if area > largest_bounding_rectangle_area:
+					# 	largest_bounding_rectangle_area = area
+					people_count += 1
+					cv.Rectangle(img, (x,y), (x+w,y+h), color)
+					cv.PutText(img, 'B', (x+w/2,y+h/2), font, color)
+					if not person_in_focus_center:
+						person_in_focus_center = is_in_focus_center(x,y,w,h)
+			for (x,y,w,h),n in face[index]:
+				color = cv.RGB(0, 100, 0) # dark green 0-100-0
+				if n > n_min:
+					area = compute_area(w,h)
+					if area > largest_bounding_rectangle_area:
+						largest_bounding_rectangle_area = area						
+					people_count += 1
+					cv.Rectangle(img, (x,y), (x+w,y+h), color)						
+					cv.PutText(img, 'F', (x+w/2,y+h/2), font, color)
+					if not person_in_focus_center:
+						person_in_focus_center = is_in_focus_center(x,y,w,h)
+			for (x,y,w,h),n in prof[index]:
+				color = cv.RGB(178, 34, 34) # firebrick 178-34-34
+				if n > n_min:
+					area = compute_area(w,h)
+					if area > largest_bounding_rectangle_area:
+						largest_bounding_rectangle_area = area						
+					people_count += 1
+					cv.Rectangle(img, (x,y), (x+w,y+h), color)						
+					cv.PutText(img, 'P', (x+w/2,y+h/2), font, color)
+					if not person_in_focus_center:
+						person_in_focus_center = is_in_focus_center(x,y,w,h)
+
+			largest_bounding_rectangle_areas.append(largest_bounding_rectangle_area)
+
+			index += 1
+
+			# person in center focus
+			person_in_focus_center = round(focus_sma(int(person_in_focus_center)))
+			color = cv.RGB(255, 0, 0) # red
+			if person_in_focus_center:
+				color = cv.RGB(0, 255, 0) # green
+				person_in_focus_frames_count += 1
+			ul, lr = center_rectangle
+			cv.Rectangle(img, ul, lr, color)
+
+			# before moving avr.
+			people_counts.append(people_count)
+
+			# people count
+			people_count = ppl_cnt_sma(float(people_count))
+			color = cv.RGB(255, 0, 0) # red
+			if people_count:
+				color = cv.RGB(0, 255, 0) # green
+				people_in_frame_count += 1
+
+			# are we (with)in a crowd? *PARAM*
+			in_crowd = round(incrowd_sma(int(people_count > 1))) == 1
+
+			cv.PutText(img, '%02d:%02d of %02d:%02d' % (index / fps / 60, (index / fps) % 60, num_frames / fps / 60, (num_frames / fps) % 60), (vw - 130, 16), font, cv.RGB(0, 0, 0))
+
+			cv.PutText(img, 'mov. avr. people count: %d' % people_count, (4, 16), font, color)
+			cv.PutText(img, 'in crowd: %s' % str(in_crowd), (4, 32), font, cv.RGB(0, 255, 0) if people_count > 1 else cv.RGB(255, 0, 0))
+			cv.PutText(img, 'people in frame count: %d (%2.1f%%)' % (people_in_frame_count, 100.0 * people_in_frame_count / index), (4, vh-int(1.0*24)), font, cv.RGB(255, 255, 255))
+			cv.PutText(img, 'person in focus count: %d (%2.1f%%)' % (person_in_focus_frames_count, 100.0 * person_in_focus_frames_count / index), (4, vh-int(0.5*24)), font, cv.RGB(255, 255, 255))
 
 			if show_video:
-				for img in imgs:
-					ShowImage("people detection demo, %s" % ytid, img)
-					cv2.waitKey(int(1000.0/fps))
+				imgs.append(img)
+			in_crowds.append(int(in_crowd))
+			in_focus.append(person_in_focus_center)
 
-			if show_plot:
+		# out = json.dumps(dict(in_crowds=in_crowds, in_focus=in_focus, largest_bounding_rectangle_areas=largest_bounding_rectangle_areas, people_counts=people_counts))
+		out = json.dumps(dict(in_focus=in_focus, largest_bounding_rectangle_areas=largest_bounding_rectangle_areas, people_counts=people_counts))
+		# do not write a file if json parser fails
+		if out:
+			# write to disc
+			f = open('%s/peopledetect/%s.json' % (metadata_folder, ytid),'w') 
+			f.write(out)
+			f.close()
 
-				t = np.linspace(0, num_frames/fps, num_frames)
+		stdout.write('computing: %2.1f%% done\r' % 100.0)
+		stdout.flush()
+		print ''
 
-				pylab.figure(figsize=(10,10))		
-				pylab.suptitle('%s' % ytid, fontsize=16)
+		if show_video:
+			for img in imgs:
+				ShowImage("people detection demo, %s" % ytid, img)
+				cv2.waitKey(int(1000.0/fps))
 
-				in_crowds_smooth = smoothTriangle(in_crowds, 6)
-				pylab.subplot(2,1,1, title='in crowd')
-				pylab.plot(t, in_crowds_smooth,".k")  
-				pylab.plot(t, in_crowds_smooth,"-k")  
-				pylab.axis([0,t[-1],0,1.1])
-				pylab.xlabel('secs.')
-				pylab.grid(True)
+		if show_plot:
 
-				in_focus_smooth = smoothTriangle(in_focus, 6)
-				pylab.subplot(2,1,2, title='in focus')
-				pylab.plot(t, in_focus_smooth,".k")  
-				pylab.plot(t, in_focus_smooth,"-k")  
-				pylab.axis([0,t[-1],0,1.1])
-				pylab.xlabel('secs.')
-				pylab.grid(True)
+			t = np.linspace(0, num_frames/fps, num_frames)
 
-				pylab.show()			
+			pylab.figure(figsize=(10,10))		
+			pylab.suptitle('%s' % ytid, fontsize=16)
+
+			in_crowds_smooth = smoothTriangle(in_crowds, 6)
+			pylab.subplot(2,1,1, title='in crowd')
+			pylab.plot(t, in_crowds_smooth,".k")  
+			pylab.plot(t, in_crowds_smooth,"-k")  
+			pylab.axis([0,t[-1],0,1.1])
+			pylab.xlabel('secs.')
+			pylab.grid(True)
+
+			in_focus_smooth = smoothTriangle(in_focus, 6)
+			pylab.subplot(2,1,2, title='in focus')
+			pylab.plot(t, in_focus_smooth,".k")  
+			pylab.plot(t, in_focus_smooth,"-k")  
+			pylab.axis([0,t[-1],0,1.1])
+			pylab.xlabel('secs.')
+			pylab.grid(True)
+
+			pylab.show()			
 
 # ./src/peopledetect.py "metadata"
 if __name__ == "__main__":
