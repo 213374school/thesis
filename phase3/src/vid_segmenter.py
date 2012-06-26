@@ -11,6 +11,8 @@ import math
 import sys
 import pylab
 import os.path
+# for printing on one line
+from sys import stdout
 
 # Find a JSON parser
 try:
@@ -122,23 +124,23 @@ def shift(a,xy):
 def getVideoMetadata(video_src, load_video=False):
 
 	cap = video.create_capture(video_src)
+	filename = video_src.split('/')[-1]
+	ytid = filename.split('.')[0]
 
 	# directions to shift (x,y): down, up, left, right
 	directions = [np.array([0,-1]),np.array([0,1]),np.array([-1,0]),np.array([1,0])]
 
 	frames = []
-	metadata_filename = video_src + '_metadata.txt'
+	metadata_filename = './metadata/%s.json' % ytid
 	metadata_exists = os.path.isfile(metadata_filename)
-
-	filename = video_src.split('/')[-1]
 	# print filename
-	if not metadata_exists:
-		# check in the metadata folder
-		new_path = './DataSet/Metadata/%s_metadata.txt' % filename
+	# if not metadata_exists:
+	# 	# check in the metadata folder
+	# 	new_path = '.metadata/%s_metadata.txt' % filename
 		# print 'new_path: %s' % new_path
-		metadata_exists = os.path.isfile(new_path)
-		if metadata_exists:
-			metadata_filename = new_path
+		# metadata_exists = os.path.isfile(new_path)
+		# if metadata_exists:
+		# 	metadata_filename = new_path
 
 	# if metadata is non-existing then we need to load the video anyways
 	# if not load_video and not metadata_exists:
@@ -154,29 +156,37 @@ def getVideoMetadata(video_src, load_video=False):
 			else:
 				break
 
+	metadata = dict()
 	# first check if metadata is already on disk
 	if metadata_exists:
 		# load from file and return that shite!
 		f = open(metadata_filename,'r')
 		content = f.read()
-		d = json.loads(content)		
+		metadata = json.loads(content)
 		# print 'found on disc: ', content
 		# print 'loaded as json: ', d
 		f.close()
-		return d,frames
+
+	if metadata.get('phase1'):
+		return metadata,frames
+	else:
+		metadata['phase1'] = dict()
 
 	fps = cv.GetCaptureProperty(cv.CaptureFromFile(video_src), cv.CV_CAP_PROP_FPS)
 
 	shift_vectors = []
 	# using a sliding window of 5 frames (avr. of 5 frames)
-	shift_vectors_sliding = []
+	# shift_vectors_sliding = []
 	rmsdiffs = []
 	stand_dev = []
 	for i in range(0,len(frames)):
 
+		stdout.write('video analysis (quality) in %s: %2.2f%% done -> (mm:ss): %02d:%02d\r' % (ytid, 100.0 * i / len(frames), (i/24)/60, (i/24)%60))
+		stdout.flush()		
+
 		# print feedback every minute of data processed
-		if i % (fps * 60) == 0:
-			print '%2.1f%% of %s' % (100 * float(i) / float(len(frames)), video_src)
+		# if i % (fps * 60) == 0:
+		# 	print '%2.1f%% of %s' % (100 * float(i) / float(len(frames)), video_src)
 			
 		stand_dev.append(math.sqrt(np.var(frames[i])))
 		# for i in range(0,25):
@@ -245,42 +255,53 @@ def getVideoMetadata(video_src, load_video=False):
 			# x & y are of type numpy.int64 which json cannot parse
 			shift_vectors.append((x,y))
 			rmsdiffs.append(lowest_rms_diff)
-			if len(shift_vectors) < 5:
-				shift_vectors_sliding.append((x,y))
-			else:
-				xs = [x for x,y in shift_vectors[-5:]]
-				ys = [y for x,y in shift_vectors[-5:]]
-				x = int(sum(xs) / 5.0)
-				y = int(sum(ys) / 5.0)
-				shift_vectors_sliding.append((x,y))
 
-	d = {'rmsdiffs' : rmsdiffs, 'shift_vectors' : shift_vectors, 'shift_vectors_sliding' : shift_vectors_sliding, 'stand_dev':stand_dev}
-	content = json.dumps(d)
+			# if len(shift_vectors) < 5:
+			# 	shift_vectors_sliding.append((x,y))
+			# else:
+			# 	xs = [x for x,y in shift_vectors[-5:]]
+			# 	ys = [y for x,y in shift_vectors[-5:]]
+			# 	x = int(sum(xs) / 5.0)
+			# 	y = int(sum(ys) / 5.0)
+			# 	shift_vectors_sliding.append((x,y))
 
+	# d = {'rmsdiffs' : rmsdiffs, 'shift_vectors' : shift_vectors, 'shift_vectors_sliding' : shift_vectors_sliding, 'stand_dev':stand_dev}
+	# d = {'phase1' : {'rmsdiffs' : rmsdiffs, 'shift_vectors' : shift_vectors, 'stand_dev' : stand_dev}}
+
+	metadata['phase1']['rmsdiffs'] = rmsdiffs
+	metadata['phase1']['shift_vectors'] = shift_vectors
+	metadata['phase1']['stand_dev'] = stand_dev
+
+	content = json.dumps(metadata)
 	# do not write a file if json parser fails
 	if content:
 		# write to disc
 		f = open(metadata_filename,'w')	
 		f.write(content)
 		f.close()
+	else:
+		print '\nerror when writing metadata for %s' % ytid
 
-	print '%2d%% of %s' % (100, video_src)
+	# print '%2d%% of %s' % (100, video_src)
+	stdout.write('video analysis (quality) in %s: %2.2f%% done\r' % (ytid, 100.0))
+	stdout.flush()
+	print ''
 
-	return d,frames
+	return metadata,frames
 
 def main():
-	video_src = None
+
 	try:
-		arg1 = sys.argv[1]
+		arg1 = sys.argv[1]	
+	except:		
+		print help_message
+		return
+	else:
 		if arg1 == '-?':
 			print help_message
 			return
 		else:
-			video_src = arg1	
-	except:		
-		if video_src is None:
-			print help_message
-			return
+			video_src = arg1			
 		
 	getVideoMetadata(video_src)
 
