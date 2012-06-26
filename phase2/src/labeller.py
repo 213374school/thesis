@@ -25,6 +25,7 @@ from labeller_anders import getBlueChannelMean
 
 from labeller_anders import hasPolicePresenceLabeller
 from labeller_anders import hasPersonInFocusLabeller
+from labeller_anders import isInCrowd
 
 
 
@@ -35,7 +36,7 @@ is_day
 is_night
 vertical_oscillation
 is_overview
-is_in_crowd
+is_in_crowd OR -c
 has_police OR -p
 has_person_in_focus OR -f
 '''
@@ -87,9 +88,7 @@ def calcStd(lst, no_frames=12):
 
 
 def isInCrowdLabeller(ytid):
-	return []
-
-
+	return isInCrowd(ytid)
 
 def main():
 	import sys
@@ -102,6 +101,7 @@ def main():
 
 	ytid = (video_src.split('/'))[-1]
 	
+	labels = []
 	if label == 'is_day':
 		intervals = isDayLabeller(ytid)
 	elif label == 'is_night':
@@ -110,8 +110,10 @@ def main():
 		intervals = verticalOscillationLabeller(ytid)
 	elif label == 'is_overview':
 		intervals = isOverviewLabeller(ytid)
-	elif label == 'is_in_crowd':
-		intervals = isInCrowdLabeller(ytid)
+	elif label in ['is_in_crowd', '-c']:
+		label = 'crowd'
+		intervals, labels = isInCrowdLabeller(ytid)
+		print intervals
 	elif label in ['has_police', '-p']:
 		label = 'police presence'
 		intervals = hasPolicePresenceLabeller(ytid)
@@ -142,28 +144,28 @@ def main():
 		for i in range(start, end):
 			frame_list.append(i)
 
+	print video_src
 	cam = video.create_capture(video_src)
 	i = 0
 	while True:
-		
-		if i in frame_list:
-			status = label
-			wait = 1000/24
-		else:
-			status = ''
-			wait = 1000/72
-
-		try:
-			ret, frame = cam.read()
-			cv2.putText(frame, status, (20, 40), cv2.FONT_HERSHEY_PLAIN, 2.0, (0, 255, 0), thickness = 2)
-			cv2.imshow('lk_track', frame)
+		ret, frame = cam.read()
+		if ret:
+			status = labels[i] if labels else label
+			if i in frame_list:
+				color = (0, 255, 0)
+				wait = 1000/24
+			else:
+				color = (0, 0, 255)
+				wait = int(1000/(3.5*24))
+				
+			cv2.putText(frame, status, (20, 40), cv2.FONT_HERSHEY_PLAIN, 2.0, color, thickness = 2)
+			cv2.imshow('%s' % video_src, frame)
 			ch = cv2.waitKey(wait)
 			if ch == 27:
 				break
-		except:
+			i += 1
+		else:
 			break
-
-		i += 1
 
 if __name__ == '__main__':
 	main()

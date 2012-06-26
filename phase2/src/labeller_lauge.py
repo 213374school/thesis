@@ -89,8 +89,7 @@ def loadFinalMetadata(ytid):
 		f = open(filepath, 'r+')
 		return json.loads(f.read())
 	else:
-		print 'Metadata file: \'%d\', doesnt exist.' % filepath
-		return
+		raise Exception('Metadata file: "%s", does not exist.' % filepath)
 
 def loadPhase1MetaData(ytid):
 

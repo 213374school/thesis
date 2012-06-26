@@ -296,7 +296,7 @@ def main():
 				cv.Rectangle(img, ul, lr, color)
 
 				# people count
-				people_count = ppl_cnt_sma(people_count)
+				people_count = ppl_cnt_sma(float(people_count))
 				color = cv.RGB(255, 0, 0) # red
 				if people_count:
 					color = cv.RGB(0, 255, 0) # green
