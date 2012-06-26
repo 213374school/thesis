@@ -206,7 +206,7 @@ def smooth_and_merge(a, smoothness_degree=36, cutoff_val=0.3333, max_interval_ne
 		return []
 
 
-def isInCrowd(ytid, smoothness_degree=24, cutoff_val=0.33, max_interval_neighbor_distance=24, min_interval_size=2.5*24):
+def isInCrowd(ytid, smoothness_degree=24, cutoff_val=0.90, max_interval_neighbor_distance=24, min_interval_size=2.5*24):
 
 	try:
 		ytid = ytid.split('.')[0]
@@ -222,7 +222,7 @@ def isInCrowd(ytid, smoothness_degree=24, cutoff_val=0.33, max_interval_neighbor
 	else:
 		_lib = dict()
 	people_counts = _lib.get('people_counts', [])
-	
+
 	# from labeller_lauge import getMeanVectorLength
 	# mvl_bins = getMeanVectorLength(ytid + '.m4v')
 	# mean_vector_length = []
@@ -231,25 +231,27 @@ def isInCrowd(ytid, smoothness_degree=24, cutoff_val=0.33, max_interval_neighbor
 	# 	for bin in mvl_bins:
 	# 		tmp.append(bin[i])
 	# 	mean_vector_length.append(np.mean(tmp))
-
 	# print len(mean_vector_length), len(people_counts)
 
-	in_crowd = []
-	labels = []
-	people_count_lower_limit = 0.90
-	people_count_smoothness_degree = 24
+	# in_crowd = []
+	# labels = []
+	# people_count_lower_limit = 0.90
+	# people_count_smoothness_degree = 24
 
-	people_counts_smooth = triangleSmooth(people_counts, people_count_smoothness_degree)
+	# people_counts_smooth = triangleSmooth(people_counts, people_count_smoothness_degree)
 
-	for i in range(len(people_counts)):
-		if people_counts_smooth[i] > people_count_lower_limit:
-			in_crowd.append(1)
-		else:
-			in_crowd.append(0)
-		label = '(ppl_cnt > lim): (%2.2f > %2.2f)' % (people_counts_smooth[i], people_count_lower_limit)
-		labels.append(label)
+	# for i in range(len(people_counts)):
+	# 	if people_counts_smooth[i] > people_count_lower_limit:
+	# 		in_crowd.append(1)
+	# 	else:
+	# 		in_crowd.append(0)
+	# 	label = '(ppl_cnt > lim): (%2.2f > %2.2f)' % (people_counts_smooth[i], people_count_lower_limit)
+	# 	labels.append(label)
 
-	return smooth_and_merge(in_crowd, smoothness_degree=smoothness_degree, cutoff_val=cutoff_val, max_interval_neighbor_distance=max_interval_neighbor_distance, min_interval_size=min_interval_size), labels
+	# return smooth_and_merge(in_crowd, smoothness_degree=smoothness_degree, cutoff_val=cutoff_val, max_interval_neighbor_distance=max_interval_neighbor_distance, min_interval_size=min_interval_size), labels
+
+	# all of above is equivalent to:
+	return smooth_and_merge(people_counts, smoothness_degree=smoothness_degree, cutoff_val=cutoff_val, max_interval_neighbor_distance=max_interval_neighbor_distance, min_interval_size=min_interval_size), None
 
 def hasPolicePresenceLabeller(ytid, max_interval_neighbor_distance=48, min_interval_size=24):
 
