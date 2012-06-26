@@ -295,14 +295,15 @@ def main():
 				ul, lr = center_rectangle
 				cv.Rectangle(img, ul, lr, color)
 
+				# before moving avr.
+				people_counts.append(people_count)
+
 				# people count
 				people_count = ppl_cnt_sma(float(people_count))
 				color = cv.RGB(255, 0, 0) # red
 				if people_count:
 					color = cv.RGB(0, 255, 0) # green
 					people_in_frame_count += 1
-
-				people_counts.append(people_count)
 
 				# are we (with)in a crowd? *PARAM*
 				in_crowd = round(incrowd_sma(int(people_count > 1))) == 1

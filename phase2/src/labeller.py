@@ -123,7 +123,6 @@ def main():
 	else:
 		intervals = []
 
-
 	print 'RESULTS:'
 	for interval in intervals:
 		humanReadable = []
@@ -157,7 +156,7 @@ def main():
 			else:
 				color = (0, 0, 255)
 				wait = int(1000/(3.5*24))
-				
+
 			cv2.putText(frame, status, (20, 40), cv2.FONT_HERSHEY_PLAIN, 2.0, color, thickness = 2)
 			cv2.imshow('%s' % video_src, frame)
 			ch = cv2.waitKey(wait)
