@@ -168,8 +168,12 @@ def main():
 					blue_mean.append(np.mean(blue_chan))
 					index += 1
 
-					stdout.write('detecting bluelight in %s: %2.2f%% done -> (mm:ss): %02d:%02d\r' % (video_src, 100.0 * index / num_frames, (index/24)/60, (index/24)%60))
+					stdout.write('computing blue channel in %s: %2.2f%% -> (mm:ss): %02d:%02d\r' % (video_src, 100.0 * index / num_frames, (index/24)/60, (index/24)%60))
 					stdout.flush()
+
+			stdout.write('computing blue channel in %s: %2.2f%% -> (mm:ss): %02d:%02d\r' % (video_src, 100.0, (index/24)/60, (index/24)%60))
+			stdout.flush()
+			print ''
 
 			bclib['blue_mean'] = blue_mean
 			content = json.dumps(bclib)
@@ -309,10 +313,12 @@ def main():
 
 		if ffs and DEBUG_MODE:
 			print 'police presence in %s:' % video_src
-		pp = dict()
-		pp['police_presence'] = []
+
+		police_presence = []
+		# pp = dict()
+		# pp['police_presence'] = []
 		for f1,f2 in ffs:
-			pp['police_presence'].append((int(f1),int(f2)))
+			police_presence.append((int(f1),int(f2)))
 			if DEBUG_MODE:
 				print '%s%02d:%02d->%02d:%02d\033[0m' % (green, f1/fps/60, int(f1/fps) % 60, f2/fps/60, int(f2/fps) % 60)
 				if out:
@@ -320,10 +326,21 @@ def main():
 				else:
 					print '\n'
 
-		content = json.dumps(pp)
+		metadata_filename = './metadata/%s.json' % ytid
+		metadata_exists = os.path.isfile(metadata_filename)
+		if metadata_exists:
+			f = open(metadata_filename,'r')
+			content = f.read()
+			metadata = json.loads(content)
+			f.close()
+		else:
+			metadata = dict()
+
+		metadata['police_presence'] = police_presence
+
+		content = json.dumps(metadata)
 		# do not write a file if json parser fails
 		if content:
-			metadata_filename = './metadata/police_presence/%s.json' % ytid
 			# write to disc
 			f = open(metadata_filename,'w') 
 			f.write(content)

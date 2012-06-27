@@ -260,7 +260,7 @@ def hasPolicePresenceLabeller(ytid, max_interval_neighbor_distance=48, min_inter
 	except Exception as e:
 		print e, ytid
 
-	metadata_filename = '%s/metadata/police_presence/%s.json' % (os.path.dirname(os.path.realpath(__file__)) + '/../', ytid)
+	metadata_filename = '%s/metadata/%s.json' % (os.path.dirname(os.path.realpath(__file__)) + '/../', ytid)
 	if os.path.isfile(metadata_filename):
 		f = open(metadata_filename,'r')
 		content = f.read()

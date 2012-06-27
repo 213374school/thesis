@@ -3,24 +3,23 @@
 
 import sys
 import os
+import object_detection
+object_detect = object_detection.object_detect
 
-helptxt = """usage:\n%s metadata_folder [mode=faces,body,profile]""" % __file__
+helptxt = """usage:\n%s video_src_folder""" % __file__
 
 def main():
-    os.system('clear')
-    try:
-        path = sys.argv[1]
-    except:
-        print helptxt
-    else:
-        try:
-            mode = sys.argv[2]
-        except:
-            mode = 'faces'
-        files = [filename for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v','avi']]
-        for f in files:
-            command = './src/object_detection.py ./%s/%s %s' % (path, f, mode)
-            os.system(command)
-
+	os.system('clear')
+	try:
+		video_src_folder = sys.argv[1]
+	except:
+		print helptxt
+	else:
+		files = [filename for filename in os.listdir(video_src_folder) if filename.split('.')[-1] in ['m4v','avi']]
+		for f in files:
+			video_src = '%s%s' % (video_src_folder, f)
+			for mode in ['faces', 'body', 'profile']:
+				object_detect(video_src=video_src, mode=mode)
+				
 if __name__ == "__main__":
-     main()
+	 main()

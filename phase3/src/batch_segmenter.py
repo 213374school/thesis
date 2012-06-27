@@ -6,95 +6,61 @@ import time
 import Queue
 import sys
 import cv2
+import json
+import math
+import numpy as np
+import vid_segmenter as segmenter
+getVideoMetadata = segmenter.getVideoMetadata
+smoothTriangle = segmenter.smoothTriangle
+from compute_frame_state import computeFrameStateAnders as computeFrameState
 
 help_message = '''
-USAGE: batch_segmenter.py <video_source_folder> [cycle-wait]'''
-
-# DEFAULT_PATH = '/Users/spaelling/Downloads/Converted/'
-
-class MyThread(threading.Thread):
-
-	def __init__(self, queue, path):
-		threading.Thread.__init__(self)
-
-		self.path = path
-		self.queue = queue
-
-	def run(self):
-
-		while True:
-
-            #grabs filename from queue
-			filename = self.queue.get()
-			# print 'starting segmentation on %s' % filename
-        	
-			metadata_filename = self.path + filename + '_metadata.txt'
-        	# attempt to copy metadata
-        	# print 'hej'
-        	# print './DataSet/Metadata/%s' % (filename + '_metadata.txt')
-
-        	# if os.path.isfile('./DataSet/Metadata/%s' % (filename + '_metadata.txt')):
-        	# 	cmd = 'cp ./DataSet/Metadata/%s %s' % (filename + '_metadata.txt', metadata_filename)
-        	# 	print cmd
-        	# 	os.system(cmd)
-
-			command = 'python ./vid_segmenter.py "%s%s" &' % (self.path, filename)
-			os.system(command)
-			# wait for metadata file to be created
-			
-			while not os.path.isfile(metadata_filename):
-				# check every two seconds
-				time.sleep(2)
-
-			os.system('mv %s ./DataSet/Metadata/%s' % (metadata_filename, filename + '_metadata.txt'))
-			os.system('rm %s%s' % (self.path, filename))
-
-            #signals to queue job is done
-			self.queue.task_done()
+USAGE: %s <video_source_folder>''' % __file__
 
 def main():
+
 	try:
 		path = sys.argv[1]
 	except:
 		print help_message
 		return
-		# path = DEFAULT_PATH
 
-	try:
-		loop = sys.argv[2]
-	except:
-		loop = False
+	listing = [filename for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v','avi']]
 
-	while True:
-		listing = [filename for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v','avi']]
-		# for filename in listing:
-		# 	print filename
+	for filename in listing:
+		video_src = '%s%s' % (path, filename)
+		filename = video_src.split('/')[-1]
+		ytid = filename.split('.')[0]	
+		metadata_filename = './metadata/%s.json' % ytid
 
-		queue = Queue.Queue()
-		#spawn a pool of threads, and pass them queue instance 
-		for i in range(min(4, len(listing))):
-			# print 'spawning thread #%d' % i
-			t = MyThread(queue, path)
-			t.setDaemon(True)
-			t.start()
-	      
-		#populate queue with data   
-		for filename in listing:
-			# only add filename to queue if there is no existing metadata
-			if not os.path.isfile('./DataSet/Metadata/%s' % (filename + '_metadata.txt')):
-				print 'adding %s to queue' % filename
-				queue.put(filename)
-			else:
-				os.system('rm ./DataSet/Inbox/%s' % (filename))
-	   
-		#wait on the queue until everything has been processed     
-		queue.join()
+		metadata,frames = getVideoMetadata(video_src)
 
-		if not loop:
-			break
+		# quality analysis - computation time is very short, but we must get the optimal parameter, p, at some point
+		shift_vectors = metadata['phase1']['shift_vectors']
+		stand_dev = metadata['phase1']['stand_dev']
+		
+		# from tweak.py
+		degree = 12
+		try:
+			magnitudes = smoothTriangle((np.array([math.sqrt(x**2 + y**2) for x,y in shift_vectors])**2)/(63**2), degree)	
+			contrast = smoothTriangle((127.5 - np.array(stand_dev)) / 127.5, degree)
+		except IndexError as e:
+			# too little data in segment will cause this error
+			print 'error in %s when computing magnitudes and contrast' % ytid
+			continue
+
+		states, state_values = computeFrameState(magnitudes, contrast, p=0.015)
+		metadata['frame_states'] = states
+
+		content = json.dumps(metadata)
+		# do not write a file if json parser fails
+		if content:
+			# write to disc
+			f = open(metadata_filename,'w')	
+			f.write(content)
+			f.close()
 		else:
-			print 'waiting for data... ctrl+c to break'
-			time.sleep(5)
+			print '\nerror when writing metadata for %s' % ytid		
 		
 if __name__ == '__main__':
     main()
