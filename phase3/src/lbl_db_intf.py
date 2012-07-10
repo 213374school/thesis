@@ -116,18 +116,26 @@ def get_segments(labels):
 	candidates = sort(candidates)
 	return candidates
 
+def open_db():
+
+	f = open('database.json','r')
+	database = json.loads(f.read())
+	f.close()
+	return database
+
 def main():
 
-	labels = sorted(random.sample(dummy_labels, 2))
+	labels = sorted(random.sample(dummy_labels, 2) + ['is_day'])
+	labels = ['is_day', 'is_in_crowd']
 	print 'test labels: ', labels
-	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1024)
+	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
 
 	for i in range(1):
 		candidates = get_segments(labels)
 
 	# candidates = get_segments(labels)
 	print '#candidates: %d' % len(candidates)
-	# print 'candidates: ', json.dumps(candidates[:4], sort_keys=True, indent=4)
+	print 'candidates: ', json.dumps(candidates[:4], sort_keys=True, indent=4)
 	return candidates
 
 if __name__ == '__main__':
@@ -135,7 +143,10 @@ if __name__ == '__main__':
 	global db
 	global dummy_labels
 	# #segments, #labels, #videos
-	db, dummy_labels = create_dummy_date(2500, 7, 75)
+	# db, dummy_labels = create_dummy_date(2500, 7, 75)
+	db = open_db()
+	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	# cProfile.run('main()')
 	main()
 

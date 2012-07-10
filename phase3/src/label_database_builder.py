@@ -36,7 +36,6 @@ def main():
 						intervals, labels = isInCrowdLabeller(ytid)
 					elif label in 'has_police':
 						intervals = hasPolicePresenceLabeller(ytid)
-						print intervals
 					elif label in 'has_person_in_focus':
 						intervals = hasPersonInFocusLabeller(ytid)
 					else:
@@ -45,15 +44,12 @@ def main():
 
 					for (start,end) in intervals:
 
-						segment = {'ytid': ytid, 's':(start,end), 'l':label}
+						segment = {'ytid': ytid, 's':(start,end), 'l':[label]}
 						database.append(segment)
 
 	f = open('database.json','w')
 	f.write(json.dumps(database))
 	f.close()
-
-
-						
 
 if __name__ == '__main__':
 	main()
