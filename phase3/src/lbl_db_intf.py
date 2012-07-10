@@ -35,16 +35,19 @@ def gen_dummy_segment(labels, ytids, dummies, min_segment_length=36):
 		# need to check that the new dummy segment does not overlap an existing segment
 		if validate_dummy_segment(ds, dummies):
 			return ds
+	return None
 
 def create_dummy_date(size=100, num_labels=5, num_videos=5):
 
 	dummies = []
 	ytids = range(1,num_videos)
-	labels = random.sample(LABELS, num_labels)
+	labels = sorted(random.sample(LABELS, num_labels))
+	print 'dummy labels: ', labels
 	for i in range(size):
 		ds = gen_dummy_segment(labels,ytids, dummies)
-		dummies.append(ds)
-	return dummies
+		if ds:
+			dummies.append(ds)
+	return dummies, labels
 
 def get_segment_len(x):
 	return x.get('s')[1] - x.get('s')[0]
@@ -97,10 +100,11 @@ def main():
 
 	global db
 	# #segments, #labels, #videos
-	db = create_dummy_date(5000, 7, 75)
+	db, dummy_labels = create_dummy_date(2500, 7, 75)
 
-	labels = random.sample(LABELS, 3)
-	print 'DB size: %d' % len(db)
+	labels = sorted(random.sample(dummy_labels, 3))
+	print 'test labels: ', labels
+	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1024)
 
 	for i in range(1):
 		candidates = get_segments(labels)
