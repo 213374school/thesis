@@ -118,7 +118,7 @@ def get_segments(labels):
 
 def main():
 
-	labels = sorted(random.sample(dummy_labels, 4))
+	labels = sorted(random.sample(dummy_labels, 2))
 	print 'test labels: ', labels
 	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1024)
 
@@ -128,13 +128,17 @@ def main():
 	# candidates = get_segments(labels)
 	print '#candidates: %d' % len(candidates)
 	# print 'candidates: ', json.dumps(candidates[:4], sort_keys=True, indent=4)
+	return candidates
 
 if __name__ == '__main__':
-	global db
-	# #segments, #labels, #videos
-	print 'generating dummy data...'
-	db, dummy_labels = create_dummy_date(2500, 7, 75)
-	print 'done!'
 
+	global db
+	global dummy_labels
+	# #segments, #labels, #videos
+	db, dummy_labels = create_dummy_date(2500, 7, 75)
 	# cProfile.run('main()')
 	main()
+
+	# db, dummy_labels = create_dummy_date(5, 2, 2)
+	# print 'dummy segments:\n', json.dumps(db, sort_keys=True, indent=4), '\n'
+	# print json.dumps(main(), sort_keys=True, indent=4)
