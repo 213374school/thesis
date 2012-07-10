@@ -63,6 +63,7 @@ def getLargestBoundingRectangleArea(ytid):
 		_lib = json.loads(content)     
 		f.close()
 	else:
+		print 'getLargestBoundingRectangleArea NO METADATA FILE: ' + metadata_filename
 		_lib = dict()
 	return _lib.get('largest_bounding_rectangle_areas', [])
 
@@ -79,6 +80,7 @@ def getPeopleInFrame(ytid):
 		_lib = json.loads(content)     
 		f.close()
 	else:
+		print 'getPeopleInFrame NO METADATA FILE: ' + metadata_filename
 		_lib = dict()
 	return _lib.get('people_counts', [])	
 
@@ -96,6 +98,7 @@ def getPersonInFocus(ytid):
 		_lib = json.loads(content)     
 		f.close()
 	else:
+		print 'getPersonInFocus NO METADATA FILE: ' + metadata_filename
 		_lib = dict()
 	return _lib.get('in_focus', [])
 
@@ -113,6 +116,7 @@ def getBlueChannelMean(ytid):
 		_lib = json.loads(content)     
 		f.close()
 	else:
+		print 'getBlueChannelMean NO METADATA FILE: ' + metadata_filename
 		_lib = dict()
 	return _lib.get('blue_mean', [])
 
@@ -123,7 +127,7 @@ def _smooth(a, smoothness_degree=36, cutoff_val=0.3333):
 	smooth = triangleSmooth(a, smoothness_degree)
 	# print 'pif smooth (BEFORE): ', smooth
 	smooth = np.array(np.array(smooth) > cutoff_val, dtype=np.int64)
-	print 'cut off %d of %d values' % (sum(np.array(np.array(smooth) < cutoff_val, dtype=np.int64)), len(smooth))
+	#print 'cut off %d of %d values' % (sum(np.array(np.array(smooth) < cutoff_val, dtype=np.int64)), len(smooth))
 	# print 'pif smooth (AFTER): ', smooth
 	out = []
 	frame_start_index = -1
@@ -144,8 +148,8 @@ def _smooth(a, smoothness_degree=36, cutoff_val=0.3333):
 			if not smooth[i]:
 				raise Exception('sanity check failed in %s for video %s' % (smooth_and_merge.__name__, ytid))
 	
-	print 'out: ', out
-	print '#sequences: %d' % len(out)
+	#print 'out: ', out
+	#print '#sequences: %d' % len(out)
 
 	return out
 
@@ -161,10 +165,10 @@ def _merge(out, max_interval_neighbor_distance=24, min_interval_size=5*24):
 		for i in range(1,len(out_merged)):
 			a1,b1 = out[i-1]
 			a2,b2 = out[i]
-			print 'inspecting intervals: ', out[i-1], ', ', out[i]
+			#print 'inspecting intervals: ', out[i-1], ', ', out[i]
 			interval_distance = a2 - b1
 			if interval_distance < max_interval_neighbor_distance:
-				print 'merging intervals: ', out[i-1], ', ', out[i]
+				#print 'merging intervals: ', out[i-1], ', ', out[i]
 				out_merged[i-1] = (a1,b2)
 				del out_merged[i]
 				merged_or_removed_interval = True
@@ -188,11 +192,11 @@ def _merge(out, max_interval_neighbor_distance=24, min_interval_size=5*24):
 		if b - a < min_interval_size:
 			del out_merged[0]
 
-	print 'out_merged: ', out_merged
-	print '#sequences: %d' % len(out_merged)
+	#print 'out_merged: ', out_merged
+	#print '#sequences: %d' % len(out_merged)
 	fps = 24
-	for a,b in out_merged:
-		print '%02d:%02d -> %02d:%02d' % (a/fps/60, a/fps%60, b/fps/60, b/fps%60)
+	#for a,b in out_merged:
+		#print '%02d:%02d -> %02d:%02d' % (a/fps/60, a/fps%60, b/fps/60, b/fps%60)
 
 	return out_merged	
 
@@ -220,6 +224,7 @@ def isInCrowd(ytid, smoothness_degree=24, cutoff_val=0.90, max_interval_neighbor
 		_lib = json.loads(content)     
 		f.close()
 	else:
+		print 'isInCrowd NO METADATA FILE: ' + metadata_filename
 		_lib = dict()
 	people_counts = _lib.get('people_counts', [])
 
@@ -267,6 +272,7 @@ def hasPolicePresenceLabeller(ytid, max_interval_neighbor_distance=48, min_inter
 		_lib = json.loads(content)     
 		f.close()
 	else:
+		print 'hasPolicePresenceLabeller NO METADATA FILE: ' + metadata_filename
 		_lib = dict()
 
 	return _merge(_lib.get('police_presence', []), max_interval_neighbor_distance=max_interval_neighbor_distance, min_interval_size=min_interval_size)
@@ -277,7 +283,7 @@ def hasPersonInFocusLabeller(ytid, smoothness_degree=36, cutoff_val=0.3333, max_
 		ytid = ytid.split('.')[0]
 	except Exception as e:
 		print e, ytid
-	print ytid
+	#print ytid
 
 	pif = getPersonInFocus(ytid)
 	return smooth_and_merge(pif, smoothness_degree=smoothness_degree, cutoff_val=cutoff_val, max_interval_neighbor_distance=max_interval_neighbor_distance, min_interval_size=min_interval_size)

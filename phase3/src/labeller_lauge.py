@@ -84,7 +84,7 @@ def getMeanVectorLength(ytid):
 def loadFinalMetadata(ytid):
 	
 	# Get metadata
-	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../metadata/final/' + ytid + '.json'
+	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../metadata/' + ytid + '.json'
 	if os.path.isfile(filepath):
 		f = open(filepath, 'r+')
 		return json.loads(f.read())
@@ -92,6 +92,8 @@ def loadFinalMetadata(ytid):
 		raise Exception('Metadata file: "%s", does not exist.' % filepath)
 
 def loadPhase1MetaData(ytid):
+
+	return (loadFinalMetadata(ytid)).get('phase1')
 
 	filepath = os.path.dirname(os.path.realpath(__file__)) + '/../../phase1/DataSet/Metadata/' + ytid + '_metadata.txt'
 	if os.path.isfile(filepath):
