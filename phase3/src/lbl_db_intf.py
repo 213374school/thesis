@@ -123,6 +123,12 @@ def open_db():
 	f.close()
 	return database
 
+def label_filter(candidates, labels=[]):
+
+	for label in labels:
+		candidates = filter(lambda x: label in x.get('l'), candidates)
+	return candidates
+
 def main():
 
 	labels = sorted(random.sample(dummy_labels, 2) + ['is_day'])
@@ -132,6 +138,8 @@ def main():
 
 	for i in range(1):
 		candidates = get_segments(labels)
+
+	candidates = label_filter(candidates, ['is_day'])
 
 	# candidates = get_segments(labels)
 	print '#candidates: %d' % len(candidates)
