@@ -126,7 +126,7 @@ def open_db():
 def main():
 
 	labels = sorted(random.sample(dummy_labels, 2) + ['is_day'])
-	labels = ['is_day', 'is_in_crowd']
+	# labels = ['is_day', 'is_in_crowd']
 	print 'test labels: ', labels
 	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
 
