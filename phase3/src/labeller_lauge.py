@@ -132,7 +132,7 @@ def isDayLabeller(ytid):
 	print np.mean(corrolation)
 	print brightnessHist
 
-	if np.mean(corrolation) > 0:
+	if np.mean(corrolation) > 0 or sum(brightnessHist[0:4]) < sum(brightnessHist[4:]):
 		return [(0,len(brightness))]
 	else:
 		return []
