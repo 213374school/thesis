@@ -111,20 +111,37 @@ def loadPhase1MetaData(ytid):
 def isDayLabeller(ytid):
 
 	threshold = 60
+	ratio = 0.2
 
-	data = getBrightness(ytid)
-	if np.mean(data) >= threshold:
-		return [(0,len(data))]
+	brightness = getBrightness(ytid)
+	blueness = getBlueChannelMean(ytid)
+
+	# Make sure both have same length
+	length = min(len(brightness), len(blueness))
+	brightness = brightness[0:length]
+	blueness = blueness[0:length]
+
+	(brightnessHist, tmp) = np.histogram(brightness, range=(0,255))
+	(bluenessHist, tmp) = np.histogram(blueness, range=(0,255))
+
+	brightnessHist = [float(h) / sum(brightnessHist) for h in brightnessHist]
+	bluenessHist = [float(h) / sum(bluenessHist) for h in bluenessHist]
+
+	corrolation = (np.array(np.float32(blueness))/np.array(brightness)) - 1
+
+	print np.mean(corrolation)
+	print brightnessHist
+
+	if np.mean(corrolation) > 0:
+		return [(0,len(brightness))]
 	else:
 		return []
 
 def isNightLabeller(ytid):
 
-	threshold = 60
-
-	data = getBrightness(ytid)
-	if np.mean(data) < threshold:
-		return [(0,len(data))]
+	if len(isDayLabeller(ytid)) == 0:
+		brightness = getBrightness(ytid)
+		return [(0,len(brightness))]
 	else:
 		return []
 

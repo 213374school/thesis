@@ -100,6 +100,7 @@ def main():
 		return
 
 	ytid = (video_src.split('/'))[-1]
+	ytid = (ytid.split('.'))[0]
 	
 	labels = []
 	if label == 'is_day':
