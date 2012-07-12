@@ -78,7 +78,7 @@ def get_overlap(a,b):
 	# return dict(s=segment, l=labels, ytid=ytid, org=(a,b))
 	return dict(s=segment, l=labels, ytid=ytid)
 
-def get_overlapping_segments(labels, candidates, min_segment_length=36):
+def get_overlapping_segments(labels, candidates, min_segment_length=6):
 
 	# check if labels from a is present in labels from b
 	def f(a,b):
@@ -132,95 +132,119 @@ def open_db():
 	f.close()
 	db = database
 
-def seg_len_filter(candidates, max_len, min_len=0):
+	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
 
-	candidates = filter(lambda x: x.get('s')[0] > min_len and x.get('s')[1] < max_len, candidates)
+def seg_len_filter(candidates, min_len, max_len):
+
+	if min_len > 0:
+		candidates = filter(lambda x: get_segment_len(x) > min_len, candidates)
+	if max_len > 0:
+		candidates = filter(lambda x: get_segment_len(x) < max_len, candidates)
 	return candidates
 
-def label_filter(candidates, labels=[]):
+def label_filter(candidates, labels=[], excl_labels=[]):
 
 	for label in labels:
 		candidates = filter(lambda x: label in x.get('l'), candidates)
+	for label in excl_labels:
+		candidates = filter(lambda x: label not in x.get('l'), candidates)
+
 	return candidates
 
-def get_frames(segment, labels='', max_len=99999999999):
+def get_capture(ytid):
+
+	video_src = 'data/%s.m4v' % ytid
+	try:
+		cap = cv2.VideoCapture(video_src)
+	except:
+		video_src = 'data/%s.avi' % ytid
+		cap = cv2.VideoCapture(video_src)
+	return cap
+
+def get_num_frames(ytid):
+
+	return get_capture(ytid).get(cv.CV_CAP_PROP_FRAME_COUNT)
+	
+def get_frames(segment, labels='', max_len=15*24):
 
 	print 'segment: ', segment
 
 	start, end = segment.get('s')
 	ytid = segment.get('ytid')
-	video_src = 'data/%s.m4v' % ytid
-	try:
-		cap = cv2.VideoCapture(video_src)
-		
-	except:
-		video_src = 'data/%s.avi' % ytid
-		cap = cv2.VideoCapture(video_src)
+
+	cap = get_capture(ytid)
 
 	frames = []
 	if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start):
-		length = min(get_segment_len(segment), max_len) - 1
+		length = int(min(get_segment_len(segment), max_len))
 		print 'grabbing %d frames' % length
 		for i in range(length):
 			ret, frame = cap.read()
 			if ret:
-				draw_str(frame, (20, 20), labels)
+				draw_str(frame, (20, 20), '%s: %s' % (ytid, labels))
 				frames.append(frame)
 			else:
-				raise 'error, no more frames!'
+				# problem is that setting a given frame in the video capture may actually jump forward to the closest keyframe
+				# because of limitations with the video compression algorithm. for short clips this is likely to occur
+				print 'ERROR: segment read cut short at index %d for segment %s' % (i, json.dumps(segment))
+				break
+				# raise Exception('no more frames, index = %d, segment: %s' % (i, json.dumps(segment)))
 	else:
-		print 'error, unable to set seek position in video capture'
+		raise Exception('unable to set seek position in video capture')
 	return frames
 
-def main():
+def get_summary(recipe):
 
-	# labels = sorted(random.sample(dummy_labels, 2) + ['is_day'])
-	# # labels = ['is_day', 'is_in_crowd']
-	# print 'test labels: ', labels
-	# print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
+	frames = []
+	for labels, excl_labels, min_seg_len, max_seg_len in recipe:
+		print 'labels=%s, excl_labels=%s, min_seg_len=%d, max_seg_len=%d' % (labels, excl_labels, min_seg_len, max_seg_len)
+		candidates = get_segments(labels)
 
-	# for i in range(1):
-	# 	candidates = get_segments(labels)
+		# print '**********************'
+		# candidates = candidates[:50]
+		# candidates = sorted(candidates, key=lambda x: x.get('ytid'))
+		# for candidate in candidates:
+		# 	print candidate.get('ytid')
+		# print '**********************'
+		# return []
+		# candidates = rank_sort(candidates, None)
+		# _candidates_before_exclusion = list(candidates)
+		# candidates = label_filter(candidates, [], excl_labels)
+		# print '#candidates: %d, excl_labels=%s' % (len(candidates), excl_labels)
+		# candidates = seg_len_filter(candidates, min_seg_len, max_seg_len)
+		print '#candidates: %d' % len(candidates)
 
-	# candidates = label_filter(candidates, ['is_day'])
+		if candidates:
+			segment = candidates[random.randint(0,len(candidates)-1)]
+			# frames += get_frames(segment, ''.join(labels), random.randint(2.5*24, 5.5*24))
+			# max_len = random.randint(2.5*24, 5.5*24)
+			frames += get_frames(segment, labels, max_seg_len)
+		else:
+			print '***'
+			for x in _candidates_before_exclusion:
+				print x
+			print '***'
+			raise Exception('no segment matching: labels=%s, excl_labels=%s, min_seg_len=%d, max_seg_len=%d' % (labels, excl_labels, min_seg_len, max_seg_len))
+	return frames
 
-	# # candidates = get_segments(labels)
-	# print '#candidates: %d' % len(candidates)
-	# # print 'candidates: ', json.dumps(candidates[:4], sort_keys=True, indent=4)
-
-	# segment = candidates[0]
-	# frames = get_frames(segment)
-
-	# fps = 24
-	# for frame in frames:
-	# 	cv2.imshow('%s' % segment.get('ytid'), frame)
-	# 	cv2.waitKey(int(1000/fps))	
+def main():	
 
 	# ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
-	recipe = (['is_day', 'is_overview'], ['is_day', 'is_in_crowd'], ['is_day', 'has_person_in_focus'], ['is_night'], ['is_night', 'vertical_oscillation'], ['is_night', 'has_police'], ['is_night'])
-	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
-	frames = []
-	for labels in recipe:
-		candidates = get_segments(labels)
-		if 'is_day' in labels:
-			candidates = label_filter(candidates, ['is_day'])
-		if 'is_night' in labels:
-			candidates = label_filter(candidates, ['is_night'])
-
-		_candidates = list(candidates)
-		candidates = seg_len_filter(candidates, 9999999999999, 3*24)
-		if not candidates:
-			candidates = _candidates
-		print '#candidates: %d' % len(candidates)
-		if candidates:
-			segment = candidates[random.randint(0,min(len(candidates), 10)-1)]
-			frames += get_frames(segment, ''.join(labels), random.randint(2.5*24, 5.5*24))
-		else:
-			print 'no segment matching: %s' % labels
+	recipe = [
+		(['is_day', 'is_overview'], [], 2.5*24, 5.0*24), 
+		(['is_day', 'is_in_crowd', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
+		(['is_day', 'has_person_in_focus'], [], 2.5*24, 5.0*24), 
+		(['is_night'], [], 2.5*24, 5.9*24), 
+		(['is_night', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
+		(['is_night', 'has_police'], [], 2.5*24, 5.0*24), 
+		(['is_night'], [], 2.5*24, 5.0*24)
+	]
+	
+	frames = get_summary(recipe)
 
 	fps = 24
 	for frame in frames:
-		cv2.imshow('%s' % segment.get('ytid'), frame)
+		cv2.imshow('', frame)
 		cv2.waitKey(int(1000/fps))
 
 if __name__ == '__main__':
