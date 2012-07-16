@@ -18,6 +18,8 @@ from labeller_lauge import isNightLabeller
 from labeller_lauge import verticalOscillationLabeller
 from labeller_lauge import isOverviewLabeller
 
+from labeller_lauge import getBrightness
+
 
 from labeller_anders import getPeopleInFrame
 from labeller_anders import getPersonInFocus
@@ -89,6 +91,9 @@ def calcStd(lst, no_frames=12):
 
 def isInCrowdLabeller(ytid):
 	return isInCrowd(ytid)
+
+def getVideoLength(ytid):
+	return len(getBrightness(ytid))
 
 def main():
 	import sys

@@ -71,6 +71,8 @@ def _has_ytid(ytid, item):
 
 def _get_with_ytid(ytid):
 
+	open_db()
+
 	# equivalent to builtin filter-function
 	items = []
 	for item in db:
@@ -154,7 +156,7 @@ def open_db():
 	f.close()
 	db = database
 
-	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
+	#print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
 
 def seg_len_filter(candidates, min_len, max_len):
 
