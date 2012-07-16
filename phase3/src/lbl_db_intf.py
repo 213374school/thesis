@@ -35,7 +35,7 @@ def _has_ytid(ytid, item):
 	return ytid in item['ytid']
 
 def get_segment_len(x):
-
+	
 	return x.get('s')[1] - x.get('s')[0]
 
 def get_overlap(a,b):
@@ -183,17 +183,6 @@ class CandidateFactory:
 	# 	self.db = dummies
 	# 	return dummies, labels
 
-# recipe = [
-# 	(['is_day', 'is_overview'], [], 2.5*24, 5.0*24), 
-# 	(['is_day', 'is_in_crowd', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
-# 	(['is_day', 'has_person_in_focus'], [], 2.5*24, 5.0*24), 
-# 	(['is_night'], [], 2.5*24, 5.9*24), 
-# 	(['is_night', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
-# 	(['is_night', 'has_police'], [], 2.5*24, 5.0*24), 
-# 	(['is_night'], [], 2.5*24, 5.0*24)
-# ]
-
-
 class Ingredient:
 
 	def __init__(self):
@@ -287,19 +276,9 @@ def get_summary(recipe):
 
 def main():	
 
-	# global dummy_labels
-	# #segments, #labels, #videos
-	# db, dummy_labels = create_dummy_date(2500, 7, 75)
-
-
 	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 
-	# ytid = 'a8USSTeb8_I'
-	# print _get_with_ytid(ytid)
-	# return
-
-	# ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	recipe = [
 		(['is_day', 'is_overview'], [], 2.5*24, 5.0*24), 
 		(['is_day', 'is_in_crowd', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
@@ -318,11 +297,5 @@ def main():
 		cv2.waitKey(int(1000/fps))
 
 if __name__ == '__main__':
-
-
 	# cProfile.run('main()')
 	main()
-
-	# db, dummy_labels = create_dummy_date(5, 2, 2)
-	# print 'dummy segments:\n', json.dumps(db, sort_keys=True, indent=4), '\n'
-	# print json.dumps(main(), sort_keys=True, indent=4)
