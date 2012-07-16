@@ -65,6 +65,17 @@ def _has_label(label, item):
 	# print label, item
 	return label in item['l']
 
+def _has_ytid(ytid, item):
+	# print ytid, item
+	return ytid in item['ytid']
+
+def _get_with_ytid(ytid):
+
+	# equivalent to builtin filter-function
+	for item in db:
+		if _has_ytid(ytid, item):
+			return item
+
 def _get_with_label(label):
 
 	# equivalent to builtin filter-function
@@ -239,7 +250,8 @@ def get_summary(recipe):
 def main():	
 
 	ytid = 'a8USSTeb8_I'
-	print get_labels_for_ytid(ytid)
+	print _get_with_ytid(ytid)
+	return
 
 	# ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	recipe = [
