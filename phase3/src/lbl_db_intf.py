@@ -24,64 +24,19 @@ def is_overlapping(a,b):
 	# return a.get('ytid') == b.get('ytid') and a.get('l') != b.get('l') and a != b and max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
 	return max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
 
-def validate_dummy_segment(ds, dummies):
-
-	for dummy in dummies:
-		if ds.get('ytid') == dummy.get('ytid') and ds.get('l') == dummy.get('l') and is_overlapping(dummy, ds):
-			return False
-	return True
-
-def gen_dummy_segment(labels, ytids, dummies, min_segment_length=36):
-
-	for i in range(5):
-		a = random.randint(0,2159-min_segment_length)
-		b = random.randint(a+1,2160)
-		l = [random.choice(labels)]
-		ytid = random.choice(ytids)
-		ds = dict(s=(a,b), l=l, ytid=ytid)
-		# need to check that the new dummy segment does not overlap an existing segment
-		if validate_dummy_segment(ds, dummies):
-			return ds
-	return None
-
-def create_dummy_date(size=100, num_labels=5, num_videos=5):
-
-	global db
-
-	dummies = []
-	ytids = range(1,num_videos)
-	labels = sorted(random.sample(LABELS, num_labels))
-	print 'dummy labels: ', labels
-	for i in range(size):
-		ds = gen_dummy_segment(labels,ytids, dummies)
-		if ds:
-			dummies.append(ds)
-	return dummies, labels
-
-def get_segment_len(x):
-	return x.get('s')[1] - x.get('s')[0]
-
 def _has_label(label, item):
+
 	# print label, item
 	return label in item['l']
 
 def _has_ytid(ytid, item):
+
 	# print ytid, item
 	return ytid in item['ytid']
 
-def _get_with_ytid(ytid):
+def get_segment_len(x):
 
-	# equivalent to builtin filter-function
-	items = []
-	for item in db:
-		if _has_ytid(ytid, item):
-			items.append(item)
-	return items
-
-def _get_with_label(label):
-
-	# equivalent to builtin filter-function
-	return [item for item in db if _has_label(label, item)]
+	return x.get('s')[1] - x.get('s')[0]
 
 def get_overlap(a,b):
 
@@ -91,87 +46,163 @@ def get_overlap(a,b):
 	# return dict(s=segment, l=labels, ytid=ytid, org=(a,b))
 	return dict(s=segment, l=labels, ytid=ytid)
 
-def get_overlapping_segments(labels, candidates, min_segment_length=6):
-
-	# check if labels from a is present in labels from b
-	def f(a,b):
-		for l in a.get('l'):
-			if l in b.get('l'):
-				return False
-		return True
-
-	# compute candidates based on input candidates. then reiterate new candidates to produce even more
-	for x in range(len(labels)-1):
-		# copy the current candidates
-		_candidates = list(candidates)
-		# optimized loops
-		for i in range(len(_candidates)):
-			a = _candidates[i]
-			for j in range(i+1, len(_candidates)):
-				b = _candidates[j]
-				# assert(a!=b)
-				if a.get('ytid') == b.get('ytid') and is_overlapping(a,b) and f(a,b):
-					c = get_overlap(a,b)
-					# avoid duplicates and too short segments - the larger "candidates", the longer it takes to validate
-					# duplicates will occur if we produce candidates with more than 2 labels
-					if get_segment_len(c) > min_segment_length and c not in candidates:
-						candidates.append(c)
-		# possible optimization is to filter out candidates with only 1 label (need to do this only once)
-	return candidates
-
-def sort(candidates):
-
-	# Starting with Python 2.2, sorts are guaranteed to be stable. That means that when multiple records have the same key, their original order is preserved.
-	candidates = sorted(candidates, key=lambda x: x.get('ytid'), reverse=True)
-	candidates = sorted(candidates, key=lambda x: get_segment_len(x), reverse=True)
-	candidates = sorted(candidates, key=lambda x: len(x['l']), reverse=True)
-	return candidates
-
 def _has_ytid(ytid, item):
+
 	return item.get('ytid') == ytid
 
-def get_labels_for_ytid(ytid):
+class SegmentDatabase:
 
-	candidates = [item for item in db if _has_ytid(ytid, item)]
-	labels = list(set([candidate.get('l')[0] for candidate in candidates]))
-	return labels
+	def __init__(self):
+		self.db = None
+		self._open_db()
 
-def get_segments(labels):
+	def _get_with_ytid(self, ytid):
 
-	candidates = []
-	for label in labels:
-		candidates += _get_with_label(label)
+		# equivalent to builtin filter-function
+		items = []
+		for item in self.db:
+			if _has_ytid(ytid, item):
+				items.append(item)
+		return items
 
-	candidates = get_overlapping_segments(labels, candidates)
-	candidates = sort(candidates)
-	return candidates
+	def _get_with_label(self, label):
 
-def open_db():
+		# equivalent to builtin filter-function
+		return [item for item in self.db if _has_label(label, item)]
 
-	global db
-	f = open('./database.json','r')
-	database = json.loads(f.read())
-	f.close()
-	db = database
+	def _get_labels_for_ytid(self, ytid):
 
-	print 'DB size: %d, %dkb' % (len(db), len(json.dumps(db))/1000)
+		candidates = [item for item in self.db if _has_ytid(ytid, item)]
+		labels = list(set([candidate.get('l')[0] for candidate in candidates]))
+		return labels
 
-def seg_len_filter(candidates, min_len, max_len):
+	def _open_db(self):
 
-	if min_len > 0:
-		candidates = filter(lambda x: get_segment_len(x) > min_len, candidates)
-	if max_len > 0:
-		candidates = filter(lambda x: get_segment_len(x) < max_len, candidates)
-	return candidates
+		f = open('./database.json','r')
+		self.db = json.loads(f.read())
+		f.close()
+		print 'DB size: %d, %dkb' % (len(self.db), len(json.dumps(self.db))/1000)
 
-def label_filter(candidates, labels=[], excl_labels=[]):
+class CandidateFactory:
 
-	for label in labels:
-		candidates = filter(lambda x: label in x.get('l'), candidates)
-	for label in excl_labels:
-		candidates = filter(lambda x: label not in x.get('l'), candidates)
+	def __init__(self, segment_database):
+		self.db = segment_database
+		self.candidates = []
 
-	return candidates
+	def get_overlapping_segments(self, labels, min_segment_length=6):
+
+		# check if labels from a is present in labels from b
+		def f(a,b):
+			for l in a.get('l'):
+				if l in b.get('l'):
+					return False
+			return True
+
+		candidates = self.candidates
+		# compute candidates based on input candidates. then reiterate new candidates to produce even more
+		for x in range(len(labels)-1):
+			# copy the current candidates
+			_candidates = list(candidates)
+			# optimized loops
+			for i in range(len(_candidates)):
+				a = _candidates[i]
+				for j in range(i+1, len(_candidates)):
+					b = _candidates[j]
+					# assert(a!=b)
+					if a.get('ytid') == b.get('ytid') and is_overlapping(a,b) and f(a,b):
+						c = get_overlap(a,b)
+						# avoid duplicates and too short segments - the larger "candidates", the longer it takes to validate
+						# duplicates will occur if we produce candidates with more than 2 labels
+						if get_segment_len(c) > min_segment_length and c not in candidates:
+							candidates.append(c)
+			# possible optimization is to filter out candidates with only 1 label (need to do this only once)
+
+	def sort(self):
+
+		# Starting with Python 2.2, sorts are guaranteed to be stable. That means that when multiple records have the same key, their original order is preserved.
+		self.candidates = sorted(self.candidates, key=lambda x: x.get('ytid'), reverse=True)
+		self.candidates = sorted(self.candidates, key=lambda x: get_segment_len(x), reverse=True)
+		self.candidates = sorted(self.candidates, key=lambda x: len(x['l']), reverse=True)
+
+	def get_candidates(self, labels):
+
+		for label in labels:
+			self.candidates += self.db._get_with_label(label)
+
+		self.get_overlapping_segments(labels)
+		self.sort()
+		return self.candidates
+
+	def seg_len_filter(self, min_len, max_len):
+
+		candidates = self.candidates
+		if min_len > 0:
+			candidates = filter(lambda x: get_segment_len(x) > min_len, candidates)
+		if max_len > 0:
+			candidates = filter(lambda x: get_segment_len(x) < max_len, candidates)
+
+	def label_filter(self, labels=[], excl_labels=[]):
+
+		candidates = self.candidates
+		for label in labels:
+			candidates = filter(lambda x: label in x.get('l'), candidates)
+		for label in excl_labels:
+			candidates = filter(lambda x: label not in x.get('l'), candidates)
+
+	# not working properly now we have "classifyed" the code
+	# def validate_dummy_segment(self, ds, dummies):
+
+	# 	for dummy in dummies:
+	# 		if ds.get('ytid') == dummy.get('ytid') and ds.get('l') == dummy.get('l') and is_overlapping(dummy, ds):
+	# 			return False
+	# 	return True
+
+	# def gen_dummy_segment(self, labels, ytids, dummies, min_segment_length=36):
+
+	# 	for i in range(5):
+	# 		a = random.randint(0,2159-min_segment_length)
+	# 		b = random.randint(a+1,2160)
+	# 		l = [random.choice(labels)]
+	# 		ytid = random.choice(ytids)
+	# 		ds = dict(s=(a,b), l=l, ytid=ytid)
+	# 		# need to check that the new dummy segment does not overlap an existing segment
+	# 		if self.validate_dummy_segment(ds, dummies):
+	# 			return ds
+	# 	return None
+
+	# def create_dummy_data(self, size=100, num_labels=5, num_videos=5):
+
+	# 	dummies = []
+	# 	ytids = range(1,num_videos)
+	# 	labels = sorted(random.sample(LABELS, num_labels))
+	# 	print 'dummy labels: ', labels
+	# 	for i in range(size):
+	# 		ds = self.gen_dummy_segment(labels,ytids, dummies)
+	# 		if ds:
+	# 			dummies.append(ds)
+	# 	self.db = dummies
+	# 	return dummies, labels
+
+# recipe = [
+# 	(['is_day', 'is_overview'], [], 2.5*24, 5.0*24), 
+# 	(['is_day', 'is_in_crowd', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
+# 	(['is_day', 'has_person_in_focus'], [], 2.5*24, 5.0*24), 
+# 	(['is_night'], [], 2.5*24, 5.9*24), 
+# 	(['is_night', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
+# 	(['is_night', 'has_police'], [], 2.5*24, 5.0*24), 
+# 	(['is_night'], [], 2.5*24, 5.0*24)
+# ]
+
+
+class Ingredient:
+
+	def __init__(self):
+		pass
+
+class Recipe:
+
+	def __init__(self):
+		self.ingredients = []
 
 def get_capture(ytid):
 
@@ -186,7 +217,7 @@ def get_capture(ytid):
 def get_num_frames(ytid):
 
 	return get_capture(ytid).get(cv.CV_CAP_PROP_FRAME_COUNT)
-	
+		
 def get_frames(segment, labels='', max_len=15*24):
 
 	print 'segment: ', segment
@@ -217,10 +248,15 @@ def get_frames(segment, labels='', max_len=15*24):
 
 def get_summary(recipe):
 
+	segment_database = SegmentDatabase()
+	
 	frames = []
 	for labels, excl_labels, min_seg_len, max_seg_len in recipe:
 		print 'labels=%s, excl_labels=%s, min_seg_len=%d, max_seg_len=%d' % (labels, excl_labels, min_seg_len, max_seg_len)
-		candidates = get_segments(labels)
+		
+		candidate_factory = CandidateFactory(segment_database)
+		candidates = candidate_factory.get_candidates(labels)
+
 
 		# print '**********************'
 		# candidates = candidates[:50]
@@ -251,9 +287,17 @@ def get_summary(recipe):
 
 def main():	
 
-	ytid = 'a8USSTeb8_I'
-	print _get_with_ytid(ytid)
-	return
+	# global dummy_labels
+	# #segments, #labels, #videos
+	# db, dummy_labels = create_dummy_date(2500, 7, 75)
+
+
+	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+
+	# ytid = 'a8USSTeb8_I'
+	# print _get_with_ytid(ytid)
+	# return
 
 	# ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	recipe = [
@@ -275,12 +319,7 @@ def main():
 
 if __name__ == '__main__':
 
-	global dummy_labels
-	# #segments, #labels, #videos
-	# db, dummy_labels = create_dummy_date(2500, 7, 75)
-	open_db()
-	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
-	dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+
 	# cProfile.run('main()')
 	main()
 
