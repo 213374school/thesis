@@ -72,9 +72,11 @@ def _has_ytid(ytid, item):
 def _get_with_ytid(ytid):
 
 	# equivalent to builtin filter-function
+	items = []
 	for item in db:
 		if _has_ytid(ytid, item):
-			return item
+			items.append(item)
+	return items
 
 def _get_with_label(label):
 
