@@ -114,6 +114,15 @@ def sort(candidates):
 	candidates = sorted(candidates, key=lambda x: len(x['l']), reverse=True)
 	return candidates
 
+def _has_ytid(ytid, item):
+	return item.get('ytid') == ytid
+
+def get_labels_for_ytid(ytid):
+
+	candidates = [item for item in db if _has_ytid(ytid, item)]
+	labels = list(set([candidate.get('l')[0] for candidate in candidates]))
+	return labels
+
 def get_segments(labels):
 
 	candidates = []
@@ -228,6 +237,9 @@ def get_summary(recipe):
 	return frames
 
 def main():	
+
+	ytid = 'a8USSTeb8_I'
+	print get_labels_for_ytid(ytid)
 
 	# ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	recipe = [
