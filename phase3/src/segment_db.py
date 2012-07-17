@@ -39,10 +39,22 @@ class SegmentDatabase:
 		labels = list(set([candidate.get('l')[0] for candidate in candidates]))
 		return labels
 
-	def _open_db(self):
+	def remove_ignored_files(self):
 
+		ignore = ['']
+		def filter_fun(x):
+			for ytid in ignore:
+				if x.get('ytid') in ignore:
+					return False
+			return True
+
+		self.db = filter(filter_fun, self.db)
+
+	def _open_db(self):
+		
 		f = open('./database.json','r')
 		self.db = json.loads(f.read())
+		self.remove_ignored_files()
 		f.close()
 		print 'DB size: %d, %dkb' % (len(self.db), len(json.dumps(self.db))/1000)
 
