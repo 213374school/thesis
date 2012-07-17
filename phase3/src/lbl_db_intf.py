@@ -18,6 +18,7 @@ except Exception as e:
 	print e
 from segment_db import SegmentDatabase
 from sort_candidates import sortCandidates
+from collections import *
 
 LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
 
@@ -106,9 +107,25 @@ class CandidateFactory:
 		for label in excl_labels:
 			candidates = filter(lambda x: label not in x.get('l'), candidates)
 
-	def get_ytids(self):
+	def get_ytids(self, lim=-1):
 
-		return list(set([candidate.get('ytid') for candidate in self.candidates]))
+		ytids = [candidate.get('ytid') for candidate in self.candidates]
+
+		d = defaultdict(lambda: 0)
+		# count the number of occurences of each candidate
+		for c in ytids: d[c] += 1
+		# sort by the number of occurences (largest first)
+		d = sorted(d.items(), key=lambda (x,y): y, reverse=True)
+		if lim > 0:
+			d = d[:lim]
+		# and finally the new list of ytids
+		ytids = [x for (x,y) in d]
+		# print 'get_ytids(...): ', ytids
+
+		return ytids
+
+		# hella lot better than:
+		# return list(set([candidate.get('ytid') for candidate in self.candidates]))
 
 class Ingredient:
 
@@ -185,7 +202,7 @@ class Recipe:
 			candidates = candidate_factory.get_candidates(labels)
 			print '#candidates: %d' % len(candidates)
 
-			ytids = candidate_factory.get_ytids()
+			ytids = candidate_factory.get_ytids(20)
 			query = dict(
 				labels=labels,
 				required=ingredient.required_labels,
