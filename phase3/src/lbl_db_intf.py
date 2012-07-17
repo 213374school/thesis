@@ -127,6 +127,24 @@ class CandidateFactory:
 		# hella lot better than:
 		# return list(set([candidate.get('ytid') for candidate in self.candidates]))
 
+def get_capture(ytid):
+
+	video_src = 'data/%s.m4v' % ytid
+	try:
+		cap = cv2.VideoCapture(video_src)
+	except:
+		video_src = 'data/%s.avi' % ytid
+		cap = cv2.VideoCapture(video_src)
+	return cap
+
+def get_num_frames(cap):
+
+	return cap.get(cv.CV_CAP_PROP_FRAME_COUNT)
+
+def get_fps(cap):
+
+	return cap.get(cv.CV_CAP_PROP_FPS)
+
 class Ingredient:
 
 	def __init__(self, labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]):
@@ -147,29 +165,19 @@ class Recipe:
 	def __init__(self, ingredients):
 		self.ingredients = ingredients
 		self.segment_database = SegmentDatabase()
-
-	def get_capture(self, ytid):
-
-		video_src = 'data/%s.m4v' % ytid
-		try:
-			cap = cv2.VideoCapture(video_src)
-		except:
-			video_src = 'data/%s.avi' % ytid
-			cap = cv2.VideoCapture(video_src)
-		return cap
-
-	def get_num_frames(self, ytid):
-
-		return get_capture(ytid).get(cv.CV_CAP_PROP_FRAME_COUNT)
+		self.ignore_list = []
 			
 	def get_frames(self, segment, labels='', max_len=15*24):
 
-		print 'segment: ', segment
+		# print 'segment: ', segment
 
 		start, end = segment.get('s')
 		ytid = segment.get('ytid')
 
-		cap = self.get_capture(ytid)
+		cap = get_capture(ytid)
+		fps = get_fps(cap)
+		assert(fps == 24)
+		# print 'fps: ', fps
 
 		frames = []
 		if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start):
@@ -200,7 +208,7 @@ class Recipe:
 			
 			candidate_factory = CandidateFactory(segment_database)
 			candidates = candidate_factory.get_candidates(labels)
-			print '#candidates: %d' % len(candidates)
+			print '#immediate candidates: %d' % len(candidates)
 
 			ytids = candidate_factory.get_ytids(20)
 			query = dict(
@@ -212,7 +220,10 @@ class Recipe:
 			spanAlpha = ingredient.span_alpha
 			minSpan = ingredient.min_span
 			maxSpan = ingredient.max_span
-			candidates = sortCandidates(ytids=ytids, query=query, minSpan=minSpan, maxSpan=maxSpan, interval=interval, spanAlpha=spanAlpha, segment_database=segment_database)
+			ignore_list = self.ignore_list
+
+			candidates = sortCandidates(ytids=ytids, query=query, minSpan=minSpan, maxSpan=maxSpan, interval=interval, spanAlpha=spanAlpha, segment_database=segment_database, ignoreList=ignore_list)
+			print '#candidates: %d' % len(candidates)
 
 			# reformat
 			for candidate in candidates:
@@ -220,10 +231,31 @@ class Recipe:
 
 			if candidates:
 				# segment = candidates[random.randint(0,len(candidates)-1)]
-				segment = candidates[0]
-				frames += self.get_frames(segment, labels, max_len=maxSpan)
+				score_sum = sum([candidate.get('score') for candidate in candidates])
+				# filter out invalid candidates
+				candidates = filter(lambda x: x.get('score') >= 0, candidates)
+				# if there are any valid candidates left
+				if candidates:
+					new_candidates = []
+					# we want the multiplier to be atleast 1e5
+					multiplier = min(1e5, max(1e5, 1 / (candidates[-1].get('score') / score_sum)))
+					# print 'multiplier: ' , multiplier
+					for candidate in candidates:
+						# we want atleast 1 occurence
+						probability_score = multiplier * candidate.get('score') / score_sum
+						# print 'probability_score: ', probability_score
+						# print 'rel. rounding error: %2.2f%%' % (100 * abs(probability_score - max(1, int(round(probability_score)))) / probability_score)
+						new_candidates += [candidate] * max(1, int(round(probability_score)))
+					print len(new_candidates)
+					candidate = random.choice(new_candidates)
+
+					print candidate
+					self.ignore_list.append(candidate)
+					frames += self.get_frames(candidate, labels, max_len=maxSpan)
+				else:
+					print 'no candidate matching: %s' % ingredient
 			else:
-				raise Exception('no segment matching: %s' % ingredient)
+				raise Exception('no candidate matching: %s' % ingredient)
 		return frames
 
 def main():	

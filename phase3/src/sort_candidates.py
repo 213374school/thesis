@@ -94,9 +94,10 @@ def createLabelQueryFulfilmentGraph(ytid, query, segment_database, ignore):
 
 	# Handle ignore list
 	for segment in ignore:
-		start = segment.get('start')
-		end = segment.get('end')
-		result[start,end] = -9999999999999999.0
+		# print 'ytid: ', ytid, ' segment: ' , segment
+		start = segment[0]
+		end = segment[1]
+		result[start:end] = -9999999999999999.0
 
 	return result
 
