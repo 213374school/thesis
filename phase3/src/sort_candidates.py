@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import numpy as np
-from lbl_db_intf import _get_with_ytid
 from labeller import getVideoLength
 
 def findBestRegion(data, minSpan, maxSpan, interval, spanAlpha):
@@ -41,7 +40,7 @@ def findBestRegion(data, minSpan, maxSpan, interval, spanAlpha):
 
 	return best
 
-def createLabelQueryFulfilmentGraph(ytid, query):
+def createLabelQueryFulfilmentGraph(ytid, query, segment_database):
 
 	# Disect query
 	requestedLabels = query.get('labels')
@@ -49,7 +48,8 @@ def createLabelQueryFulfilmentGraph(ytid, query):
 	forbiddenLabels = query.get('forbidden')
 
 	# Load video and label information
-	labels = _get_with_ytid(ytid)
+	
+	labels = segment_database.get_with_ytid(ytid)
 	videoLength = getVideoLength(ytid)
 
 	# Create fulfilment graph
@@ -83,13 +83,13 @@ def createLabelQueryFulfilmentGraph(ytid, query):
 	return result
 
 
-def sortCandidates(ytids, query, minSpan, maxSpan, interval, spanAlpha):
+def sortCandidates(ytids, query, minSpan, maxSpan, interval, spanAlpha, segment_database):
 
 	candidates = []
 	for ytid in ytids:
 
 		# Create teh fulfilment graph for this video
-		graph = createLabelQueryFulfilmentGraph(ytid, query)
+		graph = createLabelQueryFulfilmentGraph(ytid, query, segment_database)
 
 		# Find the best region in the graph
 		resultData = findBestRegion(graph, minSpan, maxSpan, interval, spanAlpha)

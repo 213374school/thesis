@@ -16,23 +16,14 @@ try:
 	from common import draw_str
 except Exception as e:
 	print e
+from segment_db import SegmentDatabase
+from sort_candidates import sortCandidates
 
 LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
 
 def is_overlapping(a,b):
 
-	# return a.get('ytid') == b.get('ytid') and a.get('l') != b.get('l') and a != b and max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
 	return max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
-
-def _has_label(label, item):
-
-	# print label, item
-	return label in item['l']
-
-def _has_ytid(ytid, item):
-
-	# print ytid, item
-	return ytid in item['ytid']
 
 def get_segment_len(x):
 	
@@ -43,45 +34,11 @@ def get_overlap(a,b):
 	segment = (max(a.get('s')[0],b.get('s')[0]), min(a.get('s')[1],b.get('s')[1]))
 	labels = sorted(a.get('l') + b.get('l'))
 	ytid = a.get('ytid')
-	# return dict(s=segment, l=labels, ytid=ytid, org=(a,b))
 	return dict(s=segment, l=labels, ytid=ytid)
 
 def _has_ytid(ytid, item):
 
 	return item.get('ytid') == ytid
-
-class SegmentDatabase:
-
-	def __init__(self):
-		self.db = None
-		self._open_db()
-
-	def _get_with_ytid(self, ytid):
-
-		# equivalent to builtin filter-function
-		items = []
-		for item in self.db:
-			if _has_ytid(ytid, item):
-				items.append(item)
-		return items
-
-	def _get_with_label(self, label):
-
-		# equivalent to builtin filter-function
-		return [item for item in self.db if _has_label(label, item)]
-
-	def _get_labels_for_ytid(self, ytid):
-
-		candidates = [item for item in self.db if _has_ytid(ytid, item)]
-		labels = list(set([candidate.get('l')[0] for candidate in candidates]))
-		return labels
-
-	def _open_db(self):
-
-		f = open('./database.json','r')
-		self.db = json.loads(f.read())
-		f.close()
-		print 'DB size: %d, %dkb' % (len(self.db), len(json.dumps(self.db))/1000)
 
 class CandidateFactory:
 
@@ -127,7 +84,7 @@ class CandidateFactory:
 	def get_candidates(self, labels):
 
 		for label in labels:
-			self.candidates += self.db._get_with_label(label)
+			self.candidates += self.db.get_with_label(label)
 
 		self.get_overlapping_segments(labels)
 		self.sort()
@@ -149,147 +106,125 @@ class CandidateFactory:
 		for label in excl_labels:
 			candidates = filter(lambda x: label not in x.get('l'), candidates)
 
-	# not working properly now we have "classifyed" the code
-	# def validate_dummy_segment(self, ds, dummies):
+	def get_ytids(self):
 
-	# 	for dummy in dummies:
-	# 		if ds.get('ytid') == dummy.get('ytid') and ds.get('l') == dummy.get('l') and is_overlapping(dummy, ds):
-	# 			return False
-	# 	return True
-
-	# def gen_dummy_segment(self, labels, ytids, dummies, min_segment_length=36):
-
-	# 	for i in range(5):
-	# 		a = random.randint(0,2159-min_segment_length)
-	# 		b = random.randint(a+1,2160)
-	# 		l = [random.choice(labels)]
-	# 		ytid = random.choice(ytids)
-	# 		ds = dict(s=(a,b), l=l, ytid=ytid)
-	# 		# need to check that the new dummy segment does not overlap an existing segment
-	# 		if self.validate_dummy_segment(ds, dummies):
-	# 			return ds
-	# 	return None
-
-	# def create_dummy_data(self, size=100, num_labels=5, num_videos=5):
-
-	# 	dummies = []
-	# 	ytids = range(1,num_videos)
-	# 	labels = sorted(random.sample(LABELS, num_labels))
-	# 	print 'dummy labels: ', labels
-	# 	for i in range(size):
-	# 		ds = self.gen_dummy_segment(labels,ytids, dummies)
-	# 		if ds:
-	# 			dummies.append(ds)
-	# 	self.db = dummies
-	# 	return dummies, labels
+		return list(set([candidate.get('ytid') for candidate in self.candidates]))
 
 class Ingredient:
 
-	def __init__(self):
-		pass
+	def __init__(self, labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]):
+		self.labels = labels
+		self.min_span = min_span
+		self.max_span = max_span
+		self.interval = interval
+		self.span_alpha = span_alpha
+		self.required_labels = required_labels
+		self.forbidden_labels = forbidden_labels
+
+	def __str__(self):
+
+		return 'labels=%s, min_span=%d, max_span=%d, interval=%d, span_alpha=%f, required_labels=%s, forbidden_labels=%s' % (self.labels, self.min_span, self.max_span, self.interval, self.span_alpha, self.required_labels, self.forbidden_labels)
 
 class Recipe:
 
-	def __init__(self):
-		self.ingredients = []
+	def __init__(self, ingredients):
+		self.ingredients = ingredients
+		self.segment_database = SegmentDatabase()
 
-def get_capture(ytid):
+	def get_capture(self, ytid):
 
-	video_src = 'data/%s.m4v' % ytid
-	try:
-		cap = cv2.VideoCapture(video_src)
-	except:
-		video_src = 'data/%s.avi' % ytid
-		cap = cv2.VideoCapture(video_src)
-	return cap
+		video_src = 'data/%s.m4v' % ytid
+		try:
+			cap = cv2.VideoCapture(video_src)
+		except:
+			video_src = 'data/%s.avi' % ytid
+			cap = cv2.VideoCapture(video_src)
+		return cap
 
-def get_num_frames(ytid):
+	def get_num_frames(self, ytid):
 
-	return get_capture(ytid).get(cv.CV_CAP_PROP_FRAME_COUNT)
-		
-def get_frames(segment, labels='', max_len=15*24):
+		return get_capture(ytid).get(cv.CV_CAP_PROP_FRAME_COUNT)
+			
+	def get_frames(self, segment, labels='', max_len=15*24):
 
-	print 'segment: ', segment
+		print 'segment: ', segment
 
-	start, end = segment.get('s')
-	ytid = segment.get('ytid')
+		start, end = segment.get('s')
+		ytid = segment.get('ytid')
 
-	cap = get_capture(ytid)
+		cap = self.get_capture(ytid)
 
-	frames = []
-	if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start):
-		length = int(min(get_segment_len(segment), max_len))
-		print 'grabbing %d frames' % length
-		for i in range(length):
-			ret, frame = cap.read()
-			if ret:
-				draw_str(frame, (20, 20), '%s: %s' % (ytid, labels))
-				frames.append(frame)
-			else:
-				# problem is that setting a given frame in the video capture may actually jump forward to the closest keyframe
-				# because of limitations with the video compression algorithm. for short clips this is likely to occur
-				print 'ERROR: segment read cut short at index %d for segment %s' % (i, json.dumps(segment))
-				break
-				# raise Exception('no more frames, index = %d, segment: %s' % (i, json.dumps(segment)))
-	else:
-		raise Exception('unable to set seek position in video capture')
-	return frames
-
-def get_summary(recipe):
-
-	segment_database = SegmentDatabase()
-	
-	frames = []
-	for labels, excl_labels, min_seg_len, max_seg_len in recipe:
-		print 'labels=%s, excl_labels=%s, min_seg_len=%d, max_seg_len=%d' % (labels, excl_labels, min_seg_len, max_seg_len)
-		
-		candidate_factory = CandidateFactory(segment_database)
-		candidates = candidate_factory.get_candidates(labels)
-
-
-		# print '**********************'
-		# candidates = candidates[:50]
-		# candidates = sorted(candidates, key=lambda x: x.get('ytid'))
-		# for candidate in candidates:
-		# 	print candidate.get('ytid')
-		# print '**********************'
-		# return []
-		# candidates = rank_sort(candidates, None)
-		# _candidates_before_exclusion = list(candidates)
-		# candidates = label_filter(candidates, [], excl_labels)
-		# print '#candidates: %d, excl_labels=%s' % (len(candidates), excl_labels)
-		# candidates = seg_len_filter(candidates, min_seg_len, max_seg_len)
-		print '#candidates: %d' % len(candidates)
-
-		if candidates:
-			segment = candidates[random.randint(0,len(candidates)-1)]
-			# frames += get_frames(segment, ''.join(labels), random.randint(2.5*24, 5.5*24))
-			# max_len = random.randint(2.5*24, 5.5*24)
-			frames += get_frames(segment, labels, max_seg_len)
+		frames = []
+		if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start):
+			length = int(min(get_segment_len(segment), max_len))
+			print 'grabbing %d frames' % length
+			for i in range(length):
+				ret, frame = cap.read()
+				if ret:
+					draw_str(frame, (20, 20), '%s: %s' % (ytid, labels))
+					frames.append(frame)
+				else:
+					# problem is that setting a given frame in the video capture may actually jump forward to the closest keyframe
+					# because of limitations with the video compression algorithm. for short clips this is likely to occur
+					print 'ERROR: segment read cut short at index %d for segment %s' % (i, json.dumps(segment))
+					break
+					# raise Exception('no more frames, index = %d, segment: %s' % (i, json.dumps(segment)))
 		else:
-			print '***'
-			for x in _candidates_before_exclusion:
-				print x
-			print '***'
-			raise Exception('no segment matching: labels=%s, excl_labels=%s, min_seg_len=%d, max_seg_len=%d' % (labels, excl_labels, min_seg_len, max_seg_len))
-	return frames
+			raise Exception('unable to set seek position in video capture')
+		return frames
+
+	def bake(self):
+
+		segment_database = self.segment_database
+		frames = []
+		for ingredient in self.ingredients:
+			labels, excl_labels, min_span, max_span = ingredient.labels, [], ingredient.min_span, ingredient.max_span
+			print 'labels=%s, excl_labels=%s, min_span=%d, max_span=%d' % (labels, excl_labels, min_span, max_span)
+			
+			candidate_factory = CandidateFactory(segment_database)
+			candidates = candidate_factory.get_candidates(labels)
+			print '#candidates: %d' % len(candidates)
+
+			ytids = candidate_factory.get_ytids()
+			query = dict(
+				labels=labels,
+				required=ingredient.required_labels,
+				forbidden=ingredient.forbidden_labels,
+				)
+			interval = ingredient.interval
+			spanAlpha = ingredient.span_alpha
+			minSpan = ingredient.min_span
+			maxSpan = ingredient.max_span
+			candidates = sortCandidates(ytids=ytids, query=query, minSpan=minSpan, maxSpan=maxSpan, interval=interval, spanAlpha=spanAlpha, segment_database=segment_database)
+
+			# reformat
+			for candidate in candidates:
+				candidate['s'] = (candidate.get('start'), candidate.get('end'))
+
+			if candidates:
+				# segment = candidates[random.randint(0,len(candidates)-1)]
+				segment = candidates[0]
+				frames += self.get_frames(segment, labels, max_len=maxSpan)
+			else:
+				raise Exception('no segment matching: %s' % ingredient)
+		return frames
 
 def main():	
 
 	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
-	dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	# dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 
-	recipe = [
-		(['is_day', 'is_overview'], [], 2.5*24, 5.0*24), 
-		(['is_day', 'is_in_crowd', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
-		(['is_day', 'has_person_in_focus'], [], 2.5*24, 5.0*24), 
-		(['is_night'], [], 2.5*24, 5.9*24), 
-		(['is_night', 'vertical_oscillation'], [], 2.5*24, 5.0*24), 
-		(['is_night', 'has_police'], [], 2.5*24, 5.0*24), 
-		(['is_night'], [], 2.5*24, 5.0*24)
-	]
-	
-	frames = get_summary(recipe)
+	ingredients = [
+		Ingredient(labels=['is_day', 'is_overview']),
+		Ingredient(labels=['is_day', 'is_in_crowd', 'vertical_oscillation']),
+		Ingredient(labels=['is_day', 'has_person_in_focus']),
+		Ingredient(labels=['is_night']),
+		Ingredient(labels=['is_night', 'vertical_oscillation']),
+		Ingredient(labels=['is_night', 'has_police']),
+		Ingredient(labels=['is_night'])
+		]
+	recipe = Recipe(ingredients)
+	frames = recipe.bake()
 
 	fps = 24
 	for frame in frames:
