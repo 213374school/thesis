@@ -39,6 +39,31 @@ class SegmentDatabase:
 		labels = list(set([candidate.get('l')[0] for candidate in candidates]))
 		return labels
 
+	def trim_to_datasets(dataset_list):
+
+		f = open('./datasets.json','r')
+		d = json.loads(f.read())
+		f.close()
+
+		dataset = []
+		for dtset in dataset_list:
+			dataset += d.get(dtset)
+
+		new_db = []
+		for segment in self.db:
+			ytid = segment.get('ytid')
+			real_ytid = ''
+			for part in ytid.split('_'):
+				if part[:4] == 'part':
+					break
+				real_ytid += part
+
+			if real_ytid in dataset:
+				new_db.append(segment)
+
+		self.db = new_db
+
+
 	def remove_ignored_files(self):
 
 		ignore = ['']
