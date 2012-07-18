@@ -9,7 +9,6 @@
 
 import json
 import random
-import cProfile
 try:
 	import cv
 	import cv2
@@ -166,6 +165,7 @@ class Recipe:
 		self.ingredients = ingredients
 		self.segment_database = SegmentDatabase()
 		self.ignore_list = []
+		self.frames = []
 			
 	def get_frames(self, segment, labels='', max_len=15*24):
 
@@ -256,19 +256,28 @@ class Recipe:
 					print 'no candidate matching: %s' % ingredient
 			else:
 				raise Exception('no candidate matching: %s' % ingredient)
-		return frames
+		self.frames = frames
+		# return frames
 
-def write_video(filename, frames, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
+	def write_video(self, filename, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
+		
+		frames = self.frames
+		writer = cv.CreateVideoWriter(filename, int(fourcc),fps,(int(width),int(height)),1)	
+		for frame in frames:
+
+			# convert frame to iPlImage
+			frame = cv.fromarray(frame)
+			cv_img = cv.CreateImageHeader((width, height), cv.IPL_DEPTH_8U, 3)
+			cv.SetData(cv_img, frame.tostring(), width * 3)
+			# write image
+			cv.WriteFrame(writer, cv_img)
 	
-	writer = cv.CreateVideoWriter(filename, int(fourcc),fps,(int(width),int(height)),1)	
-	for frame in frames:
+	def show_video(self):
 
-		# convert frame to iPlImage
-		frame = cv.fromarray(frame)
-		cv_img = cv.CreateImageHeader((width, height), cv.IPL_DEPTH_8U, 3)
-		cv.SetData(cv_img, frame.tostring(), width * 3)
-		# write image
-		cv.WriteFrame(writer, cv_img)
+		fps = 24
+		for frame in self.frames:
+			cv2.imshow('', frame)
+			cv2.waitKey(int(1000/fps))
 
 def main():	
 
@@ -285,14 +294,9 @@ def main():
 		Ingredient(labels=['is_night'])
 		]
 	recipe = Recipe(ingredients)
-	frames = recipe.bake()
-	write_video('testout.avi', frames)
-
-	# fps = 24
-	# for frame in frames:
-	# 	cv2.imshow('', frame)
-	# 	cv2.waitKey(int(1000/fps))
+	recipe.bake()
+	recipe.write_video('./data/out/%s.avi' % 'testout')
 
 if __name__ == '__main__':
-	# cProfile.run('main()')
+
 	main()
