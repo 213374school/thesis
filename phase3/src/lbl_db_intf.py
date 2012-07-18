@@ -258,6 +258,18 @@ class Recipe:
 				raise Exception('no candidate matching: %s' % ingredient)
 		return frames
 
+def write_video(filename, frames, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
+	
+	writer = cv.CreateVideoWriter(filename, int(fourcc),fps,(int(width),int(height)),1)	
+	for frame in frames:
+
+		# convert frame to iPlImage
+		frame = cv.fromarray(frame)
+		cv_img = cv.CreateImageHeader((width, height), cv.IPL_DEPTH_8U, 3)
+		cv.SetData(cv_img, frame.tostring(), width * 3)
+		# write image
+		cv.WriteFrame(writer, cv_img)
+
 def main():	
 
 	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
@@ -274,11 +286,12 @@ def main():
 		]
 	recipe = Recipe(ingredients)
 	frames = recipe.bake()
+	write_video('testout.avi', frames)
 
-	fps = 24
-	for frame in frames:
-		cv2.imshow('', frame)
-		cv2.waitKey(int(1000/fps))
+	# fps = 24
+	# for frame in frames:
+	# 	cv2.imshow('', frame)
+	# 	cv2.waitKey(int(1000/fps))
 
 if __name__ == '__main__':
 	# cProfile.run('main()')
