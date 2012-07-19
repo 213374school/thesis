@@ -39,7 +39,7 @@ class SegmentDatabase:
 		labels = list(set([candidate.get('l')[0] for candidate in candidates]))
 		return labels
 
-	def trim_to_datasets(dataset_list):
+	def trim_to_datasets(self, dataset_list):
 		# acta_cph, acta_aarhus, cop15
 
 		f = open('./datasets.json','r')

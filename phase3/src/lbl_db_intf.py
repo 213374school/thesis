@@ -211,26 +211,25 @@ class Recipe:
 		f.write(json.dumps(dump))
 		f.close()
 
-	def get_frames(self, segment, labels='', max_len=15*24):
+	def get_frames(self, segment):
 
 		# print 'segment: ', segment
 
-		start, end = segment.get('s')
+		start, end = segment.get('start'), segment.get('end')
 		ytid = segment.get('ytid')
 
 		cap = get_capture(ytid)
 		fps = get_fps(cap)
 		assert(fps == 24)
-		# print 'fps: ', fps
 
 		frames = []
 		if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start):
-			length = int(min(get_segment_len(segment), max_len))
+			length = end - start
 			print 'grabbing %d frames' % length
 			for i in range(length):
 				ret, frame = cap.read()
 				if ret:
-					draw_str(frame, (20, 20), '%s: %s' % (ytid, labels))
+					# draw_str(frame, (20, 20), '%s: %s' % (ytid, labels))
 					frames.append(frame)
 				else:
 					# problem is that setting a given frame in the video capture may actually jump forward to the closest keyframe
@@ -270,18 +269,23 @@ class Recipe:
 			print '#candidates: %d' % len(candidates)
 
 			# reformat
-			for candidate in candidates:
-				candidate['s'] = (candidate.get('start'), candidate.get('end'))
+			# for candidate in candidates:
+			# 	candidate['s'] = (candidate.get('start'), candidate.get('end'))
 
 			if candidates:
+				candidates = filter(lambda x: x.get('score') >= 0, candidates)
 				score_sum = sum([candidate.get('score') for candidate in candidates])
 				# filter out invalid candidates
-				candidates = filter(lambda x: x.get('score') >= 0, candidates)
+				
 				# if there are any valid candidates left
 				if candidates:
 					new_candidates = []
 					# we want the multiplier to be atleast 1e5
-					multiplier = min(1e5, max(1e5, 1 / (candidates[-1].get('score') / score_sum)))
+					min_score = candidates[-1].get('score')
+					if min_score:
+						multiplier = min(1e5, max(1e5, 1 / (min_score / score_sum)))
+					else:
+						multiplier = 1e5
 					# print 'multiplier: ' , multiplier
 					for candidate in candidates:
 						# we want atleast 1 occurence
@@ -293,22 +297,22 @@ class Recipe:
 					candidate = random.choice(new_candidates)
 
 					print candidate
-					# TODO: perform any stretching of the segment here!
-					# STREEETCH
-					print candidate
-					ytid = candidate.get('ytid')
-					new_start = candidate.get('start')
-					new_end = candidate.get('end')
-					score = candidate.get('score')
-					labels = candidate.get('l')
 
-					self.result.get('segments').append(dict(ytid=ytid, start=new_start, end=new_end, score=score, labels=labels))
+					start = candidate.get('start')
+					end = candidate.get('end')
+					ytid = candidate.get('ytid')
+					score = candidate.get('score')
+
+					self.result.get('segments').append(dict(ytid=ytid, start=start, end=end, score=score))
+					frames += self.get_frames(candidate)
+					candidate['start'] = min(0, abs(start-24))
+					# no consequence if this actually extends the length of the video
+					candidate['end'] = end+24
 					self.ignore_list.append(candidate)
-					frames += self.get_frames(candidate, labels, max_len=maxSpan)
 				else:
-					print 'no candidate matching: %s' % ingredient
+					print '\n******************\nno candidate matching: %s\n******************\n' % ingredient
 			else:
-				raise Exception('no candidate matching: %s' % ingredient)
+				print '\n******************\nno candidate matching: %s\n******************\n' % ingredient
 		self.frames = frames
 		self.dump_to_json()
 
@@ -333,10 +337,10 @@ class Recipe:
 			cv2.imshow('', frame)
 			cv2.waitKey(int(1000/fps))
 
-def get_random_recipe(num_ingredients, max_labels_per_ingredient=3):
+def get_random_recipe(num_ingredients, input_labels, max_labels_per_ingredient=3):
 
-	input_labels=['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	ingredients = []
+	clip_len_sum = 0
 	for i in range(num_ingredients):
 		num_labels = random.randint(1,max_labels_per_ingredient)
 		while True:
@@ -346,18 +350,26 @@ def get_random_recipe(num_ingredients, max_labels_per_ingredient=3):
 			if not ('is_day' in labels and 'is_night' in labels):
 				break
 
-		min_span = random.randint(24, 5*24)
-		max_span = random.randint(min_span+6, min_span+5*24)
+		# multiplier is avrg. video len. divided by the number of clips to get the avr. clip len
+		# current value produces videos in the range 25-35s
+		multiplier = 35.0 / num_ingredients
+		min_span = random.randint(2*24, int(multiplier*24))
+		max_span = random.randint(min_span+6, 2*min_span+6)
+
+		clip_len = ((max_span+min_span) / (2.0*24))
+		clip_len_sum += clip_len
+		print 'desired clip len: %2.2fs' % clip_len
+
 		# labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]
 		ingredient = Ingredient(labels=labels, min_span=min_span, max_span=max_span)
 		ingredients.append(ingredient)
 		print 'ingredient #%d: ' % i, ingredient
+	print '%2.2fs' % clip_len_sum
 	return ingredients
 
 def main():	
 
-	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
-	# dummy_labels = ['vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	# ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 
 	ingredients = [
 		Ingredient(labels=['is_day', 'is_overview']),
@@ -368,12 +380,18 @@ def main():
 		Ingredient(labels=['is_night', 'has_police']),
 		Ingredient(labels=['is_night'])
 		]
-	ingredients = get_random_recipe(5)
 
-	recipe = Recipe(ingredients)
-	recipe.bake()
-	recipe.write_video()
+	input_labels_cop15 = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	input_labels_acta = ['is_day', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	for datasets in [['acta_cph'], ['acta_cph'], ['acta_aarhus'], ['acta_aarhus'], ['cop15'], ['cop15']]:
+		if 'cop15' in datasets:
+			input_labels = input_labels_cop15
+		else:
+			input_labels = input_labels_acta
+		ingredients = get_random_recipe(num_ingredients=5, input_labels=input_labels)
+		recipe = Recipe(ingredients, datasets)
+		recipe.bake()
+		recipe.write_video()
 
 if __name__ == '__main__':
-
 	main()
