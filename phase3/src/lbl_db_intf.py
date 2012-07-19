@@ -18,6 +18,8 @@ except Exception as e:
 from segment_db import SegmentDatabase
 from sort_candidates import sortCandidates
 from collections import *
+# for checking if file exists
+import os
 
 LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
 
@@ -159,14 +161,56 @@ class Ingredient:
 
 		return 'labels=%s, min_span=%d, max_span=%d, interval=%d, span_alpha=%f, required_labels=%s, forbidden_labels=%s' % (self.labels, self.min_span, self.max_span, self.interval, self.span_alpha, self.required_labels, self.forbidden_labels)
 
+	def __to_dict__(self):
+
+		return dict(
+			labels=self.labels,
+			min_span=self.min_span,
+			max_span=self.max_span,
+			interval=self.interval,
+			span_alpha=self.span_alpha,
+			required_labels=self.required_labels,
+			forbidden_labels=self.forbidden_labels,
+			)
+
+def filename_generator(path):
+
+	filename = '%s%s' % (path, hex(random.randint(1e6,1e12)).replace('0x', ''))
+	if os.path.exists('%s.avi' % filename):
+		# in the extremely unlikely case the file already exists we compute a new name
+		return filename_generator(path)
+	return filename
+
 class Recipe:
 
-	def __init__(self, ingredients):
+	def __init__(self, ingredients, datasets=[]):
+
 		self.ingredients = ingredients
 		self.segment_database = SegmentDatabase()
 		self.ignore_list = []
 		self.frames = []
+		self.result = dict(segments=[])
+		self.datasets = datasets
+		if datasets:
+			self.segment_database.trim_to_datasets(datasets)
+
+		self.filename = filename_generator(path='./data/out/')
 			
+	def dump_to_json(self):
+
+		filename = '%s.json' % self.filename
+		
+		dump = dict(
+			ingredients=[ingredient.__to_dict__() for ingredient in self.ingredients],
+			result=self.result,
+			filename='%s.avi' % self.filename,
+			datasets=self.datasets,
+			)
+
+		f = open(filename, 'w')
+		f.write(json.dumps(dump))
+		f.close()
+
 	def get_frames(self, segment, labels='', max_len=15*24):
 
 		# print 'segment: ', segment
@@ -230,7 +274,6 @@ class Recipe:
 				candidate['s'] = (candidate.get('start'), candidate.get('end'))
 
 			if candidates:
-				# segment = candidates[random.randint(0,len(candidates)-1)]
 				score_sum = sum([candidate.get('score') for candidate in candidates])
 				# filter out invalid candidates
 				candidates = filter(lambda x: x.get('score') >= 0, candidates)
@@ -250,6 +293,16 @@ class Recipe:
 					candidate = random.choice(new_candidates)
 
 					print candidate
+					# TODO: perform any stretching of the segment here!
+					# STREEETCH
+					print candidate
+					ytid = candidate.get('ytid')
+					new_start = candidate.get('start')
+					new_end = candidate.get('end')
+					score = candidate.get('score')
+					labels = candidate.get('l')
+
+					self.result.get('segments').append(dict(ytid=ytid, start=new_start, end=new_end, score=score, labels=labels))
 					self.ignore_list.append(candidate)
 					frames += self.get_frames(candidate, labels, max_len=maxSpan)
 				else:
@@ -257,10 +310,11 @@ class Recipe:
 			else:
 				raise Exception('no candidate matching: %s' % ingredient)
 		self.frames = frames
-		# return frames
+		self.dump_to_json()
 
-	def write_video(self, filename, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
+	def write_video(self, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
 		
+		filename = '%s.avi' % self.filename
 		frames = self.frames
 		writer = cv.CreateVideoWriter(filename, int(fourcc),fps,(int(width),int(height)),1)	
 		for frame in frames:
@@ -279,6 +333,27 @@ class Recipe:
 			cv2.imshow('', frame)
 			cv2.waitKey(int(1000/fps))
 
+def get_random_recipe(num_ingredients, max_labels_per_ingredient=3):
+
+	input_labels=['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	ingredients = []
+	for i in range(num_ingredients):
+		num_labels = random.randint(1,max_labels_per_ingredient)
+		while True:
+			random.shuffle(input_labels)
+			labels = input_labels[0:num_labels]
+			# cant have both night and day labels
+			if not ('is_day' in labels and 'is_night' in labels):
+				break
+
+		min_span = random.randint(24, 5*24)
+		max_span = random.randint(min_span+6, min_span+5*24)
+		# labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]
+		ingredient = Ingredient(labels=labels, min_span=min_span, max_span=max_span)
+		ingredients.append(ingredient)
+		print 'ingredient #%d: ' % i, ingredient
+	return ingredients
+
 def main():	
 
 	# dummy_labels = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
@@ -293,9 +368,11 @@ def main():
 		Ingredient(labels=['is_night', 'has_police']),
 		Ingredient(labels=['is_night'])
 		]
+	ingredients = get_random_recipe(5)
+
 	recipe = Recipe(ingredients)
 	recipe.bake()
-	recipe.write_video('./data/out/%s.avi' % 'testout')
+	recipe.write_video()
 
 if __name__ == '__main__':
 

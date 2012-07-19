@@ -18,10 +18,13 @@ def findBestRegion(data, minSpan, maxSpan, interval, spanAlpha):
 			distance_to_center = len(regionData)/2
 			firstHalf = np.linspace(0.99, 1.0, distance_to_center)
 			lastHalf = firstHalf[::-1]
-			if distance_to_center == float(len(regionData)/2):
+			if distance_to_center == float(len(regionData))/2:
 				skewTriangle = np.concatenate([firstHalf, lastHalf])
 			else:
 				skewTriangle = np.concatenate([firstHalf, [1], lastHalf])
+
+			if len(skewTriangle) != len(regionData):
+				print '>>>>>> ', len(skewTriangle), len(regionData)
 
 			# What is the score of this region (skewed slightly toward rewarding centricity of high numbers)
 			score = float(sum(np.array(regionData)*skewTriangle)) / len(regionData)

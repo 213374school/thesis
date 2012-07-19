@@ -40,6 +40,7 @@ class SegmentDatabase:
 		return labels
 
 	def trim_to_datasets(dataset_list):
+		# acta_cph, acta_aarhus, cop15
 
 		f = open('./datasets.json','r')
 		d = json.loads(f.read())
