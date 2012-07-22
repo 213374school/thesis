@@ -53,17 +53,18 @@ class SegmentDatabase:
 		new_db = []
 		for segment in self.db:
 			ytid = segment.get('ytid')
-			real_ytid = ''
-			for part in ytid.split('_'):
-				if part[:4] == 'part':
-					break
-				real_ytid += part
+			# ytid.split('_')
 
-			if real_ytid in dataset:
+			for part in ytid.split('_'):
+				if 'part' in part:
+					ytid = ytid.replace('_%s' % part, '')
+					break
+			
+			if ytid in dataset:
 				new_db.append(segment)
 
 		self.db = new_db
-
+		print 'DB size: %d, %dkb' % (len(self.db), len(json.dumps(self.db))/1000)
 
 	def remove_ignored_files(self):
 
@@ -82,8 +83,7 @@ class SegmentDatabase:
 		self.db = json.loads(f.read())
 		self.remove_ignored_files()
 		f.close()
-		print 'DB size: %d, %dkb' % (len(self.db), len(json.dumps(self.db))/1000)
-
+		
 	# not working properly now we have "classifyed" the code
 	# def validate_dummy_segment(self, ds, dummies):
 

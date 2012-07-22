@@ -4,6 +4,7 @@
 import os
 import json
 import urllib
+import sys
 
 def main():
 	# bulkupload videos to YouTube
@@ -16,23 +17,24 @@ def main():
 	keywords = ''
 	description = 'thesis.fmitcar.appspot.com/thesis/'
 
-	try:
-		path = sys.argv[1]
-	except:	
-		path = './' # default to current directory (calling)
-
+	# try:
+	# 	path = sys.argv[1]
+	# except:	
+	path = './' # default to current directory (calling)
 	files = [filename for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v','avi']]
 
-	for filename in files:
+	for i, filename in enumerate(files):
 		title = filename.split('.')[0]
 		
-		command = 'python ./youtube-ul.py --email=%s --password=%s --title="%s" --description="%s" --category="%s" --keywords="%s"  %s' % (email, password, title, description, category, keywords, filename)
-		print command
+		command = 'python ./src/youtube-ul.py --email=%s --password=%s --title="%s" --description="%s" --category="%s" --keywords="%s"  %s' % (email, password, title, description, category, keywords, filename)
+		if i == 0 or  i % 4 != 0:
+			# start in background
+			command += ' &'
 		os.system(command)
 	
 if __name__ == "__main__":
 
-	# main()
+	main()
 
 	raw_input("REMEMBER TO MAKE VIDEOS PUBLIC HERE: https://www.youtube.com/my_videos - Press Enter to get a list of uploaded (public) YouTube IDs...")
 

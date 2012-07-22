@@ -148,7 +148,7 @@ def get_fps(cap):
 
 class Ingredient:
 
-	def __init__(self, labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]):
+	def __init__(self, labels, min_span=48, max_span=120, interval=10, span_alpha=0.5, required_labels=[], forbidden_labels=[]):
 		self.labels = labels
 		self.min_span = min_span
 		self.max_span = max_span
@@ -183,8 +183,9 @@ def filename_generator(path):
 
 class Recipe:
 
-	def __init__(self, ingredients, datasets=[]):
+	def __init__(self, name, ingredients, datasets=[]):
 
+		self.name = name
 		self.ingredients = ingredients
 		self.segment_database = SegmentDatabase()
 		self.ignore_list = []
@@ -211,7 +212,7 @@ class Recipe:
 		f.write(json.dumps(dump))
 		f.close()
 
-	def get_frames(self, segment):
+	def get_frames(self, segment, captions=''):
 
 		# print 'segment: ', segment
 
@@ -222,6 +223,7 @@ class Recipe:
 		fps = get_fps(cap)
 		assert(fps == 24)
 
+		captions += ' :: %s' % (self.name)
 		frames = []
 		if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start):
 			length = end - start
@@ -229,7 +231,7 @@ class Recipe:
 			for i in range(length):
 				ret, frame = cap.read()
 				if ret:
-					# draw_str(frame, (20, 20), '%s: %s' % (ytid, labels))
+					# draw_str(frame, (20, 20), '%s: %s' % (ytid, captions))
 					frames.append(frame)
 				else:
 					# problem is that setting a given frame in the video capture may actually jump forward to the closest keyframe
@@ -239,6 +241,7 @@ class Recipe:
 					# raise Exception('no more frames, index = %d, segment: %s' % (i, json.dumps(segment)))
 		else:
 			raise Exception('unable to set seek position in video capture')
+		print 'returning %d frames' % len(frames)
 		return frames
 
 	def bake(self):
@@ -268,17 +271,12 @@ class Recipe:
 			candidates = sortCandidates(ytids=ytids, query=query, minSpan=minSpan, maxSpan=maxSpan, interval=interval, spanAlpha=spanAlpha, segment_database=segment_database, ignoreList=ignore_list)
 			print '#candidates: %d' % len(candidates)
 
-			# reformat
-			# for candidate in candidates:
-			# 	candidate['s'] = (candidate.get('start'), candidate.get('end'))
-
 			if candidates:
-				candidates = filter(lambda x: x.get('score') >= 0, candidates)
-				score_sum = sum([candidate.get('score') for candidate in candidates])
 				# filter out invalid candidates
-				
-				# if there are any valid candidates left
-				if candidates:
+				candidates = filter(lambda x: x.get('score') >= 0, candidates)
+				# compute the sum-square of scores
+				score_sum = sum([candidate.get('score')**2 for candidate in candidates])
+				if candidates: # if there are any valid candidates left
 					new_candidates = []
 					# we want the multiplier to be atleast 1e5
 					min_score = candidates[-1].get('score')
@@ -289,11 +287,11 @@ class Recipe:
 					# print 'multiplier: ' , multiplier
 					for candidate in candidates:
 						# we want atleast 1 occurence
-						probability_score = multiplier * candidate.get('score') / score_sum
+						probability_score = multiplier * candidate.get('score')**2 / score_sum
 						# print 'probability_score: ', probability_score
 						# print 'rel. rounding error: %2.2f%%' % (100 * abs(probability_score - max(1, int(round(probability_score)))) / probability_score)
 						new_candidates += [candidate] * max(1, int(round(probability_score)))
-					print len(new_candidates)
+					# print len(new_candidates)
 					candidate = random.choice(new_candidates)
 
 					print candidate
@@ -304,10 +302,10 @@ class Recipe:
 					score = candidate.get('score')
 
 					self.result.get('segments').append(dict(ytid=ytid, start=start, end=end, score=score))
-					frames += self.get_frames(candidate)
-					candidate['start'] = min(0, abs(start-24))
+					frames += self.get_frames(candidate, captions='score: %2.2f' % (score))
+					candidate['start'] = max(0, start-10*24)
 					# no consequence if this actually extends the length of the video
-					candidate['end'] = end+24
+					candidate['end'] = end+10*24
 					self.ignore_list.append(candidate)
 				else:
 					print '\n******************\nno candidate matching: %s\n******************\n' % ingredient
@@ -315,6 +313,7 @@ class Recipe:
 				print '\n******************\nno candidate matching: %s\n******************\n' % ingredient
 		self.frames = frames
 		self.dump_to_json()
+		return self
 
 	def write_video(self, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
 		
@@ -322,7 +321,6 @@ class Recipe:
 		frames = self.frames
 		writer = cv.CreateVideoWriter(filename, int(fourcc),fps,(int(width),int(height)),1)	
 		for frame in frames:
-
 			# convert frame to iPlImage
 			frame = cv.fromarray(frame)
 			cv_img = cv.CreateImageHeader((width, height), cv.IPL_DEPTH_8U, 3)
@@ -337,7 +335,7 @@ class Recipe:
 			cv2.imshow('', frame)
 			cv2.waitKey(int(1000/fps))
 
-def get_random_recipe(num_ingredients, input_labels, max_labels_per_ingredient=3):
+def get_random_recipe(num_ingredients, input_labels, max_labels_per_ingredient=3, span_alpha=None):
 
 	ingredients = []
 	clip_len_sum = 0
@@ -352,46 +350,156 @@ def get_random_recipe(num_ingredients, input_labels, max_labels_per_ingredient=3
 
 		# multiplier is avrg. video len. divided by the number of clips to get the avr. clip len
 		# current value produces videos in the range 25-35s
-		multiplier = 35.0 / num_ingredients
+		multiplier = 45.0 / num_ingredients
 		min_span = random.randint(2*24, int(multiplier*24))
 		max_span = random.randint(min_span+6, 2*min_span+6)
 
 		clip_len = ((max_span+min_span) / (2.0*24))
 		clip_len_sum += clip_len
-		print 'desired clip len: %2.2fs' % clip_len
-
+		
 		# labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]
-		ingredient = Ingredient(labels=labels, min_span=min_span, max_span=max_span)
+		ingredient = Ingredient(labels=labels, min_span=min_span, max_span=max_span, span_alpha=span_alpha)
 		ingredients.append(ingredient)
-		print 'ingredient #%d: ' % i, ingredient
-	print '%2.2fs' % clip_len_sum
+		# print 'ingredient #%d: ' % i, ingredient
+		# print 'desired clip len: %2.2fs' % clip_len
+	# print '%2.2fs' % clip_len_sum
 	return ingredients
 
 def main():	
 
 	# ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
+	# labels, min_span=48, max_span=120, interval=10, span_alpha=0.05, required_labels=[], forbidden_labels=[]
 
-	ingredients = [
-		Ingredient(labels=['is_day', 'is_overview']),
-		Ingredient(labels=['is_day', 'is_in_crowd', 'vertical_oscillation']),
-		Ingredient(labels=['is_day', 'has_person_in_focus']),
-		Ingredient(labels=['is_night']),
-		Ingredient(labels=['is_night', 'vertical_oscillation']),
-		Ingredient(labels=['is_night', 'has_police']),
-		Ingredient(labels=['is_night'])
-		]
+	# ACTA CPH
+	recipies = []
+	for datasets, span_alpha in [(['acta_cph'], 0.5), (['acta_cph'], 0.25)]:
+		ingredients = [
+			Ingredient(labels=['is_overview'], min_span=72, max_span=120, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+			Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+			Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha)
+			]
+		recipe = Recipe('Acta Cph.', ingredients, datasets)
+		recipies.append(recipe)
+
+	# ACTA AARHUS
+	for datasets, span_alpha in [(['acta_aarhus'], 0.5), (['acta_aarhus'], 0.25)]:
+		ingredients = [
+			Ingredient(labels=['is_overview'], min_span=72, max_span=120, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+			Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+			Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha)
+			]
+		recipe = Recipe('Acta Aarhus', ingredients, datasets)
+		recipies.append(recipe)
+
+	# COP15
+	for datasets, span_alpha in [(['cop15'], 0.5), (['cop15'], 0.25)]:
+		required_labels = ['is_day']
+		ingredients = [
+			Ingredient(labels=['is_overview'], min_span=72, max_span=120, required_labels=required_labels, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_overview'], min_span=72, max_span=144, required_labels=required_labels, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, required_labels=required_labels, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, required_labels=required_labels, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+			Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+			Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus', 'is_night'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+			Ingredient(labels=['is_overview'], min_span=72, max_span=144, required_labels=['is_night'], forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha)
+			]
+		recipe = Recipe('COP15', ingredients, datasets)
+		recipies.append(recipe)
 
 	input_labels_cop15 = ['is_day', 'is_night', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
 	input_labels_acta = ['is_day', 'vertical_oscillation', 'is_overview', 'is_in_crowd', 'has_police', 'has_person_in_focus']
-	for datasets in [['acta_cph'], ['acta_cph'], ['acta_aarhus'], ['acta_aarhus'], ['cop15'], ['cop15']]:
+	for datasets, span_alpha in [(['acta_cph'], 0.5), (['acta_cph'], 0.25), (['acta_aarhus'], 0.5), (['acta_aarhus'], 0.25), (['cop15'], 0.5), (['cop15'], 0.25)]:
 		if 'cop15' in datasets:
 			input_labels = input_labels_cop15
 		else:
 			input_labels = input_labels_acta
-		ingredients = get_random_recipe(num_ingredients=5, input_labels=input_labels)
-		recipe = Recipe(ingredients, datasets)
-		recipe.bake()
-		recipe.write_video()
+		ingredients = get_random_recipe(num_ingredients=5, input_labels=input_labels, span_alpha=span_alpha)
+		recipe = Recipe('Random', ingredients, datasets)
+		recipies.append(recipe)
+
+	print 'made %d recipies. Start cooking...' % len(recipies)
+	for recipe in recipies:
+		recipe.bake().write_video()
+
+	# make 3 totally random videos
+	path = './data/'
+	max_len = 10.0*24
+	min_len = 2.0*24
+
+	def write_video(filename, frame, height=360, width=640, fps=24, fourcc=cv.CV_FOURCC('D','I','V','3')):
+		writer = cv.CreateVideoWriter(filename, int(fourcc),fps,(int(width),int(height)),1)	
+		for frame in frames:
+			# convert frame to iPlImage
+			frame = cv.fromarray(frame)
+			cv_img = cv.CreateImageHeader((width, height), cv.IPL_DEPTH_8U, 3)
+			cv.SetData(cv_img, frame.tostring(), width * 3)
+			# write image
+			cv.WriteFrame(writer, cv_img)
+
+	__ytids = [filename.split('.')[0] for filename in os.listdir(path) if filename.split('.')[-1] in ['m4v']]
+	for dataset in ['acta_cph', 'acta_aarhus', 'cop15']:
+
+		f = open('./datasets.json','r')
+		d = json.loads(f.read()).get(dataset)
+		f.close()
+
+		ytids = []
+		for ytid in __ytids:
+			_ytid = ytid
+			for part in ytid.split('_'):
+				if 'part' in part:
+					_ytid = ytid.replace('_%s' % part, '')
+					break
+			if _ytid in d:
+				# append org. ytid
+				ytids.append(ytid)
+		picked = []
+		for i in range(6):
+			# pick a random ytid
+			while True:
+				ytid = random.choice(ytids)
+				if ytid not in picked:
+					picked.append(ytid)
+					print '%s found in %s' % (ytid, dataset)
+					break
+		frames = []
+		for ytid in picked:
+			cap = get_capture(ytid)
+			# get length in frames
+			num_frames = get_num_frames(cap)
+			seg_len = int(min(random.randint(min_len, max_len), num_frames))
+			start_frame = random.randint(0, num_frames-seg_len)
+			# end_frame = start_frame + seg_len
+		
+			fps = get_fps(cap)
+			assert(fps == 24)
+
+			if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start_frame):
+				length = seg_len
+				print 'grabbing %d frames' % length
+				for i in range(length):
+					ret, frame = cap.read()
+					if ret:
+						# draw_str(frame, (20, 20), '%s: %s' % (ytid, captions))
+						frames.append(frame)
+					else:
+						# problem is that setting a given frame in the video capture may actually jump forward to the closest keyframe
+						# because of limitations with the video compression algorithm. for short clips this is likely to occur
+						print 'ERROR: segment read cut short at index %d for ytid %s' % (i, ytid)
+						break
+						# raise Exception('no more frames, index = %d, segment: %s' % (i, json.dumps(segment)))
+			else:
+				raise Exception('unable to set seek position in video capture')
+		filename = '%s.avi' % filename_generator('./data/out/')
+		write_video(filename, frames)
 
 if __name__ == '__main__':
 	main()
