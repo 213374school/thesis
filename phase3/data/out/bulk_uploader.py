@@ -36,7 +36,7 @@ if __name__ == "__main__":
 
 	# main()
 
-	raw_input("REMEMBER TO MAKE VIDEOS PUBLIC HERE: https://www.youtube.com/my_videos - Press Enter to get a list of uploaded (public) YouTube IDs...")
+	raw_input("Press any key to get a list of uploaded (public) YouTube IDs...")
 
 	# to get videos: curl https://gdata.youtube.com/feeds/api/users/ThomNicksen/uploads?alt=json&&prettyprint=true
 	url = 'https://gdata.youtube.com/feeds/api/users/ThomNicksen/uploads?alt=json'
