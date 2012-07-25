@@ -1,0 +1,38 @@
+%
+\section{Creating video-summaries}
+%
+
+%
+\subsection{Label Database}
+%
+% segements (recap of p2?)
+
+%
+\subsection{Candidate Factory}
+%
+% candidate factory: get candidates with requested labels then compute overlapping segments and finally sort segments by number of overlapping labels ties resolved by segment frame-length and yet again ties resolved by ytid (to group them, but really not needed)
+% overlapping segments has a small required segment length (6 frames)
+% top candidates are resolved and their ytid is extracted and fed to segment score algorithm. segment is then selected with a propability as a function of their score: s^2/S, S=sum(scores^2) where scores = scores > 0
+
+%
+\subsection{Segment Score}
+%
+% Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.
+
+%
+\subsection{Choosing a Segment}
+%
+
+%
+\subsection{Recipe}
+%
+% recipies - simple approach. no immediate feedback. kinda skipped lit. study on this one. universal recipe. 2 permutations on each dataset (different alpha_span value), and added some required labels 
+% recipe structure: list of ingredients (labels, min/max span, interval, span alpha, required/forbidden labels)
+
+%
+\subsubsection{Random}
+%
+
+%
+\subsubsection{Designer}
+%

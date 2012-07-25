@@ -1,10 +1,13 @@
 %
 \section{Grouping and labeling}
 %
+% Remember to mention that video quality isn't used after phase 1 due to the side effects cased by labeling the video (namely that bad quality segments don't receive any labels). in a real world application this quality measure could be used to reduce the amount of data to analyze
+
+%
 \subsection{Literature Study}
 %
-% need to describe Haar cascade classifiers (performance and an outline of how they work)
-
+% describe Haar cascade classifiers (performance and an outline of how they work)
+Detecting suitable regions in the video-clips is not enough. The content in the regions also has to be interesting. Hanjalic, A. \cite{citeulike:405480} describes a way to identify such regions by measuring the level of excitement in a sports video-clip based on a manually selected set of features. These features can be both visuals (like the movement in an image or the change of camera positions) or audial (namely the energy contained in the audio track).% WHETHER SUCH AN APPROACH IS SUITABLE TO US IS YET TO BE DETERMINED BASED ON THE CONTENT IN OUR FUTURE DATA SET.
 %
 \subsection{Method}
 %
@@ -12,5 +15,68 @@
 
 %
 \subsection{Detecting interesting regions in video-clips}
-% kim: hører til i litt. study
-Detecting suitable regions in the video-clips is not enough. The content in the regions also has to be interesting. Hanjalic, A. \cite{citeulike:405480} describes a way to identify such regions by measuring the level of excitement in a sports video-clip based on a manually selected set of features. These features can be both visuals (like the movement in an image or the change of camera positions) or audial (namely the energy contained in the audio track).% WHETHER SUCH AN APPROACH IS SUITABLE TO US IS YET TO BE DETERMINED BASED ON THE CONTENT IN OUR FUTURE DATA SET.
+%
+
+%
+\subsection{Metadata}
+%
+
+%
+\subsubsection{Facial Detection}
+%
+% using haar cascade classifier
+% profile, standard and upper body
+
+%
+\subsubsection{Brightness}
+%
+
+%
+\subsubsection{Optical Flow}
+%
+
+%
+\subsubsection{Blue channel}
+%
+
+%
+\subsubsection{Contrast}
+%
+% from phase1
+
+%
+\subsubsection{Shift Vector Magnitude}
+%
+% from phase1
+
+%
+\subsection{Labels}
+%
+
+%
+\subsubsection{Police Detection}
+%
+% blue channel mean, local minima/maxima. oscillation
+
+%
+\subsubsection{Vertical Oscillation}
+%
+
+%
+\subsubsection{In crowd}
+%
+% based on facial detection
+
+%
+\subsubsection{Person in Focus}
+%
+% based on facial detection and object placement in frame (center)
+
+%
+\subsubsection{Overview}
+%
+
+%
+\subsubsection{Day \& Night}
+%
+% Test/Success-rate
