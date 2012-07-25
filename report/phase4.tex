@@ -1,12 +1,42 @@
 %
 \section{Testing}
 %
-
+thesis.fmitcar.appspot.com/thesis/start/
 %
 \subsection{Test Environment}
 %
-% test env. setup: questions: process (rewrote, changed order), what do each question investigate? wording. not showing questionnaire before video is close to ending. spartan styling. disabled suggested videos on YouTube. comments box. facebook + tweeetter. video title is meaningless (avoid distraction). reverse engineer questions (find lit. on how to write a questionnaire). control-sample: random (baseline) + human edited.
 
+%
+All our video summaries are hosted on YouTube.
+%
+\subsubsection{Questionnaire}
+%
+% reverse engineer questions (find lit. on how to write a questionnaire)
+%
+The questionnaire was structured as a statement and 5 options where the test user could either agree, disagree, or indicate that they were unable to respond to the statement. An example of a statement was INSERT STATEMENT HERE and the possible replies was Totally agree, Somewhat agree, Somewhat disagree, Totally disagree, and Don't know, in that order. We initially had "dont't know" in the middle, but we learned that placing it last would result in a higher rate of usable responses.\\
+We want to investigate a few crucial points in depth which resulted in 4 very different statements:
+%
+\begin{itemize}
+\item The individual video clips are interesting
+\item The video is well edited
+\item The length of the individual video clips are fitting
+\item The length of the entire video is fitting
+\end{itemize}
+%
+The first statement investigates the quality of our labeller. The second statement investigates how well we are able to combine segments (in other words the quality of our recipe, ie. the order and context of the ingredients). The third statement investigates the general attitude towards clip-length, which is chosen somewhat at random within boundaries determined by the recipe. The fourth statement investigates the general attitude towards the total length of a video-summary. The ordering of statements changes between asking to the enterity of the video to each individual clip.\\
+We also added an optional note to each questionnaire incase a user wanted to ellaborate on their answer(s).
+%
+\subsubsection{Setup}
+%
+As we both have a good deal of experience with \textit{Google App Engine} we chose to deploy a small website where our test panel could rate video-summaries. We used a spartan styling of the site such as a white background. To discern interuptive elements we removed player-controls from the YouTube embedded player (the user could still pause the video by clicking on it or using the space-bar on their keyboard), and also disable the recommended videos that appear after playing a YouTube video to the end. The questionnaire was not shown before the end of the video not to disctract attention to it. The video-title, which would appear briefly in the top of the player was the hex-value of a randomly generated number to ensure a non-descript title.\\
+We supplied each session with a unique identifier. This means that we are unable to track a returning test-user, as they would get a new session id, but it does give us a rough measure of how many different test-users we get, how many questionnaires answered on average, and also investigate the progress of a test-user (they may generally rate a video worse as they watch more videos) - the time at which a result is recorded is saved along with the data.\\
+To increase the availability of our test environment everything is localized into danish and english - especially elderly danish people may have a hard time answering an english questionnaire. The resulting locale is recorded along with each result. This will also allow us to measure any significant difference between the two locales - as it is impossible to make a 1-to-1 translation of the statements.\\
+To ensure a proper shuffling of each video-summary we record how many times a given summary is shown (it counts as shown when a test-user has completed the questionnaire). We consequently enforce a balance of this counter amongst all the videoes. Furthermore we restrict, if possible, that a video has not been shown recently (within the last 3 minutes). This would allow us to easily add more videos later on should the need arise, while getting results from the entire range of summaries.\\
+We initially spread the survey on Facebook by messaging friends and family and making a public wall post. To further increase the chance of the survey going viral we placed a Facebook Like-button and a Twitter button discretely in the bottom of the site to allow test-users to further spread the word.
+%
+\subsubsection{Control Samples}
+%
+We also added two different control samples: one was randomly generated videos, but from a random set of labels and segment lengths, but also some where sections of a video was picked totally at random. This will form the baseline for our test, ie. we expect these to perform poorly in all aspects. We also added the opposite, videos edited by humans as another control sample. We expect these to perform better than all other videos.
 %
 \subsection{Results}
 %
