@@ -36,9 +36,9 @@ Detecting suitable regions in the video-clips is not enough. The content in the 
 %
 
 %
-\subsubsection{Blue channel}
+\subsubsection{Blue channel}\label{sec:blue_channel}
 %
-
+Each frame in a video consists of a matrix of pixels in 3 channels, red, green, and blue. For the purpose of police detection, described in detail in section \ref{sec:police_detection}, and day/night detection, described in detail in section \ref{blah}, we extracted the blue channel in each frame and computed the mean pixel intensity. 
 %
 \subsubsection{Contrast}
 %
@@ -54,10 +54,19 @@ Detecting suitable regions in the video-clips is not enough. The content in the 
 %
 
 %
-\subsubsection{Police Detection}
+\subsubsection{Police Detection}\label{sec:police_detection}
 %
 % blue channel mean, local minima/maxima. oscillation
-
+By investigating the blue channel mean, see section \ref{sec:blue_channel}, in detail we are able to some degree detect if the police is present in part of a video, under the circumstance that the police blinker lights are active. The theory was simple: we would expect the blue channel mean to oscilate over time. If we plot the mean values as a function of time (frames) we can easily distinguish oscilating areas visually, and then check if this osciallation corresponds to police being present in the video at that point in time. Somewhat to our surprise this was amazingly accurate. We did get a rather large number of false negatives, but almost no false positives.\\
+We did not find any ready-at-hand code for detecting oscillations so we rolled something ourselves. What we ended up with was a simple approach based on the realization that the points in an oscillating graph could be connected by triangular shapes (bottom facing up) see Figure \ref{fig:triangles}, and each consequtive triangle is roughly the same shape and size. The problem was boiled down to matching these triangles.\\
+We compute the magnitude of the vectors a,b,c,d,e,f and check if the relative standard deviation of $[a,b,c,d]$ and $[e,f]$ is below a certain treshold (meaning that a,b,c,d and e,f are roughly the same length).
+%
+\begin{figure}
+     \centering
+     \includegraphics[width=1.05\textwidth]{img/triangles.jpg}
+     \caption{}\label{fig:triangles}
+\end{figure}
+% 
 %
 \subsubsection{Vertical Oscillation}
 %
