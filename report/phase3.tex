@@ -18,6 +18,69 @@ The is simply a list of segments, where each segment consist of a number of valu
 %
 % Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.
 
+The most fitting sub-parts of the video are found and scored based on how well they fulfill the label requirements we have constructed for the segment in question as well as how well they match the time span we are looking to fill. Each aspect is encapsulated in each their seperate fulfilment ratio, which are then later combined into a final score.\\
+
+\subsubsection{Label fulfilment}
+%
+For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of labels we would like to be present in the segment, $n$ be the number of labels in $L_{x}$, $L_{y}$ be the set of labels which we require to be present, and $L_{z}$ be the set of labels which are forbidden to be present. Also let $f_{l}$ and $f_{n}$ be the set of requested labels present in frame $f$, and the number of requested labels present in frame $f$, respectively, where $f$ is a frame in the video. The the requirement fulfilment-ratio for each frame can be calculated like this:\\
+%
+\begin{equation}
+R(f) = \frac{f_{n}}{n} \cdot Y(f) \cdot Z(f)
+\end{equation} 
+%
+, where\\
+%
+\begin{equation}
+Y(f) =
+\begin{cases}
+0 & \text{, if} f_{l} \cap L_{y} \neq L_{y}\\
+1 &  \text{, otherwise}
+\end{cases}
+\end{equation} 
+%
+, and\\
+%
+\begin{equation}
+Z(f) =
+\begin{cases}
+0 & \text{, if} f_{l} \cap L_{z} \neq Ø\\
+1 &  \text{, otherwise}
+\end{cases}
+\end{equation} 
+%
+\\
+%
+Effectively this means that a frame will receive a fulfilment-ratio of 0 percent if it does not contain a required label or if it contains a forbidden one, and the ratio of the number of requested labels it contains, otherwise.\\
+%
+With this fulfillment graph we now have a tool of measure to identify the parts of the video that best fit the label requirements.
+%
+\subsubsection{Time span fulfilment}
+%
+The other aspect used to determine the score of a sub-part of a video is the how well it fits within the time span we are looking to fill. A minimum- and maximum- length defines the time span, that we want the final segment to cover. Let $T_{min}$ and $T_{max}$ be the the minimum- and maximum- length, respectively, and let $l$ be the length of the sub-part in frames. The time span fulfilment ratio is then defined as:\\
+%
+\begin{equation}
+\tau(l) =
+\begin{cases}
+1 & \text{, if } T_{max} = T_{min}\\
+\frac{l-T_{min}}{T_{max}-T_{min}} &  \text{, otherwise}
+\end{cases}
+\end{equation} 
+%
+\\
+%
+A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have one of one. 
+%
+\subsubsection{The score}
+%
+The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $L$ be a set of the label fulfilment ratios for each frame in the video. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then calculated as:\\
+%
+\begin{equation}
+S(v,w) =(1-\alpha) \cdot \sum_{i=v}^{w} \frac{L_{i}}{l} + \alpha \cdot \tau(l)
+\end{equation}
+%
+\\
+%
+The score is thus determined by the average label fulfilment rate in the sub-part, weighted against the time span it covers.
 %
 \subsection{Choosing a Segment}
 %
