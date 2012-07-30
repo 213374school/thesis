@@ -5,16 +5,25 @@
 %
 \subsection{Segment Database}
 %
-The is simply a list of segments, where each segment consist of a number of values. The start and end frame for which a given label covers, and the respective video.
+The is simply a list of segments, where each segment consist of a number of values: The start and end frame for which a given label covers, the label, and the respective video.
 %
 \subsection{Candidate Factory}
 %
 % candidate factory: get candidates with requested labels then compute overlapping segments and finally sort segments by number of overlapping labels ties resolved by segment frame-length and yet again ties resolved by ytid (to group them, but really not needed)
 % overlapping segments has a small required segment length (6 frames)
 % top candidates are resolved and their ytid is extracted and fed to segment score algorithm. segment is then selected with a propability as a function of their score: s^2/S, S=sum(scores^2) where scores = scores > 0
-
+The candidate factory takes generates all permutation of segments for which a select set, $L$, of labels is present. Based on the segment database it filters the segments for which a label $l$ in $L$ is not present. It then follows by computing the overlapping segments by checking if segment $a$ and segment $b$ is true: $a$ and $b$ is in the same video and if they overlap:
+\[
+\text{max}(a_{\text{start}}, b_{\text{start}}) < \text{min}(a_{\text{end}}, b_{\text{end}}),
+\] % max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
+and to avoid creating duplicate segments it lastly checks that labels in $a$ is not present in $b$. If this is true a new segment, $c$, is created where 
+\[
+c_{\text{start}}, c_{\text{end}} = \text{max}(a_{\text{start}}, b_{\text{start}}), \text{min}(a_{\text{end}}, b_{\text{end}}),
+\]
+and labels in $c$ is the union of labels in $a$ and $b$, and the video source is set to the same source as in $a$ ($a$ and $b$ share the same source). Segment $c$ is then added to the list of candidates if the segment length, $c_{\text{end}} - c_{\text{start}}$, is larger than a treshold of 6 frames. We deemed a segment that short to be irrelevant.\\
+The candidate list is then sorted by number of labels in each candidate (the most relevant candidate is usually the ones where multiple labels overlap). We then get the first twenty different videos and feed these to a segment score algorithm described in section \ref{sec:segment_score}.
 %
-\subsection{Segment Score}
+\subsection{Segment Score}\label{sec:segment_score}
 %
 % Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.
 
@@ -84,17 +93,70 @@ The score is thus determined by the average label fulfilment rate in the sub-par
 %
 \subsection{Choosing a Segment}
 %
-
+The segment score algorithm described in section \ref{sec:segment_score} returns a number of candidate segments, each with an assigned score. A score sum, $S$ is computed:
+\[
+S = \sum{\text{score}(s)^2 \text{ for } s \text{ in candidates if } s > 0}.
+\]
+A multiplier, $m$ is computed as
+\[
+m = \text{min}(10^5, \text{max}(10^5, X)), X = \frac{s}{S}^{-1},
+\] % multiplier = min(1e5, max(1e5, 1 / (min_score / score_sum)))
+where $s$ is the smalles score of all candidates. This ensures that the probability score explained below is atleast 1.\\
+A probability score, $P$, is then computed for each candidate 
+\[
+P = m \frac{s^2}{S} \text{ for } s \text{ in candidates if } s > 0.
+\] % probability_score = multiplier * candidate.get('score')**2 / score_sum
+Each candidate is then replicated $P$ times, ie. if candidate $a$ has a probability score of 4 and candidate $b$ has a probability score of 2 then the list of candidates is expanded to $C = [a,a,a,a,b,b]$. A final candidate, $c$, is selected at random in $C$.\\
+This method has a minor rounding error which is roughly the decimal fraction of $P$ divided by the magnitude of $P$, which is in the order of $100\frac{1}{10^5} = 0.001\%$. IS IT NOW?????
 %
 \subsection{Recipe}
 %
 % recipies - simple approach. no immediate feedback. kinda skipped lit. study on this one. universal recipe. 2 permutations on each dataset (different alpha_span value), and added some required labels 
 % recipe structure: list of ingredients (labels, min/max span, interval, span alpha, required/forbidden labels)
-
+A recipe is a list of ingredients in a specific order, much like a cooking recipe. Each ingredient is described by
+\begin{itemize}
+\item labels - labels present in a segment has a positive impact on the segment score
+\item min. span - segments should be no shorter than this
+\item max. span - segments should be no longer than this
+\item interval - ?
+\item span alpha - weighing of labels vs. segment length
+\item required labels - labels not present in a segment has a negative impact on the segment score
+\item forbidden labels - labels present in a segment has a negative impact on the segment score
+\end{itemize}
+Unless otherwise noted we did 2 permutations on each dataset, each with a varying span alpha, $0.5$ and $0.25$.
 %
-\subsubsection{Random}
+\subsubsection{Random Labels}
+% 
+Our baseline recipe in its purest form selects random labels to feed the candidate factory, but in order to avoid idiosyncrasies we have made some minor tweaks to this selection. We will for instance not choose to have both the night and the day label in the same segment as they are by definition mutually exclusive. The length of each segment is also selected at random such that it is atleast 2 seconds long, and the maximum length is selected such that the complete videoclip is somewhere between 25-35 seconds. If $mil$ is the minimum length of a segment and $k=9$ then $mil=\text{random}(48,24k)$ in frames, ie. between 2 and 9 seconds. The maximum segment length is then $mal=\text{random}(mil+6, 2mil+6)$. $mil$ would average $\frac{2+9}{2}=5.5$ seconds hence $mal$ would average $\frac{5.5+0.25+11+0.25}{2}=8.5$ seconds, and the total clip length, with 5 segments, then averages around $5\frac{5.5+8.5}{2}=35$ seconds.
+% SPAN ALPHA?
 %
-
+\subsubsection{Random Segments}
+% 
+For each dataset we created a videoclip totally at random, ie. we picked a random video, and a random segment within that video, and cut it all together. The segment length was chosen such that they would not differ considerably from the general length of other computer generated videoclips.
+%
+\subsubsection{Human Edited}
+% 
+We used humanly edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips.
 %
 \subsubsection{Designer}
+% designer algo
+We designed a recipe to be used on all three datasets. Ingredients outlined below:
+\begin{itemize}
+\item Overview shot, 3-5 seconds, no person in focus
+\item Overview shot, 3-6 seconds, no person in focus
+\item Crowd shot, 3-6 seconds, no person in focus
+\item Crowd shot, 3-6 seconds, no person in focus
+\item Person in focus shot, 4-8 seconds, not in a crowd
+\item Person in focus shot, 4-8 seconds, not in a crowd
+\item Overview shot, 3-5 seconds, no person in focus
+\end{itemize}
 %
+During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
+Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
+% Ingredient(labels=['is_overview'], min_span=72, max_span=120, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+% Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+% Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+% Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
+% Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+% Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
+% Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha)
