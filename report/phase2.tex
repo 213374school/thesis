@@ -97,12 +97,14 @@ We compute the magnitude of the vectors a,b,c,d,e,f and check if the relative st
 \subsubsection{In crowd}
 %
 % based on facial detection
-
+We exploited an inherent limitation in facial detection; that faces far away in the image was rarely detected. Due to the nature of our datasets, and we do not try to cover up in any way that this particular label is highly overfitted for this exact purpose, waranted that when multiple faces, on average 2 or more faces, was detected we would almost certainly be in a crowd or overlooking a crowd from within.\\
+Technically speaking we would compute the moving average over 12 frames (500 ms) of people detected (profile, frontal, or upper body) and if we had detected more than 1 person we would deem that particular frame to be in a crowd. One must have in mind that there are 24 frames each second, and the facial detection will far from detect (the same) faces/people in each consequtive frame, even for a fairly still image. Hence we had to interpolate the data to get a good estimate.\\
+This method could be made even more accurate if we instead of employing a moving average would interpolate each bounding box (bounding the detected object), but also a more complex method.
 %
 \subsubsection{Person in Focus}
 %
 % based on facial detection and object placement in frame (center)
-
+The method for detected a person in focus was simple. It works much like the in crowd detection, with the extra constraint that the bounding box must be within a centrally placed area of the frame. The data was interpolated over 4 frames of a moving average as we wanted a more consistent detection.
 %
 \subsubsection{Overview}
 %
