@@ -112,4 +112,18 @@ The many different thresholds, as well as the different phases of smoothing, all
 %
 \subsubsection{Day \& Night}
 %
-% Test/Success-rate
+Our Day \& Night classifier is mostly a proof-of-concept. The time of creation is stored as part of the video file's metadata when it is recorded. As previously explained, this information is stripped away when the video is uploaded to Youtube, but should be available to us in a real scenario. However, Day \& Night classification can actually be done with high accuracy even without this informaton. In [REF] the authors describe how to classify still images through a hierachy of Support Vector Machines, including day/night classification. We have however come up with a much simpler approach, whith a very high success rate.\\
+Based around the fact that night footage has a significantly less amount of blue compared compared to footage recorded during the day, we compare the Blue Channel metadata (described in section [SEC:REF]) with the Brightness metadata (described in [SEC:REF]) in order to determine how they corrolate. Let $i$ be the frame number in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the corrolation $C_{i}$ is defined as:\\
+%
+\begin{equation}
+C_{i} = \frac{L_{i}}{R_{i}} - 1
+\end{equation}
+%
+A value above zero shows that blue is a dominant color in the frame. The mean of $C$ thus indicates whether the footage is recorded during day- or night- time. Simply using this as a determinant yields a success-ratio of ~88\%, across 301 video clips of various length. However we can futher look at the general distribution of color intensity we are able to improve this rate further.\\
+We start by creating a histogram of the brightness distribution across the entire video. The histograms have a range of [0:255] and contain 10 bins of equal size. For each frame in the video, the mean brightness value is inserted in the histogram. Now we compare the the lower end of the brightness spectrum with the number of frames in the higher end like this:
+%
+\begin{equation}
+\sum_{i=0}^{m}H_{i} < \sum_{j=m+1}^{10}H_{j}
+\end{equation}
+%
+Here $H$ is the histogram and $m$ is some value in the range $m\in [1..10]$ (we found $3$ to work quite well). If this statement is true or if the mean of $C$ is above zero we classify the video as day. Otherwise we classify it as night. With this modification we are able to increase the success-rate to ~97\%. And even then, some of the few false classifications that does occur would be difficult to classify manually since they occur in videos recorded in the evening or the late afternoon.
