@@ -92,7 +92,12 @@ We compute the magnitude of the vectors a,b,c,d,e,f and check if the relative st
 %
 \subsubsection{Vertical Oscillation}
 %
-
+% TODO: Move this section below 'Overview'
+%
+The Vertical Oscillation classifier was made to experiment with extracting information from the Optical Flow metadata. It attempts to detect footage where objects in the frames moves up and down, over a period of time. This happens, for example, if people are jumping on the spot, if people close to the camera are gesticulating heavily whilst talking, or if people are thrusting signs into the air. In order to do this we look at the variance of the vertical direction of the optical flow vectors over some time.\\
+Like in the Overview classifier we have a set of thresholds, $s$, $t$, and $v$, which are used to regulate the classifier. We start by calculating the standard deviations of the vertical direction of the vectors, throughout the videos. Since the optical flow metadata consists of nine bins of data for each frame, each bin covering one uniuqe ninth of the frame, this is done sepeately for each bin. The parameter $v$ (in our case $s = 12$), determines over how many frames the standard deviation is calculated. Thus, $s$ can be used to determine the frequence of oscillation the classifier should detect. The resulting deviations in each bin are smoothed over 60 frames in order to remove noise, just like in the Overview classifier. We then iterate through all frames and for each of them look in each bin to see if the standard deviation in it is above our threshold, $s$. If this is the case for more than $t$ bins, we consider the frame to contain vertical oscillation.
+%
+% TODO: Little bit more here...
 %
 \subsubsection{In crowd}
 %
