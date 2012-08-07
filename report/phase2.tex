@@ -2,21 +2,21 @@
 \section{Grouping and labeling}
 %
 % Remember to mention that video quality isn't used after phase 1 due to the side effects cased by labeling the video (namely that bad quality segments don't receive any labels). in a real world application this quality measure could be used to reduce the amount of data to analyze
-
+intro...
 %
 \subsection{Literature Study}
 %
-% describe Haar cascade classifiers (performance and an outline of how they work)
+%Lauge:
 Detecting suitable regions in the video-clips is not enough. The content in the regions also has to be interesting. Hanjalic, A. \cite{citeulike:405480} describes a way to identify such regions by measuring the level of excitement in a sports video-clip based on a manually selected set of features. These features can be both visuals (like the movement in an image or the change of camera positions) or audial (namely the energy contained in the audio track).% WHETHER SUCH AN APPROACH IS SUITABLE TO US IS YET TO BE DETERMINED BASED ON THE CONTENT IN OUR FUTURE DATA SET.
+\\
+%
+%Anders:
+% describe Haar cascade classifiers (performance and an outline of how they work)
+
 %
 \subsection{Method}
 %
-% how we implemented the Haar cascade classifier
-
-%
-\subsection{Detecting interesting regions in video-clips}
-%
-
+method...
 %
 \subsection{Metadata}
 %
@@ -30,6 +30,7 @@ The Haar Cascade Classifier uses a data-structure called an integral image, an a
 An integral image is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions. A FIGURE WOULD ILLUSTRATE THIS QUITE WELL.\\
 AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning algorithms where subsequent classifiers built are tweaked in favor of those instances misclassified by previous classifiers (partly FROM WIKI). The derivative algorithm is a modification of AdaBoost that constrains each returned (weak) classifier to be dependent only on a single feature, which in turn is deemed a critical feature.\\
 A method of using less complex processing to detect promising regions, and then apply the more complex processing on these regions.
+% how we implemented the Haar cascade classifier
 %
 \subsubsection{Brightness}
 %
