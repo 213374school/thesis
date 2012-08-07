@@ -5,18 +5,24 @@ import json
 import random
 import numpy as np
 from collections import *
-# for checking if file exists
+import cProfile
 import os
+import answers
+
 
 class Data:
 
-	def __init__(self, path):
+	def __init__(self, path='.'):
 
-		f = open('%s/dump/data_dump.json' % path, 'r')
+		self.file2yt = {'d370ccc56c': '2C7Y5Shw5p8', 'bf7dc9f5ca': '48QPI1wz1QY', '2806c14722': '5swFsRKsI7I', '9891596ecf': '75IHEvP7An4', '2f7a25e921': '7sao2_7sKms', '3b95a67d38': '8sk2HWj4zhU', 'a8d1de1e81': 'BbS0GQLp4CQ', '913eef2ed2': 'E1v6_GvB3j4', '143a413f62': 'G9YeDzzwyVQ', '77baa022f1': 'HlOIeCzXSCI', '57d23634ac': 'MLzAuBHSiTU', 'c23777fd98': 'Mu7JJEHonGE', '48b62f11dc': 'XYHr6gZqkTs', '3f79a5f7f1': 'ZFSYWB1BcxE', '80a451d4c2': 'a7k7gemEwsE', '90fe6adcd2': 'ho1CjPB02F8', 'dd7d1998f8': 'hrxbQNTBqNQ', '625838c2b1': 'j_pkzYcJ8j0', '7babfd31c4': 'pBw6UJa6-_w', '14e177dd42': 'rEFkglQCcXg', '98b1d02056': 'yrfnIujswX8'}
+		self.yt2file = {'2C7Y5Shw5p8': 'd370ccc56c', '48QPI1wz1QY': 'bf7dc9f5ca', '5swFsRKsI7I': '2806c14722', '75IHEvP7An4': '9891596ecf', '7sao2_7sKms': '2f7a25e921', '8sk2HWj4zhU': '3b95a67d38', 'BbS0GQLp4CQ': 'a8d1de1e81', 'E1v6_GvB3j4': '913eef2ed2', 'G9YeDzzwyVQ': '143a413f62', 'HlOIeCzXSCI': '77baa022f1', 'MLzAuBHSiTU': '57d23634ac', 'Mu7JJEHonGE': 'c23777fd98', 'XYHr6gZqkTs': '48b62f11dc', 'ZFSYWB1BcxE': '3f79a5f7f1', 'a7k7gemEwsE': '80a451d4c2', 'ho1CjPB02F8': '90fe6adcd2', 'hrxbQNTBqNQ': 'dd7d1998f8', 'j_pkzYcJ8j0': '625838c2b1', 'pBw6UJa6-_w': '7babfd31c4', 'rEFkglQCcXg': '14e177dd42', 'yrfnIujswX8': '98b1d02056'}
+
+		f = open('data_dump.json', 'r')
 		self.dump = json.loads(f.read())
 
 		self.videos = []
-		filenames = ['%s/%s' % (path, filename) for filename in os.listdir(path) if filename.split('.')[-1] in ['json']]
+		filenames = ['%s/%s' % (path, filename) for filename in os.listdir(path) if filename.split('.')[-1] in ['json'] and filename != 'data_dump.json']
+		# print filenames
 		for filename in filenames:
 			f = open(filename, 'r')
 			content = json.loads(f.read())
@@ -29,12 +35,19 @@ class Data:
 
 	def __ytid_to_filename(self, ytid):
 
-		filename = ytid
+		if ytid not in self.yt2file:
+			raise Exception('no corresponding filename for ytid: %s' % ytid)
+
+		filename = self.yt2file.get(ytid)
 		return filename
 
 	def __filename_to_ytid(self, filename):
 
-		ytid = filename
+		_filename = filename.split('.')[0]
+		if _filename not in self.file2yt:
+			raise Exception('no corresponding ytid for filename: %s' % _filename)
+
+		ytid = self.file2yt.get(_filename)
 		return ytid
 
 	def __filenames_to_ytids(self, filenames):
@@ -74,7 +87,39 @@ class Data:
 					filename = Data.__get_filename(video)
 					filenames.append(filename)
 					break
+		if 'cop15' in datasets:
+			filenames += ['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi']
+		if 'acta_aarhus' in datasets:
+			filenames += ['2806c14722.avi']
+		if 'acta_cph' in datasets:
+			filenames += ['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
 		return filenames
+
+	# get: total random, label random, edited, recipe
+
+	def __get_filenames_with_total_random_recipe(self):
+		return ['dd7d1998f8.avi', '2806c14722.avi', '48b62f11dc.avi']
+
+	def get_ytid_with_total_random_recipe(self):
+		return self.__filenames_to_ytids(self.__get_filenames_with_total_random_recipe())
+
+	def __get_filenames_with_random_label_recipe(self):
+		return ['3b95a67d38.avi', '7babfd31c4.avi', '80a451d4c2.avi', '90fe6adcd2.avi', '143a413f62.avi', 'd370ccc56c.avi']
+
+	def get_ytid_with_random_label_recipe(self):
+		return self.__filenames_to_ytids(self.__get_filenames_with_random_label_recipe())
+
+	def __get_filenames_human_edited(self):
+		return ['2f7a25e921.m4v', '77baa022f1.m4v', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+
+	def get_ytid_human_edited(self):
+		return self.__filenames_to_ytids(self.__get_filenames_human_edited())
+
+	def __get_filenames_with_designer_recipe(self):
+		return ['98b1d02056.avi', '913eef2ed2.avi', '625838c2b1.avi', '9891596ecf.avi', 'a8d1de1e81.avi', 'bf7dc9f5ca.avi']
+
+	def get_ytid_with_designer_recipe(self):
+		return self.__filenames_to_ytids(self.__get_filenames_with_designer_recipe())
 
 	def get_ytids_with_dataset(self, datasets=[]):
 
@@ -147,18 +192,70 @@ class Data:
 		filenames = self.__get_filenames_with_org_ytids(ytids=ytids)
 		return self.__filenames_to_ytids(filenames=filenames)
 
-
 def main():
-	data = Data('./mt_out')
-	print data.get_ytids_with_dataset(datasets=['acta_aarhus'])
-	print data.get_ytids_with_span_alpha(span_alpha=0.25)
-	video = data.get_video_with_filename('90fe6adcd2.avi')
-	print Data.get_mean_score(video)
-	labels = ['is_in_crowd']
-	print 'videos with labels: %s' % labels
-	print data.get_ytids_with_labels(labels=labels)
-	ytids = ['wxiI97Qp08w']
-	print data.get_ytids_with_org_ytids(ytids=ytids)
+	data = Data()
+	# print data.get_ytids_with_dataset(datasets=['acta_aarhus'])
+	# print data.get_ytids_with_span_alpha(span_alpha=0.25)
+	# video = data.get_video_with_filename('90fe6adcd2.avi')
+	# print Data.get_mean_score(video)
+	# labels = ['is_in_crowd']
+	# print 'videos with labels: %s' % labels
+	# print data.get_ytids_with_labels(labels=labels)
+	# ytids = ['wxiI97Qp08w']
+	# print 'videos with ytids: %s' % ytids
+	# print data.get_ytids_with_org_ytids(ytids=ytids)
+
+	# print data.get_ytid_with_total_random_recipe()
+	# print data.get_ytid_with_random_label_recipe()
+	# print data.get_ytid_with_designer_recipe()
+	# print data.get_ytid_human_edited()
+
+	aarh = data.get_ytids_with_dataset(datasets=['acta_aarhus'])
+	acph = data.get_ytids_with_dataset(datasets=['acta_cph'])
+	cop15 = data.get_ytids_with_dataset(datasets=['cop15'])
+	tr = data.get_ytid_with_total_random_recipe()
+	lr = data.get_ytid_with_random_label_recipe()
+	design = data.get_ytid_with_designer_recipe()
+	human_edit = data.get_ytid_human_edited()
+	low_alpha = data.get_ytids_with_span_alpha(span_alpha=0.25)
+	high_alpha = data.get_ytids_with_span_alpha(span_alpha=0.50)
+
+	print '\nlow alpha'
+	la_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), low_alpha)
+	answers.showScoresForAnswers(la_video_answers)
+
+	print '\nhigh alpha'
+	ha_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), high_alpha)
+	answers.showScoresForAnswers(ha_video_answers)
+	
+	print 'ACTA Aarhus'
+	aarh_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), aarh)
+	answers.showScoresForAnswers(aarh_video_answers)
+
+	print '\nACTA cph.'
+	acph_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), acph)
+	answers.showScoresForAnswers(acph_video_answers)
+
+	print '\nCOP15'
+	cop15_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), cop15)
+	answers.showScoresForAnswers(cop15_video_answers)
+
+	print '\ntotally random'
+	tr_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), tr)
+	answers.showScoresForAnswers(tr_video_answers)	
+
+	print '\nrandom label'
+	lr_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), lr)
+	answers.showScoresForAnswers(lr_video_answers)
+
+	print '\ndesigner'
+	des_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), design)
+	answers.showScoresForAnswers(des_video_answers)
+
+	print '\nhuman edited'
+	hum_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), human_edit)
+	answers.showScoresForAnswers(hum_video_answers)
 
 if __name__ == '__main__':
+	# cProfile.run('main()')
 	main()

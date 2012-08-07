@@ -58,6 +58,7 @@ def showScoresForAnswers(video_answers):
 	print 'Editing:      %.2f (std: %.2f)' % (np.mean(editing), np.std(editing))
 	print 'Clip Length:  %.2f (std: %.2f)' % (np.mean(clip_len), np.std(clip_len))
 	print 'Video Length: %.2f (std: %.2f)' % (np.mean(video_len), np.std(video_len))
+	print 'Final score:  %.2f (std: %.2f)' % (np.mean([content, editing, clip_len, video_len]), np.std([content, editing, clip_len, video_len]))
 
 def showNotesForAnswers(video_answers):
 
