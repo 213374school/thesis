@@ -12,7 +12,7 @@ Detecting suitable regions in the video-clips is not enough. The content in the 
 %
 %Anders:
 % describe Haar cascade classifiers (performance and an outline of how they work)
-
+With the introduction of Haar cascade classifiers by Viola and Jones \cite{viola01}, later improved upon by Lienhart and Maydt \cite{lienhart01}, there exists a very efficient tool for facial detection. This work has later been improved upon by Schmidt and Kasinski in \cite{schmidt01}\cite{schmidt02}.
 %
 \subsection{Method}
 %
@@ -24,7 +24,7 @@ Before we attempt to label the content in the videos we first extract all the me
 %
 \subsubsection{Facial Detection}
 %
-With the introduction of Haar cascade classifiers by Viola and Jones \cite{viola01}, later improved upon by Lienhart and Maydt \cite{lienhart01}, we have a very efficient tool for facial detection. OpenCV provides an implementation of an already trained classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body (CONFIRM!!!!!).\\
+OpenCV provides an implementation of an already trained classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body (CONFIRM!!!!!).\\
 Describe how Haar Cascade Detection works?\\
 The Haar Cascade Classifier uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions.\\
 An integral image is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions. A FIGURE WOULD ILLUSTRATE THIS QUITE WELL.\\
