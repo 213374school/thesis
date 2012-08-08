@@ -305,21 +305,21 @@ def main():
 	d = 0.025
 	Z = computeZ(x1,x2, d)
 	print '\nZ = %2.3f, d = %2.4f\n' % (Z, d)
-	if d == 0:
-		# alt. hypothesis: u1 != u2
-		if Z > 1.645:
-			print 'reject H0 at 0.1 level of significance'
-		else:
-			print 'cannot reject H0 at 0.1 level of significance'
-	if d > 0:
-		# alt. hypothesis: u1 > u2
-		if Z > 1.28:
-			print 'reject H0 at 0.1 level of significance'
-		else:
-			print 'cannot reject H0 at 0.1 level of significance'
-	if d < 0:
-		pass
-		# alt. hypothesis: u1 < u2
+	# if d == 0:
+	# 	# alt. hypothesis: u1 != u2
+	# 	if Z > 1.645:
+	# 		print 'reject H0 at 0.1 level of significance'
+	# 	else:
+	# 		print 'cannot reject H0 at 0.1 level of significance'
+	# if d > 0:
+	# 	# alt. hypothesis: u1 > u2
+	# 	if Z > 1.28:
+	# 		print 'reject H0 at 0.1 level of significance'
+	# 	else:
+	# 		print 'cannot reject H0 at 0.1 level of significance'
+	# if d < 0:
+	# 	pass
+	# 	# alt. hypothesis: u1 < u2
 
 	print ''
 
