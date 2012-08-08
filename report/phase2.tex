@@ -1,7 +1,7 @@
 %
 \section{Grouping and labeling}
 %
-% Remember to mention that video quality isn't used after phase 1 due to the side effects cased by labeling the video (namely that bad quality segments don't receive any labels). in a real world application this quality measure could be used to reduce the amount of data to analyze
+% Remember to mention that video quality isn't used after phase 1 due to the side effects cased by labeling the video (namely that bad quality segments don't receive any labels). in a real world application this quality measure could be used to reduce the amount of data to analyze. This should probably be in the discussion section or the summary section for this phase.
 Grouping and labeling comes down to extracting information about what is happening in a piece of video footage. We want to be able to distinguish between different \textit{types} of scenes so we have a way to construct final videos using a \textit{recipe} of some sort. This recipe would define what kinds of clips we want in the video and in what order they should appear.
 %
 \subsection{Literature Study}
@@ -10,28 +10,41 @@ Grouping and labeling comes down to extracting information about what is happeni
 %
 %Lauge:
 There are many ways to extract context from images, sound and video. Some focus on the depicted scene itself, while others look at the events happening in the scene. Location and time of day would be an example of the former while elements such as excitement, violence and other specific behaviour are examples of the later.\\
-Hanjalic, A. For example, \cite{citeulike:405480} describes a way to identify regions of high levels of excitement in sports video-clips based on a manually selected set of features. These features can be both visuals (like the movement in an image or the change of camera positions) or audial (namely the energy contained in the audio track).\\
-Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow looks at how objects move around by tracking a collection of points across frames in a video.
-Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds from a moving vehicle by looking for inward moving optical flow.
-Optical flow
-Day Night Classification
-Crowd detection
+For example, Hanjalic, A. \cite{citeulike:405480} describes a way to identify regions of high levels of excitement in sports video-clips based on a manually selected set of features. These features can be both visuals (like the movement in an image or the change of camera positions) or audial (namely the energy contained in the audio track).\\
+Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow looks at changes in the intensinty pattern in images. In many cases this indirectly indicate changes in the 3D scene caused by moving objects or a change of view-point.\\
+% Flere optical flow artikler her
+Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds from a moving vehicle by looking for inward moving optical flow. That is, flow which is highly likely to be caused by moving objects and not a change of view-point.\\
+Arandjelović \cite{Arandjelovic08crowddetection} takes a different approach and attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure. That is that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will containt repetative structures.\\
+% Flere crowd detection artikler?
+Zhong et. al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream, based individual video segments likeness to the overall events in the video.
 \\
 %
 %Anders:
 % describe Haar cascade classifiers (performance and an outline of how they work)
 With the introduction of Haar cascade classifiers by Viola and Jones\cite{viola01}, later improved upon by Lienhart and Maydt\cite{lienhart01} and by Schmidt and Kasinski\cite{schmidt01}\cite{schmidt02}, there exists a very efficient tool for facial detection.
+%
+% Lauge: Måske skal vi lige skrive lidt mere om Haar cascade. Enten flytte noget op fra Facial Detection afsnittet eller uddybe en lille smule hvordan det fungerer.
+%
 % anything on police detection (maybe violence detection)? crowd detection? 
+%
+Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically detecting the color of traffic lights.
+%
+% Lauge: Vi skal lige have læst/skrevet lidt mere om denne ^
 %
 \subsection{Method}
 %
-method...
+The labeling happens in two phases. First we extract different kinds of metadata from the individual videos. This is done frame-by-frame, for each type of metadata, so we end up with a collection of describing properties throughout each video. Some of the metadata is simple in nature. We use the frame mean pixel intentisity to estimate overall brightness and seperate the blue color channel from the original videos in order to estimate conditions such as time of day and the presence of police blinkers.\\
+Other parts of the metadata is directly available from the ealier phases of the project. This includes both the contrast level throughout the videos as well as the shift vector magnitude described in section [SEC:REF].\\
+Finally we also explore several of the methods described by the authors of the work described in the previous section [SEC:REF]. We use Haar cascade classifiers \cite{viola01}\cite{lienhart01}\cite{schmidt01}\cite{schmidt02} to detect people and faces in individual frames. For event classification we experiment with optical flow \cite{Bouguet2000}. Unfortunately most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. The only case where this is not the case is with Reisman et. al. \cite{CrowdDetectionInVideoSequences}, who work with images from a camera fixed on a moving vehicle. Neither case is anywhere close to what we are doing, since our videos are recorded mostly by handheld devices. The Optical Flow [SEC:REF] further down will describe our experimentation with overcoming this problem.\\
+\\
+With the metadata gathered from the videos, we move on to the labelling itself where we use it as input to the various classifiers. These classifiers each look at one labeling aspect of the video and construct a library of potentially overlapping segments, each containing a single lable.\\
+Section [SEC:REF] describes how we attempt to detect areas in the videos containing blue strobe light, by searching for oscillation in the blue channel from the individual video frames. In section [SEC:REF] we look at defining and detecting characteristic properties in video segments containing broad overview shots without too much nearby action. Section [SEC:REF] describes a specific attempt to extract information about particular movement within the frames of each video. We look for vertical oscillating movement as an indicator for people jumping or signs being lifted into the air. Section [SEC:REF] describes how we attempt to detect video segments containing several people in near proximity to the camera, so called Crowd shots. We part with some of the more advanced techniques described previously and simply focus on person- and facial- detection. In section [SEC:REF] we further explore this area as we attempt to distinguis video segments focusing on a specific (assumably interresting) person for a duration of time. Finally, in section [SEC:REF] we look at classifying between day- and night- time video segments by working with the different brightness and color intensity metadata we have extracted.
 %
 \subsection{Metadata}
 %
-Before we attempt to label the content in the videos we first extract all the metadata we can. MOOOORE....
+Each label classifier relies on different sets of metadata for the videos as input. This metadata is first extracted using the various methods described in this section.
 %
-\subsubsection{Facial Detection}
+\subsubsection{The presence of people}
 %
 OpenCV provides an implementation of an already trained classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body (CONFIRM!!!!!).\\
 %
@@ -103,7 +116,7 @@ An average movement and the average length of all movements are calculated for e
 % TODO: Write a bit more about how these nine vectors tells us how objects in that part of the image generally moves
 %
 % REMEMBER: Describe RISKS (zooming)
-\subsubsection{Blue channel}\label{sec:blue_channel}
+\subsubsection{Blue color channel}\label{sec:blue_channel}
 %
 Each frame in a video consists of a matrix of pixels in 3 channels, red, green, and blue. For the purpose of police detection, described in detail in section \ref{sec:police_detection}, and day/night detection, described in detail in section \ref{blah}, we extracted the blue channel in each frame and computed the mean pixel intensity.
 %
@@ -146,6 +159,26 @@ and $[e,f]$ is below a certain treshold (meaning that $a,b,c,d$ and $e,f$ are ro
      \caption{}\label{fig:triangles}
 \end{figure}
 %
+\subsubsection{Overview}
+%
+% Noter fra Kim: + Classifier
+%
+%
+Our Overview classifier attempts to detect footage with little camera movement, little internal movement within the frames, and which is not focusing on any particular single object.
+%
+% Noter fra Kim: Hvorfor det?
+%
+It uses the Support Vector Magnitude metadata described in section [SEC:REF], the Optical Flow metadata described in section [SEC:REF], as well as the actual labels classified by the Person in Focus classifier described in section [SEC:REF]. First the Optical Flow data is smoothed over 60 frames (slightly less than 3 seconds) in order to remove noise. The other two sets of metadata have already been smoothed or de-noised during their computation.\\
+%
+% Noter fra Kim: I bør vel angive klart hvad jeres defininition af Overview shot (er)
+%
+First we make sure that the frame has not already been classified as containing a Person in Focus, since this goes against our definition of an Overview shot. Now, let $s$, $t$ and $u$ be the threshold that we use to regulate the classifier. We then look at the mean vector length of the optical flow. Since each frame contains nine seperate optical flow means (for different parts of the image), we start by looking at how many of these means are below the threshold $s$. In our case $s=2$ made sense, but different resolutions will require different values. If the number of bins passing the test is larger than $t$ (in our case $7$, meaning that almost the entire image must have very little movement within), we futher make sure that the shift vector magnitude is less than $u$ (again, $10$ made sense in our case, but it will be dependant on resolution).
+%
+% Noter fra Kim: Mange af jeres variable valg virker sat arbitrært! Kan i dokumentere(?) jeres valg?
+%
+Only if the frame passes all checks will it be classified with the Overview label.\\
+The many different thresholds, as well as the different phases of smoothing, allows for a lot of tweaking. It is also very difficult to test the overall correctness of the classifier, due to the subjectiveness of what makes an Overview shot. Our configuration have been derived through emperical testing and thus may be over-fittet to our specific dataset.
+%
 \subsubsection{Vertical Oscillation}
 %
 % TODO: Move this section below 'Overview'
@@ -183,26 +216,6 @@ The data was interpolated over 4 frames of a moving average as we wanted a more 
 %
 %
 % Noter fra Kim: I skriver stedvist som en dagbog! Hold den akedemiske stil!
-%
-\subsubsection{Overview}
-%
-% Noter fra Kim: + Classifier. Flyt afsnit!
-%
-%
-Our Overview classifier attempts to detect footage with little camera movement, little internal movement within the frames, and which is not focusing on any particular single object.
-%
-% Noter fra Kim: Hvorfor det?
-%
-It uses the Support Vector Magnitude metadata described in section [SEC:REF], the Optical Flow metadata described in section [SEC:REF], as well as the actual labels classified by the Person in Focus classifier described in section [SEC:REF]. First the Optical Flow data is smoothed over 60 frames (slightly less than 3 seconds) in order to remove noise. The other two sets of metadata have already been smoothed or de-noised during their computation.\\
-%
-% Noter fra Kim: I bør vel angive klart hvad jeres defininition af Overview shot (er)
-%
-First we make sure that the frame has not already been classified as containing a Person in Focus, since this goes against our definition of an Overview shot. Now, let $s$, $t$ and $u$ be the threshold that we use to regulate the classifier. We then look at the mean vector length of the optical flow. Since each frame contains nine seperate optical flow means (for different parts of the image), we start by looking at how many of these means are below the threshold $s$. In our case $s=2$ made sense, but different resolutions will require different values. If the number of bins passing the test is larger than $t$ (in our case $7$, meaning that almost the entire image must have very little movement within), we futher make sure that the shift vector magnitude is less than $u$ (again, $10$ made sense in our case, but it will be dependant on resolution).
-%
-% Noter fra Kim: Mange af jeres variable valg virker sat arbitrært! Kan i dokumentere(?) jeres valg?
-%
-Only if the frame passes all checks will it be classified with the Overview label.\\
-The many different thresholds, as well as the different phases of smoothing, allows for a lot of tweaking. It is also very difficult to test the overall correctness of the classifier, due to the subjectiveness of what makes an Overview shot. Our configuration have been derived through emperical testing and thus may be over-fittet to our specific dataset.
 %
 \subsubsection{Day \& Night}
 %
