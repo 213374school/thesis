@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import math
 import random
 import numpy as np
 from collections import *
@@ -9,6 +10,22 @@ import cProfile
 import os
 import answers
 
+std = np.std
+var = np.var
+mean = np.mean
+sqrt = math.sqrt
+
+LoS = """0.005 level of significance: z_a = 3.30\n0.010 level of significance: z_a = 2.33
+0.025 level of significance: z_a = 1.96\n0.050 level of significance: z_a = 1.645\n0.100 level of significance: z_a = 1.28"""
+
+def computeZ(x1, x2, delta=0.0):
+
+	# p. 256 
+
+	n1, n2 = float(len(x1)), float(len(x2))
+	v1, v2 = var(x1), var(x2)
+	Z = ((mean(x1)-mean(x2)) - delta) / sqrt((v1/n1) + (v2/n2))
+	return Z
 
 class Data:
 
@@ -220,42 +237,91 @@ def main():
 	low_alpha = data.get_ytids_with_span_alpha(span_alpha=0.25)
 	high_alpha = data.get_ytids_with_span_alpha(span_alpha=0.50)
 
+	all_answers = answers.loadAllAnswers()
+
 	print '\nlow alpha'
-	la_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), low_alpha)
+	la_video_answers = answers.trimAnswersToYTIDs(all_answers, low_alpha)
 	answers.showScoresForAnswers(la_video_answers)
 
 	print '\nhigh alpha'
-	ha_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), high_alpha)
+	ha_video_answers = answers.trimAnswersToYTIDs(all_answers, high_alpha)
 	answers.showScoresForAnswers(ha_video_answers)
 	
 	print 'ACTA Aarhus'
-	aarh_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), aarh)
+	aarh_video_answers = answers.trimAnswersToYTIDs(all_answers, aarh)
 	answers.showScoresForAnswers(aarh_video_answers)
 
 	print '\nACTA cph.'
-	acph_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), acph)
+	acph_video_answers = answers.trimAnswersToYTIDs(all_answers, acph)
 	answers.showScoresForAnswers(acph_video_answers)
 
 	print '\nCOP15'
-	cop15_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), cop15)
+	cop15_video_answers = answers.trimAnswersToYTIDs(all_answers, cop15)
 	answers.showScoresForAnswers(cop15_video_answers)
 
 	print '\ntotally random'
-	tr_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), tr)
+	tr_video_answers = answers.trimAnswersToYTIDs(all_answers, tr)
 	answers.showScoresForAnswers(tr_video_answers)	
 
 	print '\nrandom label'
-	lr_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), lr)
+	lr_video_answers = answers.trimAnswersToYTIDs(all_answers, lr)
 	answers.showScoresForAnswers(lr_video_answers)
 
 	print '\ndesigner'
-	des_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), design)
+	des_video_answers = answers.trimAnswersToYTIDs(all_answers, design)
 	answers.showScoresForAnswers(des_video_answers)
 
 	print '\nhuman edited'
-	hum_video_answers = answers.trimAnswersToYTIDs(answers.loadAllAnswers(), human_edit)
+	hum_video_answers = answers.trimAnswersToYTIDs(all_answers, human_edit)
 	answers.showScoresForAnswers(hum_video_answers)
 
+	def get_answers(videos):
+		content = []
+		editing = []
+		clip_len = []
+		video_len = []
+		for vid in videos:
+			for answer in vid.get('answers'):
+				if answer.get('question_title') == 'content':
+					content.append(answer.get('answer_value'))
+				if answer.get('question_title') == 'editing':
+					editing.append(answer.get('answer_value'))
+				if answer.get('question_title') == 'clip len':
+					clip_len.append(answer.get('answer_value'))
+				if answer.get('question_title') == 'video len':
+					video_len.append(answer.get('answer_value'))
+		return content, editing, clip_len, video_len
+
+	# compare totally random to designer
+
+	content, editing, clip_len, video_len = get_answers(tr_video_answers)	
+	x1 = content
+
+	content, editing, clip_len, video_len = get_answers(des_video_answers)	
+	x2 = content
+
+	print ''
+	print LoS
+	d = 0.025
+	Z = computeZ(x1,x2, d)
+	print '\nZ = %2.3f, d = %2.4f\n' % (Z, d)
+	if d == 0:
+		# alt. hypothesis: u1 != u2
+		if Z > 1.645:
+			print 'reject H0 at 0.1 level of significance'
+		else:
+			print 'cannot reject H0 at 0.1 level of significance'
+	if d > 0:
+		# alt. hypothesis: u1 > u2
+		if Z > 1.28:
+			print 'reject H0 at 0.1 level of significance'
+		else:
+			print 'cannot reject H0 at 0.1 level of significance'
+	if d < 0:
+		pass
+		# alt. hypothesis: u1 < u2
+
+	print ''
+
 if __name__ == '__main__':
-	# cProfile.run('main()')
 	main()
