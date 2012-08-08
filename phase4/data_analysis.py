@@ -9,6 +9,14 @@ from collections import *
 import cProfile
 import os
 import answers
+import pylab
+import matplotlib
+
+plt = matplotlib.pyplot
+
+# R interface
+from rpy import *
+friedman = r.friedman_test
 
 std = np.std
 var = np.var
@@ -238,42 +246,42 @@ def main():
 	high_alpha = data.get_ytids_with_span_alpha(span_alpha=0.50)
 
 	all_answers = answers.loadAllAnswers()
-
-	print '\nlow alpha'
 	la_video_answers = answers.trimAnswersToYTIDs(all_answers, low_alpha)
-	answers.showScoresForAnswers(la_video_answers)
-
-	print '\nhigh alpha'
 	ha_video_answers = answers.trimAnswersToYTIDs(all_answers, high_alpha)
-	answers.showScoresForAnswers(ha_video_answers)
-	
-	print 'ACTA Aarhus'
 	aarh_video_answers = answers.trimAnswersToYTIDs(all_answers, aarh)
-	answers.showScoresForAnswers(aarh_video_answers)
-
-	print '\nACTA cph.'
 	acph_video_answers = answers.trimAnswersToYTIDs(all_answers, acph)
-	answers.showScoresForAnswers(acph_video_answers)
-
-	print '\nCOP15'
 	cop15_video_answers = answers.trimAnswersToYTIDs(all_answers, cop15)
-	answers.showScoresForAnswers(cop15_video_answers)
-
-	print '\ntotally random'
 	tr_video_answers = answers.trimAnswersToYTIDs(all_answers, tr)
-	answers.showScoresForAnswers(tr_video_answers)	
-
-	print '\nrandom label'
 	lr_video_answers = answers.trimAnswersToYTIDs(all_answers, lr)
-	answers.showScoresForAnswers(lr_video_answers)
-
-	print '\ndesigner'
 	des_video_answers = answers.trimAnswersToYTIDs(all_answers, design)
-	answers.showScoresForAnswers(des_video_answers)
-
-	print '\nhuman edited'
 	hum_video_answers = answers.trimAnswersToYTIDs(all_answers, human_edit)
-	answers.showScoresForAnswers(hum_video_answers)
+
+	# print '\nlow alpha'
+	# answers.showScoresForAnswers(la_video_answers)
+
+	# print '\nhigh alpha'
+	# answers.showScoresForAnswers(ha_video_answers)
+	
+	# print 'ACTA Aarhus'
+	# answers.showScoresForAnswers(aarh_video_answers)
+
+	# print '\nACTA cph.'
+	# answers.showScoresForAnswers(acph_video_answers)
+
+	# print '\nCOP15'
+	# answers.showScoresForAnswers(cop15_video_answers)
+
+	# print '\ntotally random'
+	# answers.showScoresForAnswers(tr_video_answers)	
+
+	# print '\nrandom label'
+	# answers.showScoresForAnswers(lr_video_answers)
+
+	# print '\ndesigner'
+	# answers.showScoresForAnswers(des_video_answers)
+
+	# print '\nhuman edited'
+	# answers.showScoresForAnswers(hum_video_answers)
 
 	def get_answers(videos):
 		content = []
@@ -292,36 +300,88 @@ def main():
 					video_len.append(answer.get('answer_value'))
 		return content, editing, clip_len, video_len
 
-	# compare totally random to designer
+	plot_barcharts = 0
+	if plot_barcharts:
+		##################
+		# plot barcharts #
+		##################
 
-	content, editing, clip_len, video_len = get_answers(tr_video_answers)	
-	x1 = content
+		# number of bins
+		N = 5
+		# figure export format
+		format = 'png'
 
-	content, editing, clip_len, video_len = get_answers(des_video_answers)	
-	x2 = content
+		# http://matplotlib.sourceforge.net/examples/pylab_examples/histogram_demo_extended.html
+		# http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.bar
+		for j, (va, fig_title) in enumerate([(tr_video_answers, 'Totally random'), (lr_video_answers, 'Label random'), (des_video_answers, 'Designer'), (hum_video_answers, 'Human edited')]):
+		# for j, (va, fig_title) in enumerate([(tr_video_answers, 'Totally random')]):
+			content, editing, clip_len, video_len = get_answers(va)
+			pylab.figure(j+1) # figsize=(10,10)
+			pylab.suptitle(fig_title, fontsize=16)
+			for i, (x, title) in enumerate([(content, 'Content'), (editing, 'Editing'), (clip_len, 'Clip length'), (video_len, 'Video length')]):
+				pylab.subplot(2,2,i+1, title=title)
+				# x = filter(lambda z: z, x) # remove 0's
+				# histogram functions counts occurence of each element in different bins (into the 'n' variable)
+				n, bins, patches = pylab.hist(x, bins=N); # print n, bins, patches
+				# setting alpha to 0 to not show this plot
+				pylab.setp(patches, 'alpha', 0.0, 'facecolor', 'b')
+				ind = np.arange(N) - 2 # [-2,-1,0,1,2]
+				plt.bar(left=ind, height=n, width=1.0, color='g')
+				plt.xticks(ind + 1/2.0, ('TD', 'SD', 'DK', 'SA', 'TA'))
+				pylab.grid(True)
+			# http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.savefig
+			fname = './figs/%s_barplot.%s' % (fig_title.lower().replace(' ', ''), format)
+			plt.savefig(fname, format=format)
+		pylab.show()
 
-	print ''
-	print LoS
-	d = 0.025
-	Z = computeZ(x1,x2, d)
-	print '\nZ = %2.3f, d = %2.4f\n' % (Z, d)
-	# if d == 0:
-	# 	# alt. hypothesis: u1 != u2
-	# 	if Z > 1.645:
-	# 		print 'reject H0 at 0.1 level of significance'
-	# 	else:
-	# 		print 'cannot reject H0 at 0.1 level of significance'
-	# if d > 0:
-	# 	# alt. hypothesis: u1 > u2
-	# 	if Z > 1.28:
-	# 		print 'reject H0 at 0.1 level of significance'
-	# 	else:
-	# 		print 'cannot reject H0 at 0.1 level of significance'
-	# if d < 0:
-	# 	pass
-	# 	# alt. hypothesis: u1 < u2
+	# do a Friedman test (http://en.wikipedia.org/wiki/Friedman_test), similar to a Kruskal-Wallis (KW) test (p. 318)
+	# the Friedman test is a non-parametric repeated measure on way ANOVA, non-parametric meaning we do not make assumptions on the normality of the data
+	# (the data is not normal distributed), and the repeated measure ...
+	# http://yatani.jp/HCIstats/KruskalWallis
+	# Friedman vs KW:
+	# http://stats.stackexchange.com/questions/12030/friedman-vs-kruskal-wallis-test
+	# http://www.aiaccess.net/English/Glossaries/GlosMod/e_gm_kruskal.htm
 
-	print ''
+	content_tr, editing_tr, clip_len_tr, video_len_tr = get_answers(tr_video_answers)
+	content_lr, editing_lr, clip_len_lr, video_len_lr = get_answers(lr_video_answers)
+	content_des, editing_des, clip_len_des, video_len_des = get_answers(des_video_answers)
+	
+	y1, y2, y3 = content_tr, content_lr, content_des
+
+	def to_matrix(ys):
+
+		# compute length of each pseudo-row
+		lens = [len(y) for y in ys]
+		# print lens
+		# get the longest
+		max_len = max(lens)
+
+		for i, y in enumerate(ys):
+			ys[i] += [None] * (max_len - len(y))
+
+		nys = []
+		for y in ys:
+			nys += y
+		return r.matrix(nys, nrow=max_len)
+
+	y = to_matrix([y1,y2,y3])
+	# print y
+	f = friedman(y=y)
+
+	# DoF
+	df = f.get('parameter').get('df')
+	# p-value
+	p = f.get('p.value')
+	method = f.get('method')
+	statistic = f.get('statistic')
+
+	print '##########################'
+	print method
+	print 'DoF: ', df
+	print 'p-value: ', p
+	k = statistic.keys()[0]
+	print '%s: %2.2f' % (k, statistic.get(k))
+	print '##########################'
 
 if __name__ == '__main__':
 	main()
