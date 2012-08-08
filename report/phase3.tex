@@ -5,18 +5,30 @@
 %
 \subsection{Segment Database}
 %
-The is simply a list of segments, where each segment consist of a number of values: The start and end frame for which a given label covers, the label, and the respective video.
+The is simply a list of segments,
+%
+% ^ Kim er ikke glad for denne sætning ^
+%
+where each segment consist of a number of values: The start and end frame for which a given label covers, the label, and the respective video.
 %
 \subsection{Candidate Factory}
 %
 % candidate factory: get candidates with requested labels then compute overlapping segments and finally sort segments by number of overlapping labels ties resolved by segment frame-length and yet again ties resolved by ytid (to group them, but really not needed)
 % overlapping segments has a small required segment length (6 frames)
 % top candidates are resolved and their ytid is extracted and fed to segment score algorithm. segment is then selected with a propability as a function of their score: s^2/S, S=sum(scores^2) where scores = scores > 0
-The candidate factory generates all permutation of segments for which a select set, $L$, of labels is present. Based on the segment database it filters the segments for which a label $l$ in $L$ is not present. It then follows by computing the overlapping segments by checking if segment $a$ and segment $b$ is true: $a$ and $b$ is in the same video and if they overlap:
+%
+% Noter fra Kim: Nedenstående er meget implementationsnært. Beskriv algoritmen.
+%
+The candidate factory generates all permutation of segments for which a select set, $L$, of labels is present. Based on the segment database it filters out
+the segments for which a label $l$ in $L$ is not present. It then follows by computing the overlapping segments by checking if
+%
+% Kim bryder sig ikke om nedenstående linje:
+%
+segment $a$ and segment $b$ is true: $a$ and $b$ is in the same video and if they overlap:
 \[
 \text{max}(a_{\text{start}}, b_{\text{start}}) < \text{min}(a_{\text{end}}, b_{\text{end}}),
 \] % max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
-and to avoid creating duplicate segments it lastly checks that labels in $a$ is not present in $b$. If this is true a new segment, $c$, is created where 
+and to avoid creating duplicate segments it finally also checks that labels in $a$ is not present in $b$. If this is true a new segment, $c$, is created where 
 \[
 c_{\text{start}}, c_{\text{end}} = \text{max}(a_{\text{start}}, b_{\text{start}}), \text{min}(a_{\text{end}}, b_{\text{end}}),
 \]
@@ -29,9 +41,12 @@ The candidate list is then sorted by number of labels in each candidate (the mos
 %
 The most fitting sub-parts of the video are found and scored based on how well they fulfill the label requirements we have constructed for the segment in question as well as how well they match the time span we are looking to fill. Each aspect is encapsulated in each their seperate fulfilment ratio, which are then later combined into a final score.
 %
+% Noter fra Kim: Alt for lang sætning
+%
+%
 \subsubsection{Label fulfilment}
 %
-For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of labels we would like to be present in the segment, $n$ be the number of labels in $L_{x}$, $L_{y}$ be the set of labels which we require to be present, and $L_{z}$ be the set of labels which are forbidden to be present. Also let $f_{l}$ and $f_{n}$ be the set of requested labels present in frame $f$, and the number of requested labels present in frame $f$, respectively, where $f$ is a frame in the video. The the requirement fulfilment-ratio for each frame can be calculated like this:\\
+For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of labels we would like to be present in the segment, $n$ be the number of labels in $L_{x}$, $L_{y}$ be the set of labels which we require to be present, and $L_{z}$ be the set of labels which are forbidden to be present. Also let $f_{l}$ and $f_{n}$ be the set of requested labels present in frame $f$, and the number of requested labels present in frame $f$, respectively, where $f$ is a frame in the video. The requirement fulfilment-ratio for each frame is defined like this:\\
 %
 \begin{equation}
 R(f) = \frac{f_{n}}{n} \cdot Y(f) \cdot Z(f)
@@ -61,11 +76,11 @@ Z(f) =
 %
 Effectively this means that a frame will receive a fulfilment-ratio of 0 percent if it does not contain a required label or if it contains a forbidden one, and the ratio of the number of requested labels it contains, otherwise.\\
 %
-With this fulfillment graph we now have a tool of measure to identify the parts of the video that best fit the label requirements.
+With this fulfillment ratios across the entire span of the video we now have a tool of measure to identify the parts of it, that best fit the label requirements.
 %
 \subsubsection{Time span fulfilment}
 %
-The other aspect used to determine the score of a sub-part of a video is the how well it fits within the time span we are looking to fill. A minimum- and maximum- length defines the time span, that we want the final segment to cover. Let $T_{min}$ and $T_{max}$ be the the minimum- and maximum- length, respectively, and let $l$ be the length of the sub-part in frames. The time span fulfilment ratio is then defined as:\\
+The other aspect used to determine the score of a sub-part of a video is how well it fits within the time span we are looking to fill. A minimum- and maximum- length defines the time span, that we want the final segment to cover. Let $T_{min}$ and $T_{max}$ be the the minimum- and maximum- length, respectively, and let $l$ be the length of the sub-part in frames. The time span fulfilment ratio is then defined as:\\
 %
 \begin{equation}
 \tau(l) =
@@ -77,15 +92,20 @@ The other aspect used to determine the score of a sub-part of a video is the how
 %
 \\
 %
-A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have one of one. 
+A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have a ratio of one. 
 %
 \subsubsection{The score}
 %
-The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $L$ be a set of the label fulfilment ratios for each frame in the video. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then calculated as:\\
+The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $R$ be a set of the label fulfilment ratios for each frame in the video, define in [FORMULA:REF]. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then defined as:\\
 %
 \begin{equation}
-S(v,w) =(1-\alpha) \cdot \sum_{i=v}^{w} \frac{L_{i}}{l} + \alpha \cdot \tau(l)
+S(v,w) =(1-\alpha) \cdot \sum_{i=v}^{w} \frac{R(i)}{l} + \alpha \cdot \tau(l)
 \end{equation}
+%
+% Kim var forvirret over at L_{i} (nu omdøbt til R(i)) ikke hed det samme som i den tidligere formel. Check hele denne formel igen og hver sikker på at den giver mening.
+%
+% Noter fra Kim: Argumenter for formlen. Hvorfor virker den?
+%
 %
 \\
 %
@@ -97,17 +117,29 @@ The segment score algorithm described in section \ref{sec:segment_score} returns
 \[
 S = \sum{\text{score}(s)^2 \text{ for } s \text{ in candidates if } s > 0}.
 \]
+%
+% Noter fra Kim: Sum over hvad?
+%
 A multiplier, $m$ is computed as
 \[
 m = \text{min}(10^5, \text{max}(10^5, X)), X = \frac{s}{S}^{-1},
 \] % multiplier = min(1e5, max(1e5, 1 / (min_score / score_sum)))
+%
+% Noter fra Kim: Argument for dette (formlen?)
+%
 where $s$ is the smalles score of all candidates. This ensures that the probability score explained below is atleast 1.\\
 A probability score, $P$, is then computed for each candidate 
 \[
 P = m \frac{s^2}{S} \text{ for } s \text{ in candidates if } s > 0.
 \] % probability_score = multiplier * candidate.get('score')**2 / score_sum
 Each candidate is then replicated $P$ times, ie. if candidate $a$ has a probability score of 4 and candidate $b$ has a probability score of 2 then the list of candidates is expanded to $C = [a,a,a,a,b,b]$. A final candidate, $c$, is selected at random in $C$.\\
+%
+% Noter fra Kim: Hvorfor ikke bare skrive at i sampler med sandsynlighed P? (for implementationsnært)
+%
 This method has a minor rounding error which is roughly the decimal fraction of $P$ divided by the magnitude of $P$, which is in the order of $100\frac{1}{10^5} = 0.001\%$. IS IT NOW?????
+%
+% Noter fra Kim: ???
+%
 %
 \subsection{Recipe}
 %
@@ -125,9 +157,12 @@ A recipe is a list of ingredients in a specific order, much like a cooking recip
 \end{itemize}
 Unless otherwise noted we did 2 permutations on each dataset, each with a varying span alpha, $0.5$ and $0.25$.
 %
+% Noter fra Lauge: Lad os rykke de specifikke test valg til Test afsnittet.
+%
+%
 \subsubsection{Random Labels}
 % 
-Our baseline recipe in its purest form selects random labels to feed the candidate factory, but in order to avoid idiosyncrasies we have made some minor tweaks to this selection. We will for instance not choose to have both the night and the day label in the same segment as they are by definition mutually exclusive. The length of each segment is also selected at random such that it is atleast 2 seconds long, and the maximum length is selected such that the complete videoclip is somewhere between 25-35 seconds. If $mil$ is the minimum length of a segment and $k=9$ then $mil=\text{random}(48,24k)$ in frames, ie. between 2 and 9 seconds. The maximum segment length is then $mal=\text{random}(mil+6, 2mil+6)$. $mil$ would average $\frac{2+9}{2}=5.5$ seconds hence $mal$ would average $\frac{5.5+0.25+11+0.25}{2}=8.5$ seconds, and the total clip length, with 5 segments, then averages around $5\frac{5.5+8.5}{2}=35$ seconds.
+Our baseline recipe in its purest form selects random labels to feed the candidate factory, but in order to avoid idiosyncrasies we have made some minor tweaks to this selection. We will for instance not choose to have both the night and the day label in the same segment as they are by definition mutually exclusive. The length of each segment is also selected at random such that it is at least 2 seconds long, and the maximum length is selected such that the complete videoclip is somewhere between 25-35 seconds. If $mil$ is the minimum length of a segment and $k=9$ then $mil=\text{random}(48,24k)$ in frames, ie. between 2 and 9 seconds. The maximum segment length is then $mal=\text{random}(mil+6, 2mil+6)$. $mil$ would average $\frac{2+9}{2}=5.5$ seconds hence $mal$ would average $\frac{5.5+0.25+11+0.25}{2}=8.5$ seconds, and the total clip length, with 5 segments, then averages around $5\frac{5.5+8.5}{2}=35$ seconds.
 % SPAN ALPHA?
 %
 \subsubsection{Random Segments}
@@ -137,6 +172,9 @@ For each dataset we created a videoclip totally at random, ie. we picked a rando
 \subsubsection{Human Edited}
 % 
 We used humanly edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips.
+%
+% Noter fra Kim: Hvor kommer de fra?
+%
 %
 \subsubsection{Designer}
 % designer algo
