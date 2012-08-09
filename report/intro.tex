@@ -15,14 +15,19 @@ In our work we focus on a selection of problems related to make such a video agg
 Frame quality assessment refers to the process of identifying regions within the raw video footage where the overall image quality is reasonably good. Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. This can be used later on when the final video summaries are created, or simply as a way to remove unsuitable material before the more computionally heavy operations in the later phases. Even if one does not want to remove any material this early on, it could be used as a metric for prioritising later operations. This could be relevant in a live system where one might want to prioritise later analyses based on what footage is most likely to be most useful. Frame quality assessment is usually based on the lighting conditions in the individual frames as well as the overall camera movement throughout the video.
 \subsubsection{Grouping and labeling}
 %
-Grouping and labeling refers 
-
-We actually find that the later phase of grouping and labeling the footage, in our case, proved the initial frame quality assessment to be less important than we expected. In general, in order 
+Before we can generate video summaries we need to know what we have to work with. With grouping and labeling we want to acquire some level of context from the footage. This context can be expressed in many forms. Brightenss and color distribution tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and the proximity, of people in the footage. More advanced image processesing can even tell us something about what specific actions are occuring in the video. We focus on a broad set of different methods, each focusing on one aspect of the contextual extraction. These methods, or classifiers, yield a set of labels, which can be pinned on different parts of individual footage.\\
+We actually find that this phase of grouping and labeling the footage, in our case, proved the initial frame quality assessment to be less important than we first expected. In general, at least for our selection of methods, classification only happens in footage that is of decent image quality.
 %
 \subsubsection{Video summary aggregation}
 %
+After the grouping and labeling we have created the abstraction level we need in order to create the final video summaries. Different types of \textit{random aggregation} are compared to a more controlled \textit{recipe based aggregation}. For this we construct a simple \textit{recipe language}, which uses the set generated groups as a \textit{palette} from which different segments of footage can be selected and put together. The generated video summaries are assessed by a panel of human oberservers who rate them in different aspects of quality.
 %
 \subsection{Limitations}
+%
+% Lauge: Man kan argumentere for at vi måske bør samle alle limitations i vores afsluttende RISK afsnit
+%
+\subsubsection{Data source}
+%
 %
 \subsubsection{Type of events}
 %
@@ -35,7 +40,7 @@ Our vision of a full blown system is one that constantly receives raw video foot
 %
 \subsection{Building the data set}
 %
-Since the vast majority of the videos available online do not suit our needs and since no efficient tool exist for efficiently finding the ones that does, the construction of our data set is a somewhat manual process. Each phase of this project poses specific challenges with regards to the data set needed for testing. Specific choices will be described in detail in their respective sections. However, similar for all, are the problems and decisions detailed below.
+Since the vast majority of the videos available online do not suit our needs and since no efficient tool exist for efficiently finding the ones that does, the construction of our data set is a somewhat manual process. Each phase of this project poses specific challenges with regards to the data set needed for testing. Specific choices will be described in detail in their respective sections. However, general decisions are described below.
 %
 \subsubsection{Using videos from Youtube}
 %

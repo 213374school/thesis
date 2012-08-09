@@ -1,6 +1,6 @@
 %
-\section{Video-clip segmentation}
-%
+\section{Frame quality assessment}
+% LAUGE
 % mangler
 %
 \subsection{Literature study}
@@ -12,6 +12,7 @@ The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415} is a 
 A more comprehensive approach described by ??? \cite{10.1109/ICME.2005.1521399} is a multi-level classifier that labels each frame as belonging to one of the groups: "blurred", "shaky", "inconsistent" and "stable". Their solution is based on Support Vector Machines (SVMs) and yield satisfactory results.
 %
 \subsection{Method}
+% ANDERS
 % kim: skal kunne implementere udfra beskrivelsen af metoden
 % vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
 Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a method to compute a vector that indicates the displacement in two subsequent frames, where the direction of the vector corresponds to the direction of the displacement, and the magnitude of the vector shows how many pixels was displaced. The advantage of this method is the simplicity in implementation, and low computational costs. The authors suggests a shift of each subsequent frame in four directions of 32 pixels to start with, halving the number of pixels in each step. For each shift the Root-Mean-Square (\textit{RMS}) of the difference in the two frames is calculated, and the shift with the lowest \textit{RMS} is the basis for the following shift. Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
@@ -61,6 +62,7 @@ Another way to compute $v$ is $v = \text{max}(\frac{W_{1}}{T_{1}}, \frac{W_{2}}{
 %
 \subsection{Data set for the video-clip segmentation} \label{sec:videoclipsegmentationdataset}
 %
+% LAUGE
 The main purpose of the video-clip segmentation is to be able to identify regions in the video-clips, that are suitable quality-wise. We do this by looking at the level of contrast in the frames and by estimating the amount of movement and shakiness of the camera. For simplicity we convert all our footage to gray-scale, which brings decreases the complexity and computational costs significantly. Most of the videos used for this data set was found on Youtube and collected as described in section~\ref{sec:dataset} on page~\pageref{sec:dataset}.\\
 We can roughly divide the videos from YouTube in two: raw and pre-edited video. What we generally want is raw video, but since this is by far the lesser portion of the two we decided to utilise the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\\\
 %
@@ -91,11 +93,11 @@ Finally, the data set also contains five videos, which we have recorded ourselve
 The purpose of our tests and analyses are to estimate the overall ability of several different algorithm, to correctly estimate the qualities of the frames in a video and classify them as either good and bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
 %
 \subsubsection{Overall procedure}
-%
+% LAUGE
 Since our dataset is limited in size we perform 5-fold cross validation on it in order to increase the amount of videos in the training set. The dataset is split into five buckets by sorting the video-clips by length and inserting them, one at a time, in a circular manner. The result is five sub-sets each containing more or less the same amount of frames between all the videos in each set. We then tweak each algorithm's parameter(s) on each of the training sets created by combining four out of the five sub-set and subsequently test the configuration on the remaining test set (the remaining fifth sub-set) and average the results into final scores. We also attempt to estimate how \textit{robust} each algorithm is against changes to its parameter(s). That is, we want to quantify how good the algorithm is overall. This analysis is based on the entire dataset and happens after the 5-fold cross validation.
 %
 \subsubsection{The Algorithms}
-%
+% LAUGE
 % Der skal skrives noget om at der ikke er meget tidligere forskning til rådighed omkring algoritmer til at afgøre om en frame er god eller ej, og at det er derfor vi selv har fundet på nogen %
 All our algorithms work solely with the two variables \textit{shift vector magnitude} and \textit{contrast}. The values of these variables are quantified as how good (or bad) they are compared to how bad they can be.\\
 \\
@@ -127,6 +129,7 @@ S(c,s)=MAX(c \cdot (1-c_{lim}), s \cdot (1-s_{lim}))
 , where \text{c} and \textit{s} are the \textit{contrast-} and \textit{shift vector magnitude}-ratios respectively and $c_{lim}$ and $s_{lim}$ are the limits defined by our configuration. The function effectively normalises the effect of the limits so that the two values can be compared by the \textit{MAX} statement. If $S(c,s) > 1$, one of the two parameters is beyond its limit and the frame is marked as bad.\\\\
 %
 \textbf{Cummulative contrast and shift magnitude (CCSM)}\\
+% ANDERS
 %Anders, beskriv hvad din algoritme gør % - det står i Method-afsnittet. er det “bare” en opsummering?
 %
 \textbf{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$))}
@@ -138,14 +141,14 @@ S(c,s)=\sqrt[3]{\frac{c^{3}+s^{3}}{2}}
 The parameter values are cubed (and the result normalised to the [0,1] range) in order further increase their sensitivity toward bad values. Informal experimentation shows that the power of sensitivity does not effect the outcome result in any significant way, so it has been left out as a parameter.
 %
 \subsubsection{Tweaking} \label{sec:ph1tweaking}
-%
+% LAUGE
 In turns out that defining what final score to tweak for is not as simple as it sounds. Ordinary approaches usually tend to focus on the maximisation of positive precision and recall. A very effective method for determining the overall performance of an algorithm, with this as an priority, is to use ROC diagrams, as described by [REFERENCE]. However, due the disproportion
 %
 % Noter fra Kim: Kim bryder sig ikke om sidste sætning
 %
 between the number of good and bad frames in our dataset this approach is not very suitable for us. Instead we decided that our priority would be to maximise the negative recall as well as the positive precision, since this would mean that a good score signified an algorithm/parameter combination that was not only good at avoiding unsuitable frames, but also could be relied on for delivering mostly true-positive good frames.
 %
-% Noter fra Kim: Hvad med at definere disse begreber (positiive precision etc..)
+% Noter fra Kim: Hvad med at definere disse begreber (positive precision etc..)
 %
 Of course we do not want to throw away too many good frames due to a low positive recall and a low negative precision, so any negative performance of these two factors should be considered as a cost. What we have come up with is a homemade measuring tool inspired by ROC diagrams. The cost, \textit{C}, and benefit, \text{B}, are defined as:
 \[
@@ -170,7 +173,7 @@ We create a cost/benefit diagram, by defining the benefit as the harmonic mean o
 \end{figure}
 %
 \subsubsection{Testing}
-%
+% ANDERS
 For each algorithm, in each iteration of the 5-fold cross validation, we determine the optimal choice of parameter(s) and then use this configuration to classify the test-set. Obviously, we want the resulting distance-score to be as small as possible as this signifies a good performance, but we also try to capture some of the side-effects of the specific configuration. One of the things we are interrested in knowing is how many frames long the average good video-clip is. This in itself does not tell us much, since even a very good classifier could end up with very short video-clips if the footage it was classifying is very bad. However, if several algorithms perform equally well this could work as a tie-breaker, as we in general prefer long good-quality clips since they give us more room for manoeuvre later on when we have to actually segment the footage. The variance of this length along with the median lenght is also calculated.
 %
 \subsubsection{Robustness} \label{sec:robustness}
@@ -201,7 +204,7 @@ In order to overcome this problem we simulate having only one parameter by locki
 \end{figure}
 %
 \subsubsection{Test cases} \label{sec:testcases}
-%
+% LAUGE
 \textbf{Frame by frame classification (FFC)}\\
 %
 The first test case only looks at each frame independently. For each frame we determine the level of contrast and the shift vector magnitude and use this information solely to perform a binary classification of the frame as good or bad using the algorithms described above. The results are compared with our gold standard for the videos and the amount of true and false positives and negatives are used to calculate precision and recall for both classes.\\\\
@@ -220,7 +223,7 @@ We start by identifying all the positions in the sequence of frames where the st
 %
 to the sub-sequence of the video where we stay in a state. Misclassification in these areas are not tolerated and should be punished harder. They way we accomplish this is
 %
-% Noter fra Kim: Kan ikke lide sidste sætning
+% Noter fra Kim: Kan ikke lide sidste sætning (blah blah?)
 %
  by generating a \emph{penalty function} defined as:
 %
@@ -249,7 +252,7 @@ What the function does is that i places a reverse Gaussian bell curve at each po
 Finally, for both algorithms, we also investigate the effect of smoothing the classification results. This is done to remove outliers in the final results and should not be confused with the smoothing of the \textit{contrast} and \textit{shift vector magnitudes} in the algorithms themselves.
 %
 \subsubsection{Results}
-%
+% ANDERS
 In Table \ref{tab:algoconfigs} we have a number of different configurations of algorithms. The parameter is the average over the 5-fold cross validation. Smoothness degree describes how much the result is smoothed using triangular smoothing. The comparison method is either frame-by-frame (FFC) or temporal (TC), both described in section \ref{sec:testcases}.\\
 %
 \begin{table}
@@ -416,7 +419,7 @@ The 7th configuration does not apply triangular smoothing, and also uses a fairl
 The performance can generally be explained by the nature of our dataset, as there simply is very few frames where contrast is an issue. The higher relative standard deviation of SO7 could be explained by it trying to overcompensate in the few cases where a frame is classified as bad because of a low contrast.
 %
 \subsubsection{Analysis risks}
-%
+% LAUGE
 In order to limit the scope of the testing and analysis phase we make some decisions which should be noted as a lot of areas related to determining the best algorithm and the optimal algorithm-parameter combination are left to be explored:\\
 \\
 All our algorithms square the \textit{contrast} and \textit{shift vector magnitude} values they come up with for each frame. The reason for this is that we want to increase their sensitivity toward bad values as compared to good ones. However, we have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation. Another important thing to remember is that we actually compute \textit{contrast} differently than Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general.\\
