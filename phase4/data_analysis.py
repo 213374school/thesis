@@ -16,11 +16,12 @@ plt = matplotlib.pyplot
 
 # R interface
 from rpy import *
-friedman = r.friedman_test
+r_friedman = r.friedman_test
 
 std = np.std
 var = np.var
 mean = np.mean
+array = np.array
 sqrt = math.sqrt
 
 LoS = """0.005 level of significance: z_a = 3.30\n0.010 level of significance: z_a = 2.33
@@ -217,6 +218,43 @@ class Data:
 		filenames = self.__get_filenames_with_org_ytids(ytids=ytids)
 		return self.__filenames_to_ytids(filenames=filenames)
 
+def friedman(ys):
+
+	def to_matrix(ys):
+		# convert a pseudo-matrix to a matrix useable in R
+
+		# compute length of each pseudo-row
+		lens = [len(y) for y in ys]
+		# print lens
+		# get the longest
+		max_len = max(lens)
+
+		for i, y in enumerate(ys):
+			ys[i] += [None] * (max_len - len(y))
+
+		nys = []
+		for y in ys:
+			nys += y
+		return r.matrix(nys, nrow=max_len)
+
+	y = to_matrix(ys)
+	# print y
+	f = r_friedman(y=y)
+
+	# DoF
+	df = f.get('parameter').get('df')
+	# p-value
+	p = f.get('p.value')
+	method = f.get('method')
+	statistic = f.get('statistic')
+
+	print method
+	print 'DoF: ', df
+	print 'p-value: ', p
+	k = statistic.keys()[0]
+	print '%s: %2.2f' % (k, statistic.get(k))
+	print ''
+
 def main():
 	data = Data()
 	# print data.get_ytids_with_dataset(datasets=['acta_aarhus'])
@@ -246,11 +284,17 @@ def main():
 	high_alpha = data.get_ytids_with_span_alpha(span_alpha=0.50)
 
 	all_answers = answers.loadAllAnswers()
+
+	# alpha
 	la_video_answers = answers.trimAnswersToYTIDs(all_answers, low_alpha)
 	ha_video_answers = answers.trimAnswersToYTIDs(all_answers, high_alpha)
+
+	#datasets
 	aarh_video_answers = answers.trimAnswersToYTIDs(all_answers, aarh)
 	acph_video_answers = answers.trimAnswersToYTIDs(all_answers, acph)
 	cop15_video_answers = answers.trimAnswersToYTIDs(all_answers, cop15)
+
+	#recipies
 	tr_video_answers = answers.trimAnswersToYTIDs(all_answers, tr)
 	lr_video_answers = answers.trimAnswersToYTIDs(all_answers, lr)
 	des_video_answers = answers.trimAnswersToYTIDs(all_answers, design)
@@ -298,7 +342,9 @@ def main():
 					clip_len.append(answer.get('answer_value'))
 				if answer.get('question_title') == 'video len':
 					video_len.append(answer.get('answer_value'))
-		return content, editing, clip_len, video_len
+		# compute a total score by adding each category elementwise (and then convert to standard integer)
+		total_score = [int(x) for x in list(np.sum([content, editing, clip_len, video_len], 0))]
+		return content, editing, clip_len, video_len, total_score
 
 	plot_barcharts = 0
 	if plot_barcharts:
@@ -334,54 +380,50 @@ def main():
 			plt.savefig(fname, format=format)
 		pylab.show()
 
+	#################
+	# Friedman test #
+	#################
+
 	# do a Friedman test (http://en.wikipedia.org/wiki/Friedman_test), similar to a Kruskal-Wallis (KW) test (p. 318)
 	# the Friedman test is a non-parametric repeated measure on way ANOVA, non-parametric meaning we do not make assumptions on the normality of the data
 	# (the data is not normal distributed), and the repeated measure ...
+	# http://en.wikipedia.org/wiki/Friedman_test
 	# http://yatani.jp/HCIstats/KruskalWallis
+	# http://stat.ethz.ch/R-manual/R-patched/library/stats/html/friedman.test.html
+	# http://www.gardenersown.co.uk/education/lectures/r/nonparam.htm#friedman
+	# http://www.r-statistics.com/2010/04/repeated-measures-anova-with-r-tutorials/
+	# http://vassarstats.net/textbook/ch15a.html
 	# Friedman vs KW:
 	# http://stats.stackexchange.com/questions/12030/friedman-vs-kruskal-wallis-test
 	# http://www.aiaccess.net/English/Glossaries/GlosMod/e_gm_kruskal.htm
 
-	content_tr, editing_tr, clip_len_tr, video_len_tr = get_answers(tr_video_answers)
-	content_lr, editing_lr, clip_len_lr, video_len_lr = get_answers(lr_video_answers)
-	content_des, editing_des, clip_len_des, video_len_des = get_answers(des_video_answers)
-	
-	y1, y2, y3 = content_tr, content_lr, content_des
+	y1 = get_answers(tr_video_answers)
+	y2 = get_answers(lr_video_answers)
+	y3 = get_answers(des_video_answers)
+	y4 = get_answers(hum_video_answers)
 
-	def to_matrix(ys):
+	for i, t in enumerate(['content', 'editing', 'clip length', 'video length', 'total score']):
+		print 'doing Friedman test for %s (recipies)' % t
+		friedman([y1[i], y2[i], y3[i], y4[i]])
 
-		# compute length of each pseudo-row
-		lens = [len(y) for y in ys]
-		# print lens
-		# get the longest
-		max_len = max(lens)
+	y1 = get_answers(aarh_video_answers)
+	y2 = get_answers(acph_video_answers)
+	y3 = get_answers(cop15_video_answers)
+	for i, t in enumerate(['content', 'editing', 'clip length', 'video length', 'total score']):
+		print 'doing Friedman test for %s (datasets)' % t
+		friedman([y1[i], y2[i], y3[i]])
 
-		for i, y in enumerate(ys):
-			ys[i] += [None] * (max_len - len(y))
+	y1 = get_answers(la_video_answers)
+	y2 = get_answers(ha_video_answers)
+	for i, t in enumerate(['content', 'editing', 'clip length', 'video length', 'total score']):
+		print 'doing Friedman test for %s (alpha-span)' % t
+		friedman([y1[i], y2[i]])
 
-		nys = []
-		for y in ys:
-			nys += y
-		return r.matrix(nys, nrow=max_len)
+	#################
+	# post-hoc test #
+	#################
 
-	y = to_matrix([y1,y2,y3])
-	# print y
-	f = friedman(y=y)
-
-	# DoF
-	df = f.get('parameter').get('df')
-	# p-value
-	p = f.get('p.value')
-	method = f.get('method')
-	statistic = f.get('statistic')
-
-	print '##########################'
-	print method
-	print 'DoF: ', df
-	print 'p-value: ', p
-	k = statistic.keys()[0]
-	print '%s: %2.2f' % (k, statistic.get(k))
-	print '##########################'
+	# everything is inconclusive
 
 if __name__ == '__main__':
 	main()
