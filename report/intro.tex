@@ -42,36 +42,58 @@ Our vision of a full blown system is one that constantly receives raw video foot
 %
 Since the vast majority of the videos available online do not suit our needs and since no efficient tool exist for efficiently finding the ones that does, the construction of our data set is a somewhat manual process. Each phase of this project poses specific challenges with regards to the data set needed for testing. Specific choices will be described in detail in their respective sections. However, general decisions are described below.
 %
-\subsubsection{Using videos from Youtube}
+\subsubsection{Getting the videos}
 %
-Our initial idea was to build the data set from Youtube videos recorded at events by selecting them based on location and time. However, it quickly became obvious that this was not feasible. The YouTube data API does not support searches based on specific time spans and even if it had, the timestamps accessible through it are based on the time of upload, not the time of recording. Since only very few videos are uploaded right after they are recorded, we found that the timestamps from videos from a specific event would be spread out over several days, sometimes even weeks. Location based search is however supported, but again we found the information accessible through the API unsatisfactory. Although videos can be tagged with location information, this data does not necessarily correspond to the GPS location of the device that recorded it, but is often generated based on an non specific place name, like a street, city or even country. And again, the information is created at the time of upload not the time of recording and thus based on the user's position at that time.\\
-Given these observation we instead came up with another way to build our data set. When users upload a video to YouTube they can choose to attach a set of tags/keywords and categories to it. We found that these keywords and categories, when chosen correctly, can be a very efficient way to search for related video footage. For example, events like protests and demonstration can often be found by simply searching for a keyword describing the cause behind the event along with one describing the location (often a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location can not be accurately identified through these attributes. For example, a video promoting a demonstration before it begins and explaining the reasons for it will often be tagged with the same keywords as the footage later recorded at the event. It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.
+All the videos in our dataset have been found on Youtube. Due to limitations in the Youtube API and the way Youtube stores video, most of the video metadata is unavailable to us. This means that we do not have access to the original time of recording, as well as potential geo-location data, which might have been available otherwise. Instead we had to rely on Youtubes tag/keyword system. When users upload a video to YouTube they can choose to attach a set of tags/keywords and categories to it. We find that these keywords and categories, when chosen correctly, can be a very efficient way to search for related video footage. For example, events like protests and demonstration can often be found by simply searching for a keyword describing the cause behind the event along with one describing the location (often a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location can not be accurately identified through these attributes. For example, a video promoting a demonstration before it begins and explaining the reasons for it will often be tagged with the same keywords as the footage later recorded at the event. It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.
+%
+% Lauge: Nedenstående er den tidligere tekst. Jeg har valgt at koge det meget ned, for ikke at komme for tæt på 'implementation level'
+%
+% Our initial idea was to build the data set from Youtube videos recorded at events by selecting them based on location and time. However, the YouTube data API does not support searches based on specific time spans and even if it had, the timestamps accessible through it are based on the time of upload, not the time of recording. Since only very few videos are uploaded right after they are recorded, we found that the timestamps from videos from a specific event would be spread out over several days, sometimes even weeks. Location based search \textit{is} supported, but again we found the information accessible through the API unsatisfactory. Although videos can be tagged with location information, this data does not necessarily correspond to the GPS location of the device that recorded it, but is often generated based on an non specific place name, like a street, city or even country. And again, the information is created at the time of upload not the time of recording and thus based on the user's position at that time.\\
+% As a result of these observation we came up with another way to build our data set. When users upload a video to YouTube they can choose to attach a set of tags/keywords and categories to it. We find that these keywords and categories, when chosen correctly, can be a very efficient way to search for related video footage. For example, events like protests and demonstration can often be found by simply searching for a keyword describing the cause behind the event along with one describing the location (often a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location can not be accurately identified through these attributes. For example, a video promoting a demonstration before it begins and explaining the reasons for it will often be tagged with the same keywords as the footage later recorded at the event. It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.
+%
+\subsubsection{Getting the videos}
+Using the Youtube API we searched for videos related to three seperate events, that all happened in Denmark within recent time.
+%
+\paragraph{COP 15 Climate summit, Copenhagen, 2009}
+%
+This is the event with the most diverse footage. Since the event occured over several days, this sub-set of videos contain footage from a lot of different places recorded over a significant timespan. It is also the only of the sub-sets that contain night footage, has footage with significant police presense in them, and footage of people being arrested.
+%
+\paragraph{ACTA protest, Copenhagen, 2012}
+%
+This, more recent event, spans a handful of hours starting during the day and continuing into the late afternoon and early evening. The footage is spread out over a smaller area and shows people both in walking and standing protest at various location, as well as public speakers.
+%
+\paragraph{ACTA protest, Aarhus, 2012}
+%
+The ACTA Aarhus sub-set is recorded on the same day as the ACTA Copenhagen set. Although it contains fewer videos, they are generally longer and mostly show public speakers. The footage is recorded exclusively during the day.
 %
 \subsubsection{Removal of unwanted material}
 %
-Since the purpose of our data set is to mimic raw, unedited footage as much as possible we have to perform a significant amount of manual filtering during our Youtube searches.\\\\
+Since the purpose of our data set is to mimic raw, unedited footage as much as possible we have to perform a significant amount of manual filtering during our Youtube searches.\\
 %
-\textbf{Completely unrelated videos}\\
+\paragraph{Completely unrelated videos}\\
 %
-All videos that are obviously unrelated and only a result of ambiguous search queries are removed. Examples of this would be the police chase videos that emerged during our search for protest videos from the COP 15 Climate summit in Copenhagen in 2009.\\\\
+All videos that are obviously unrelated and only a result of ambiguous search queries are removed. Examples of this would be the police chase videos that emerged during our search for protest videos from the COP 15 Climate summit.\\
 %
-\textbf{Related, non-event videos}\\
+\paragraph{Related, non-event videos}\\
 %
 These videos are related to the event we want, but they are not from the event. Again, this is the result of a ambiguous search query or maybe even an unfit tag being applied to the video. Examples include videos that promote an event or, in the COP 15 example, videos regarding the climate meetings, which had nothing to do with the protests around it.
 %
 \subsubsection{Partly use of some material}
 %
-In some cases part of a video-clip may be suitable for a specific test although the clip in its entirety does not live up to our requirements. An example of this would be a video of an event that was obviously produced from several other video-clips. Although using such a clip as if it was raw footage would severely hurt the credibility of our results, some of its sub-segments (or maybe even the entire video) can sometimes be used in specific tests, for example as a “gold standard” of what good footage or a good video summary should look like.
-% husk at det hedder golden standard (el. lign.) i stedet for ground truth
+In some cases part of a video-clip may be suitable for a specific test although the clip in its entirety does not live up to our requirements. An example of this would be a video of an event that was obviously produced from several other video-clips. Although using such a clip as if it was raw footage would severely hurt the credibility of our results, some of its sub-segments (or maybe even the entire video) can sometimes be used in specific tests, for example as a \textit{golden standard} of what good footage or a good video summary should look like.
+%
 \subsubsection{Pre-processing of the videos}
 %
-The video-clips available online are recorded on a lot of different devices and stored in many different formats. In order to streamline the later analysis processes all videos are converted to the Apple MPEG-4 video format ‘m4v’. The conversion also resizes them to a dimension of 640x360 pixels at 1600 kbit data per second at 24 frames per second. These videos are of a size, which makes them manageable computationally when we later have to analyse them, while still preserving enough information about their content. % skal ikke nævnes her, men i den forbindelse skal vi også huske at nævne at vi analysere billedet i grayscale (selvfølge i billedanalyse, men hellere være på den sikre side). dette nævnes også nedenfor. måske vi skriver det i den omvendte rækkefølge?
+The video-clips available online are recorded on a lot of different devices and stored in many different formats. In order to generalise the later analysis, all videos are converted to the Apple MPEG-4 video format \textit{m4v}. The conversion also resizes them to a height of 360 pixels at 1600 kbit data per second at 24 frames per second. Videos of this size are manageable computationally when we later have to analyse them, while still containing enough information about their content. For most of the futher image processing we work on a grayscale version of the videos. Only when we actually need to use color do we do so.\\
+Due to the different aspect ratios of different videos, their width differ slightly, even after the re-sizing. However, the most important thing is that the images we work with are of the same scale, when we further have to analyse them.
 %
 \subsubsection{Noise in the data set}
 %
-%SOMETHING ABOUT THE POSSIBLE SOURCES OF NOISE IN OUR DATA SET
+Har vi overhovedet brug for dette afsnit?
 %
 \subsubsection{Limitations as a result of our dataset}
+%
+% Lauge: Dette afsnit mangler stadigt at blive skrevet færdigt. Alt efter længde skal det måske rykkes om i slutingen af rapporten sammen med resten...
 %
 A lot of the limitations in our research should be obvious at this point. We chose to only focus on a very small subset of all the possible scenarios a fully automatic system should be able to handle. Furthermore, we screen the data manually in order to make sure it is usable. However, much of the necessity for this is based on the fact that we do not have access to the raw footage as well as all the meta-data originally attached to a video-clip. Our main goal was to create a data set, which mostly contains original raw footage or, in the cases where it makes sense, video-clips, which we can pretend is raw footage. The task of determining whether a video-clip belongs to this category is, in many ways, much easier if you know exactly when and where it was recorded. Furthermore raw footage also often contain information about the source device it was recorded on, which again would tell us that the video data is unaltered. Had we had our own video hosting service we would have access to such information.
 %
