@@ -14,7 +14,7 @@ A more comprehensive approach described by ??? \cite{10.1109/ICME.2005.1521399} 
 \subsection{Method}
 % kim: skal kunne implementere udfra beskrivelsen af metoden
 % vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
-Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a method to compute a vector that indicates the displacement in two subsequent frames, where the direction of the vector corresponds to the direction of the displacement, and the magnitude how many pixels was displaced. The advantage of this method is the simplicity in implementation, and low computational costs. The authors suggests a shift of each subsequent frame in four directions of 32 pixels to start with, halving the number of pixels in each step. For each shift the Root-Mean-Square (\textit{RMS}) of the difference in the two frames is calculated, and the shift with the lowest \textit{RMS} is the basis for the following shift. Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
+Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a method to compute a vector that indicates the displacement in two subsequent frames, where the direction of the vector corresponds to the direction of the displacement, and the magnitude of the vector shows how many pixels was displaced. The advantage of this method is the simplicity in implementation, and low computational costs. The authors suggests a shift of each subsequent frame in four directions of 32 pixels to start with, halving the number of pixels in each step. For each shift the Root-Mean-Square (\textit{RMS}) of the difference in the two frames is calculated, and the shift with the lowest \textit{RMS} is the basis for the following shift. Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
 The algorithm below illustrates how the displacement vector for two subsequent frames is computed.
 %
 \begin{verbatim}
@@ -33,6 +33,8 @@ The algorithm below illustrates how the displacement vector for two subsequent f
           f’ <- shift f’ y pixels up
      yield x’,y’
 \end{verbatim}
+%
+% Note fra Kim: ^^ Det kan skrives mere kompakt vha. formler ^^
 %
 With a frame dimension of $640\times480$ and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is then highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction. Images that are symmetrical around the vertical or horizontal center, ie. two almost identical local minima, can potentially fool the method into the wrong direction due to the greedy nature of the algorithm, but that is a rare statistical anomaly.\\
 Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a simple method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting (too) dark images, it does not take ex. extremely bright images into account, or closeups of a textureless surface. To counter this downside we instead computed a measure of contrast in a frame as the standard deviation of the pixel-values in the image-matrix, where a small standard deviation would indicate little contrast/diversity in pixel intensity, and a large standard deviation would indicate a high contrast/much diversity in pixel intensity. Hence, a very dark image or very bright image would have a low contrast as would images with little or no texture. It will however not detect an image where half of it has a very low contrast, ex. an image of clear sky in the top three-quarters, nor would we necessarily want to discard frames like these.\\\\ % skal vi have et par billeder med deres std. dev. sådan at man kan se med egne øjne, eller er det ikke for simpelt?
@@ -137,7 +139,15 @@ The parameter values are cubed (and the result normalised to the [0,1] range) in
 %
 \subsubsection{Tweaking} \label{sec:ph1tweaking}
 %
-In turns out that defining what final score to tweak for is not as simple as it sounds. Ordinary approaches usually tend to focus on the maximisation of positive precision and recall. A very effective method for determining the overall performance of an algorithm, with this as an priority, is to use ROC diagrams, as described by [REFERENCE]. However, due the disproportion between the number of good and bad frames in our dataset this approach is not very suitable for us. Instead we decided that our priority would be to maximise the negative recall as well as the positive precision, since this would mean that a good score signified an algorithm/parameter combination that was not only good at avoiding unsuitable frames, but also could be relied on for delivering mostly true-positive good frames. Of course we don't want to throw away too many good frames due to a low positive recall and a low negative precision, so any negative performance of these two factors should be considered as a cost. What we have come up with is a homemade measuring tool inspired by ROC diagrams. The cost, \textit{C}, and benefit, \text{B}, are defined as:
+In turns out that defining what final score to tweak for is not as simple as it sounds. Ordinary approaches usually tend to focus on the maximisation of positive precision and recall. A very effective method for determining the overall performance of an algorithm, with this as an priority, is to use ROC diagrams, as described by [REFERENCE]. However, due the disproportion
+%
+% Noter fra Kim: Kim bryder sig ikke om sidste sætning
+%
+between the number of good and bad frames in our dataset this approach is not very suitable for us. Instead we decided that our priority would be to maximise the negative recall as well as the positive precision, since this would mean that a good score signified an algorithm/parameter combination that was not only good at avoiding unsuitable frames, but also could be relied on for delivering mostly true-positive good frames.
+%
+% Noter fra Kim: Hvad med at definere disse begreber (positiive precision etc..)
+%
+Of course we do not want to throw away too many good frames due to a low positive recall and a low negative precision, so any negative performance of these two factors should be considered as a cost. What we have come up with is a homemade measuring tool inspired by ROC diagrams. The cost, \textit{C}, and benefit, \text{B}, are defined as:
 \[
 C = 2 \cdot \frac{positive_{recall} \cdot negative_{precision}}{positive_{recall} + negative_{precision}}
 \]
@@ -145,7 +155,13 @@ and
 \[
 B = 2 \cdot \frac{negative_{recall} \cdot positive_{precision}}{negative_{recall} + positive_{precision}}
 \]
+%
+% Noter fra Kim: Giver det mening at kalde dem cost og benefit? Mix af positive og negative, hvad er definationerne på disse? F-meassure? Forklar? Hvor kommer det fra, Fawcett?
+%
 We create a cost/benefit diagram, by defining the benefit as the harmonic mean of the positive precision and the negative recall and the cost as one minus the harmonic mean of the positive recall and negative precision. These values can be used to produce a diagram, which in many ways resembles a classic ROC diagram (see fig. [REFERENCE]). The resulting cost and benefits based on different parameter choices for an algorithm are plotted along the two axis and as with a normal ROC diagram we want the points to lie as close to the top left corner as possible, as this signifies a large benefit with a small cost. We calculate the distance from each point to this corner and use it as a final score, that can be used to measure how well that specific configuration performs.
+%
+% Noter fra Kim: What? Hvorfor ikke areal? Forklar!
+%
 %
 \begin{figure}
      \centering
@@ -159,7 +175,7 @@ For each algorithm, in each iteration of the 5-fold cross validation, we determi
 %
 \subsubsection{Robustness} \label{sec:robustness}
 %
-On top of the ordinary tweaking and testing we also attempt to measure the overall robustness of each of the algorithms with respect to the change of parameter. This is done by calculating the area under the curve (AUC) of the cost/benefit diagrams generated by each algorithm. For this we use the entire dataset, which is to say that it happens after the 5-fold cross validation. Any algorithm, whos benefit-value is generally larger than its corresponding cost-value, across all choices of parameter(s) will have an AUC larger than 0.5. The larger the AUC is the more robust the algorithm is toward changes to its parameter(s). Since the points produced by most of the algorithms are not evenly spread over the entire diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span of the diagram along the x-axis. It can be argued whether this is the most correct way to handle this, but it does produce comparable AUCs across all algorithms. Unlike the tweaking and testing described above this does not tell us anything useful about the best parameter to choose since we have no way of knowing how this would generalise. But it does tell us something about the nature of the algorithm itself. In general we would prefer our algorithm of choice to be as robust as possible as it signifies a sensible selection of parameters. 
+On top of the ordinary parameter tuning and testing we also attempt to measure the overall robustness of each of the algorithms with respect to the change of parameter. This is done by calculating the area under the curve (AUC) of the cost/benefit diagrams generated by each algorithm. For this we use the entire dataset, which is to say that it happens after the 5-fold cross validation. Any algorithm, whos benefit-value is generally larger than its corresponding cost-value, across all choices of parameter(s) will have an AUC larger than 0.5. The larger the AUC is the more robust the algorithm is toward changes to its parameter(s). Since the points produced by most of the algorithms are not evenly spread over the entire diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span of the diagram along the x-axis. It can be argued whether this is the most correct way to handle this, but it does produce comparable AUCs across all algorithms. Unlike the tweaking and testing described above this does not tell us anything useful about the best parameter to choose since we have no way of knowing how this would generalise. But it does tell us something about the nature of the algorithm itself. In general we would prefer our algorithm of choice to be as robust as possible as it signifies a sensible selection of parameters. 
 %
 \subsubsection{Multi-parameter algorithms} \label{sec:ph1multiparameter}
 %
@@ -172,6 +188,9 @@ The second problem is encountered when generating the cost/benefit diagrams and 
      \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample.jpg}
      \caption{An example of a 2D cost/benefit diagram for an algorithm with two variables}
 \end{figure}
+%
+%
+% Noter fra Kim: Y-axis = benefit? X-axis=cost? Ser mærkeligt ud, drop!
 %
 In order to overcome this problem we simulate having only one parameter by locking the second one (contrast) to a specific value and then performing our analysis as usual. We repeat this over and over again, locking the contrast parameter to a new value in each iteration until we have covered all configuration combinations. For the robustness analysis we then add an aditional axis, representing the locked parameter, to our cost/benefit diagram and draw our points in three dimensions. The plane created illustrates the robustness of the algorithm much better. Since the choice of contrast values across all iterations are uniformly distributed, we can easily determine the AUC for the algorithm by simply calculating the individual AUCs for each selection of contrast value and compute an average.
 %
@@ -189,15 +208,34 @@ The first test case only looks at each frame independently. For each frame we de
 %
 \textbf{Temporal classification (TC)} \label{sec:tctestcase}\\
 %
-In the second test case we extend the classification to take the surrounding frames into account as well. Since the human eye does not perceive a movie as a sequence of frames but rather as a moving picture, we expect good and bad frames to show up in chunks. That is, we expect single bad frames to be ignored by a human watcher, if all their surrounding frames are generally good. We assume the same for single good frames surrounded by a lot of bad frames. In this test case the goal is to see how well the algorithms are able to switch into the correct state and stay there for its entirety. In order take this into account we have come up with the following method of measurement:\\\\
+In the second test case we extend the classification to take the surrounding frames into account as well. Since the human eye does not perceive a movie as a sequence of frames but rather as a moving picture, we expect good and bad frames to show up in chunks. That is, we expect single bad frames to be ignored by a human observer, if all their surrounding frames are generally good.
 %
-We start by identifying all the positions in the sequence of frames where the state changes from good to bad or vice versa. These are the areas where we are tolerant of mistakes by the classifier, that is, we will not punish it very hard for misclassifications around these positions. The areas between the the pointers correspond to the sub-sequence of the video where we stay in a state. Misclassification in these areas are not tolerated and should be punished harder. They way we accomplish this is by generating a \emph{penalty function} defined as:
+% Noter fra Kim: Uklart
+%
+We assume the same for single good frames surrounded by a lot of bad frames. In this test case the goal is to see how well the algorithms are able to switch into the correct state and stay there for its entirety. In order take this into account we have come up with the following method of measurement:\\\\
+%
+We start by identifying all the positions in the sequence of frames where the state changes from good to bad or vice versa. These are the areas where we are tolerant of mistakes by the classifier, that is, we will not punish it very hard for misclassifications around these positions. The areas between the the pointers correspond
+%
+% Noter fra Kim: Kan ikke lide sidste sætning
+%
+to the sub-sequence of the video where we stay in a state. Misclassification in these areas are not tolerated and should be punished harder. They way we accomplish this is
+%
+% Noter fra Kim: Kan ikke lide sidste sætning
+%
+ by generating a \emph{penalty function} defined as:
 %
 \begin{displaymath}
 P(x) =1 - MAX_{b\in B}(e^{-\frac{(x-b)^{2}}{2c^{2}}})
 \end{displaymath}
 %
-The content of the \emph{MAX} clause is just a Gaussian function, \emph{x} is the position at which we want to know how much we should punish mistakes, \emph{B} is a set of all positions where a change of state happens and \emph{c} is the level of tolerance we have for mistakes in general. The further away from a change of state a misclassification is the more it is punished. See [fig reference].
+%
+% Noter fra Kim: What?
+%
+The content of the \emph{MAX} clause is just a Gaussian function, \emph{x} is the position at which we want to know how much we should punish mistakes, \emph{B} is a set of all positions where a change of state happens and \emph{c}
+%
+% Noter fra Kim: Valgt hvordan?
+%
+is the level of tolerance we have for mistakes in general. The further away from a change of state a misclassification is the more it is punished. See [fig reference].
 %
 \begin{figure}
 \includegraphics[width=1\textwidth]{img/penaltyfunction.jpg}
