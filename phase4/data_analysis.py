@@ -24,6 +24,9 @@ mean = np.mean
 array = np.array
 sqrt = math.sqrt
 
+# http://code.google.com/p/matrix2latex/
+from matrix2latex import matrix2latex
+
 LoS = """0.005 level of significance: z_a = 3.30\n0.010 level of significance: z_a = 2.33
 0.025 level of significance: z_a = 1.96\n0.050 level of significance: z_a = 1.645\n0.100 level of significance: z_a = 1.28"""
 
@@ -266,6 +269,8 @@ def friedman(ys):
 		print '%s: %2.2f' % (k, v)
 	print ''
 
+	return df, p, v
+
 def main():
 	data = Data()
 	# print data.get_ytids_with_dataset(datasets=['acta_aarhus'])
@@ -408,27 +413,48 @@ def main():
 	# http://stats.stackexchange.com/questions/12030/friedman-vs-kruskal-wallis-test
 	# http://www.aiaccess.net/English/Glossaries/GlosMod/e_gm_kruskal.htm
 
+	# used by matrix2latex
+	# header row
+	hr = ['', 'v', 'p-value', '$x^2$']
+	# format column
+	fc = ['%s', '$%d$', '$%1.4f$', '$%1.4f$']
+	alignment = 'lccc'
+
+	m = []
 	y1 = get_answers(tr_video_answers)
 	y2 = get_answers(lr_video_answers)
 	y3 = get_answers(des_video_answers)
 	y4 = get_answers(hum_video_answers)
-
-	for i, t in enumerate(['content', 'editing', 'clip length', 'video length', 'total score']):
+	for i, t in enumerate(['Content', 'Editing', 'Clip length', 'Video length', 'Total score']):
 		print 'doing Friedman test for %s (recipies)' % t
-		friedman([y1[i], y2[i], y3[i], y4[i]])
+		df, p, v = friedman([y1[i], y2[i], y3[i], y4[i]])
+		m.append([t, df, p, v])
+	caption = 'Friedman rank sum test for recipies'
+	label = 'tab:fried_recip'
+	t = matrix2latex(m, 'recipies', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)
 
+	m = []
 	y1 = get_answers(aarh_video_answers)
 	y2 = get_answers(acph_video_answers)
 	y3 = get_answers(cop15_video_answers)
-	for i, t in enumerate(['content', 'editing', 'clip length', 'video length', 'total score']):
+	for i, t in enumerate(['Content', 'Editing', 'Clip length', 'Video length', 'Total score']):
 		print 'doing Friedman test for %s (datasets)' % t
-		friedman([y1[i], y2[i], y3[i]])
+		df, p, v = friedman([y1[i], y2[i], y3[i]])
+		m.append([t, df, p, v])
+	caption = 'Friedman rank sum test for datasets'
+	label = 'tab:fried_dataset'
+	t = matrix2latex(m, 'datasets', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)
 
+	m = []
 	y1 = get_answers(la_video_answers)
 	y2 = get_answers(ha_video_answers)
-	for i, t in enumerate(['content', 'editing', 'clip length', 'video length', 'total score']):
+	for i, t in enumerate(['Content', 'Editing', 'Clip length', 'Video length', 'Total score']):
 		print 'doing Friedman test for %s (alpha-span)' % t
-		friedman([y1[i], y2[i]])
+		df, p, v = friedman([y1[i], y2[i]])
+		m.append([t, df, p, v])
+	caption = 'Friedman rank sum test for $\\alpha$-span'
+	label = 'tab:fried_alpha'
+	t = matrix2latex(m, 'alpha-span', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)
 
 	#################
 	# post-hoc test #

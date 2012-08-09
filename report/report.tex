@@ -7,6 +7,13 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{array}
+
+% packages needed for matrix2latex
+% scientific notation, 1\e{9} will print as 1x10^9
+\providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
+\usepackage{amsmath} % needed for pmatrix
+\usepackage{booktabs} % Fancy tables
+
 \newcolumntype{!}{>{\global\let\currentrowstyle\relax}}
 \newcolumntype{^}{>{\currentrowstyle}}
 \newcommand{\rowstyle}[1]{\gdef\currentrowstyle{#1}%
@@ -66,8 +73,6 @@
 % flyt resultat snak til resultat sektion
 % valg af parametre - hvordan? håndtuning?
 % overfitting pga. manglende data
-
-% spørg pernille om kontor til kim
 
 \include{intro}
 \include{phase1}
