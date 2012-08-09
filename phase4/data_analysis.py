@@ -27,6 +27,9 @@ sqrt = math.sqrt
 LoS = """0.005 level of significance: z_a = 3.30\n0.010 level of significance: z_a = 2.33
 0.025 level of significance: z_a = 1.96\n0.050 level of significance: z_a = 1.645\n0.100 level of significance: z_a = 1.28"""
 
+# show output with text color (nice for finding significant effect in Friedman test)
+SHOW_WITH_TEXT_COLOR = 0
+
 def computeZ(x1, x2, delta=0.0):
 
 	# p. 256 
@@ -252,7 +255,15 @@ def friedman(ys):
 	print 'DoF: ', df
 	print 'p-value: ', p
 	k = statistic.keys()[0]
-	print '%s: %2.2f' % (k, statistic.get(k))
+	v = statistic.get(k)
+	
+	if SHOW_WITH_TEXT_COLOR:
+		txt_clr = '\033[91m' # RED
+		if df == 1 and v >= 3.841 or df == 2 and v >= 5.991 or df == 3 and v >= 7.815:
+			txt_clr = '\033[92m' # GREEN
+		print '%s: %s%2.2f\033[0m' % (k, txt_clr, v)
+	else:
+		print '%s: %2.2f' % (k, v)
 	print ''
 
 def main():
@@ -343,7 +354,7 @@ def main():
 				if answer.get('question_title') == 'video len':
 					video_len.append(answer.get('answer_value'))
 		# compute a total score by adding each category elementwise (and then convert to standard integer)
-		total_score = [int(x) for x in list(np.sum([content, editing, clip_len, video_len], 0))]
+		total_score = [float(x/4.0) for x in list(np.sum([content, editing, clip_len, video_len], 0))]
 		return content, editing, clip_len, video_len, total_score
 
 	plot_barcharts = 0
