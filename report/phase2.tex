@@ -47,23 +47,27 @@ Each label classifier relies on different sets of metadata for the videos as inp
 %
 \subsubsection{The presence of people}
 %
-OpenCV provides an implementation of an already trained classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body (CONFIRM!!!!!).\\
+OpenCV provides an implementation of an already trained classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
 %
-% Noter fra Kim: Yes, i det mindste nogle flere detaljer
+% Noter fra Kim: Yes, i det mindste nogle flere detaljer. DESCRIBE HAAR CASCADE CLASSIFIER IN MORE DETAIL.
 %
 The Haar Cascade Classifier (HCC) uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions.\\
-An integral image is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions. A FIGURE WOULD ILLUSTRATE THIS QUITE WELL.\\
+An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img}. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions.
 %
-% Noter fra Kim: YEP
+\begin{figure}[h]
+     \centering
+     \includegraphics[width=0.75\textwidth]{img/integral_image.png}
+     \caption{Integral image}\label{fig:integral_img}
+\end{figure}\\
 %
-AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning algorithms where subsequent classifiers built are tweaked in favor of those instances misclassified by previous classifiers (partly FROM WIKI). The derivative algorithm is a modification of AdaBoost that constrains each returned (weak) classifier to be dependent only on a single feature, which in turn is deemed a critical feature.\\
+AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning algorithms where subsequent classifiers built are tweaked in favor of those instances misclassified by previous classifiers. The derivative algorithm is a modification of AdaBoost that constrains each returned (weak) classifier to be dependent only on a single feature, which in turn is deemed a critical feature.\\
 A method of using less complex processing to detect promising regions, and then apply the more complex processing on these regions.\\
 OpenCV provides a python-implementation of an already trained Haar cascade classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
-By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate, and we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal, compared to most other types of video footage).\\
+By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate, and we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set).\\
 Initial measurements by Viola achives 15 frames per second detection in an 384 by 288 pixel image on, by todays standards, outdated hardware, we are working with 480 by 640 pixel images, an almost 3 times larger area, we still had close to real-time facial detection (working on video with 24 frames per second). This is however not practical if a computer had to analyze multiple video-streams (as in our case). For the sake of simplicity we did not perform the obvious optimization of only analayzing select frames (ex. every third frame). Analyzing all of our footage was still done overnight, but as we interpolate the results afterswards, we would not expect these to suffer much from the before-mentioned optimization.\\
 We suggest that further optimizations involve exploiting the ready-at-hand metadata such as the general frame quality which severely impacts facial detection rates in a negative fashion.\\
-A more advanced optimization would be to exploit the temporal data achived when analyzing frame-by-frame. Ie. we could exploit knowledge gained in previous frames to speed up human detection in subsequent frames.
-
+%A more advanced optimization would be to exploit the temporal data achived when analyzing frame-by-frame. Ie. we could exploit knowledge gained in previous frames to speed up human detection in subsequent frames.
+This method can be optimized further by exploiting the temporal data gained between frames of the bounding boxes (of detected objects). Ie. instead of analyzing the entire frame by expanding the search windowd incrementally, we utilize knowledge of where people were present in the previous frame.
 %
 \subsubsection{Brightness}
 %
@@ -133,32 +137,46 @@ Like the contrast, the shift vector magnitudes for each video is already compute
 %
 
 %
-\subsubsection{Police Detection}\label{sec:police_detection}
+\subsubsection{Police Blinker Lights}\label{sec:police_detection}
 %
-By investigating the blue channel mean, see section \ref{sec:blue_channel}, in detail we are able to some degree detect if the police is present
+% By investigating the blue channel mean, see section \ref{sec:blue_channel}, in detail we are able to some degree detect if the police is present
+% %
+% % Noter fra Kim: Police vehicles with flasing light. (Omdøb classifieren) NOW CALLED Police Blinker Lights
+% %
+% in part of a video, under the circumstance that the police blinker lights are active. The hypothesis was simple: we would expect the blue channel mean to oscilate over time. If we plot the mean values as a function of time (frames) we can easily distinguish oscilating areas visually, and then check if this oscillation corresponds to police being present in the video at that point in time. Somewhat to our surprise this was amazingly accurate. We did get a rather large number of false negatives, but almost no false positives.\\
+% %
+% % Noter fra Kim: Upræcist. Pas på med blah blah. Ryk til Results
+% %
+% We did not find any ready-at-hand code for detecting oscillations so we rolled
+% %
+% % Noter fra Kim: What?
+% %
+% something ourselves. What we ended up with was a simple approach based on the realization that the points (local minima/maxima) in an oscillating graph could be connected by triangular shapes (bottom facing up) illustrated in Figure \ref{fig:triangles}, and each consequtive triangle is roughly the same shape and size. The problem was boiled down to comparing these triangles.\\
+% We compute the magnitude of the vectors $a,b,c,d,e,f$ and check if the relative standard deviation of $[\|a\|,\|b\|,\|c\|,\|d\|]$
+% %
+% % Noter fra Kim: Hvad betyder denne notation? Måske mængde {a,b,c,d}? 
+% %
+% respectively $[\|e\|,\|f\|]$ is below a certain treshold (meaning that $a,b,c,d$ respectively $e,f$ are roughly the same length).
+% %%%%%%%%%%
+% \\REWRITE:\\
+%%%%%%%%%%
+By investigating the blue channel mean of each frame (section \ref{sec:blue_channel}) we are able to some degree detect if the police blinker lights are present in part of a video. We analyze the blue channel mean as a function of time, and if these values are oscillating within certain parameters, we have detected a police blinker light.
 %
-% Noter fra Kim: Police vehicles with flasing light. (Omdøb classifieren)
-%
-in part of a video, under the circumstance that the police blinker lights are active. The hypothesis was simple: we would expect the blue channel mean to oscilate over time. If we plot the mean values as a function of time (frames) we can easily distinguish oscilating areas visually, and then check if this oscillation corresponds to police being present in the video at that point in time. Somewhat to our surprise this was amazingly accurate. We did get a rather large number of false negatives, but almost no false positives.\\
-%
-% Noter fra Kim: Upræcist. Pas på med blah blah. Ryk til Results
-%
-We did not find any ready-at-hand code for detecting oscillations so we rolled
-%
-% Noter fra Kim: What?
-%
-something ourselves. What we ended up with was a simple approach based on the realization that the points (local minima/maxima) in an oscillating graph could be connected by triangular shapes (bottom facing up) illustrated in Figure \ref{fig:triangles}, and each consequtive triangle is roughly the same shape and size. The problem was boiled down to comparing these triangles.\\
-We compute the magnitude of the vectors $a,b,c,d,e,f$ and check if the relative standard deviation of $[a,b,c,d]$
-%
-% Noter fra Kim: Hvad betyder denne notation? Måske mængde {a,b,c,d}?
-%
-and $[e,f]$ is below a certain treshold (meaning that $a,b,c,d$ and $e,f$ are roughly the same length).
-%
-\begin{figure}
+\begin{figure}[h]
      \centering
      \includegraphics[width=1.05\textwidth]{img/triangles.jpg}
      \caption{}\label{fig:triangles}
-\end{figure}
+\end{figure}\\
+%
+Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. As an alternative to computing the area of each triangle we investigate how the length of the vertices in each triangle deviate from each other
+\[
+\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1,
+\]
+for some constant $\tau_1$ where std is the standard deviation. Analogously for the horizontal vertices
+\[
+\text{std}([\|e\|,\|f\|]) < \tau_2,
+\]
+for some constant $\tau_2$.
 %
 \subsubsection{Overview}
 %
@@ -195,28 +213,35 @@ We then iterate through all frames and for each of them look in each bin to see 
 %
 \subsubsection{In crowd}
 %
-We exploited an inherent limitation in facial detection; that faces far away in the image are rarely detected. Due to the nature of our datasets, and we do not try to cover up in any way that this particular label is highly overfitted for this exact purpose, waranted that when multiple faces,
-%
-% Noter fra Kim: Hvad vil i sige med dette? Pas på blah blah!
-%
-on average 2 or more faces, are detected we would almost certainly be in a crowd or overlooking a crowd from within.\\
-Technically speaking we would compute the moving average over 12 frames (500 ms) of people detected (profile, frontal, or upper body) and if we had detected more than 1 person we would deem that particular frame to be in a crowd.
-%
-% Noter fra Kim: Hvorfor datid?
-%
-One must have in mind that there are 24 frames each second, and the facial detection will far from detect (the same) faces/people in each consequtive frame, even for a fairly still image. Hence we had to interpolate the data to get a good estimate.\\
-This method could be made even more accurate if we instead of employing a moving average would interpolate each bounding box (bounding the detected object), but also a more complex method.
+% We exploited an inherent limitation in facial detection; that faces far away in the image are rarely detected. Due to the nature of our datasets, and we do not try to cover up in any way that this particular label is highly overfitted for this exact purpose, waranted that when multiple faces,
+% %
+% % Noter fra Kim: Hvad vil i sige med dette? Pas på blah blah!
+% %
+% on average 2 or more faces, are detected we would almost certainly be in a crowd or overlooking a crowd from within.\\
+% Technically speaking we would compute the moving average over 12 frames (500 ms) of people detected (profile, frontal, or upper body) and if we had detected more than 1 person we would deem that particular frame to be in a crowd.
+% %
+% % Noter fra Kim: Hvorfor datid?
+% %
+% One must have in mind that there are 24 frames each second, and the facial detection will far from detect (the same) faces/people in each consequtive frame, even for a fairly still image. Hence we had to interpolate the data to get a good estimate.\\
+% This method could be made even more accurate if we instead of employing a moving average would interpolate each bounding box (bounding the detected object), but also a more complex method.
+% REWRITE
+We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be "in crowd". Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate.\\
+A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
+An alternative to this method is using optical flow... %LAUGE
 %
 \subsubsection{Person in Focus}
 %
-The method for detected a person in focus was simple. It works much like the in crowd detection, with the extra constraint that the bounding box of the detected face must be centrally placed in the frame.
-%
-% Noter fra Kim: Mere detaljer
-%
-The data was interpolated over 4 frames of a moving average as we wanted a more consistent detection.
-%
-%
-% Noter fra Kim: I skriver stedvist som en dagbog! Hold den akedemiske stil!
+% The method for detected a person in focus was simple. It works much like the in crowd detection, with the extra constraint that the bounding box of the detected face must be centrally placed in the frame.
+% %
+% % Noter fra Kim: Mere detaljer
+% %
+% The data was interpolated over 4 frames of a moving average as we wanted a more consistent detection.
+% %
+% %
+% % Noter fra Kim: I skriver stedvist som en dagbog! Hold den akedemiske stil!
+% %
+% REWRITE
+We compute a moving average (over 4 frames/166ms) of the people presence metadata but excluding objects detected (partially) outside a centrally placed bounding box. The moving average of only 4 frames requires a low frequency of false negatives between frames which in turn makes a greater demand on the quality of each frame (steady or no camera movement, a good shot angle, and little background clutter).
 %
 \subsubsection{Day \& Night}
 %
