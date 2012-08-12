@@ -415,7 +415,7 @@ def main():
 
 	# used by matrix2latex
 	# header row
-	hr = ['', 'v', 'p-value', '$x^2$']
+	hr = ['', '$\\nu$', 'p-value', '$\\chi^2$']
 	# format column
 	fc = ['%s', '$%d$', '$%1.4f$', '$%1.4f$']
 	alignment = 'lccc'
