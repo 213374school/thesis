@@ -1,7 +1,7 @@
 %
 \section{Testing}
 %
-thesis.fmitcar.appspot.com/thesis/start/
+test site can be found at thesis.fmitcar.appspot.com/thesis/start/
 %
 \subsection{Test Environment}
 %
@@ -19,7 +19,7 @@ The questionnaire was structured as a statement and 5 options
 %
 where the test user could either agree, disagree, or indicate that they were unable to respond to the statement. An example of a statement was INSERT STATEMENT HERE and the possible replies was Totally agree, Somewhat agree, Somewhat disagree, Totally disagree, and Don't know, in that order. We initially had "dont't know" in the middle, but we learned from a test-run of our questionnaire that placing it last would result in a higher rate of usable responses.\\
 %
-% Noter fra Kim: Har i så smidt resultater væk?
+% Noter fra Kim: Har i så smidt resultater væk? LAUGE
 %
 % Noter fra Lauge: Bør vi nok fjerne. Ikke super relevant. JO I HØJ GRAD RELEVANT.
 %
@@ -49,14 +49,14 @@ To discern interuptive elements we removed player-controls from the YouTube embe
 We supplied each session with a unique identifier. This means that we are unable to track a returning test-user, as they would get a new session id, but it does give us a rough measure of how many different test-users we get, how many questionnaires answered on average, and also investigate the progress of a test-user (they may generally rate a video worse as they watch more videos) - the time at which a result is recorded is saved along with the data.\\
 To increase the availability of our test environment everything is localized into danish and english - especially elderly danish people may have a hard time answering an english questionnaire.
 %
-% Noter fra Kim: Hvad er de danske oversættelser? De skal angives
+% Noter fra Kim: Hvad er de danske oversættelser? De skal angives LAUGE
 %
 The resulting locale is recorded along with each result. This will also allow us to measure any significant difference between the two locales - as it is impossible to make a 1-to-1 translation of the statements.\\
 To ensure a proper shuffling of each video-summary we record how many times a given summary is shown (it counts as shown when a test-user has completed the questionnaire). We consequently enforce a balance of this counter amongst all the videoes. Furthermore we restrict, if possible, that a video has not been shown recently (within the last 3 minutes). This would allow us to easily add more videos later on should the need arise, while getting results from the entire range of summaries.\\
 %
 % Noter fra Kim: Det forstår jeg ikke
 %
-% Noter fra Lauge: Det er heller ikke helt tilfældet som vi også sidenhen snakkede om.
+% Noter fra Lauge: Det er heller ikke helt tilfældet som vi også sidenhen snakkede om. LAUGE
 %
 %
 We initially spread the survey on Facebook by messaging friends and family and making a public wall post. To further increase the chance of the survey going viral we placed a Facebook Like-button and a Twitter button discretely in the bottom of the site to allow test-users to further spread the word.\\
@@ -64,9 +64,20 @@ We designed the test so that the test-user can watch as many or as few videos as
 %
 \subsubsection{Control Samples}
 %
+%
+\subsubsection{Random Segments}
+% 
+For each dataset we created a videoclip totally at random, ie. we picked a random video, and a random segment within that video, and cut it all together. The segment length was chosen such that they would not differ significanytly from the general length of other computer generated videoclips. These videoclips are thought of as a baseline (we expect them to perform poorly compared to even random labels recipe).
+%
+\subsubsection{Human Edited}
+% 
+We used humanly edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips.
+%
+% Noter fra Kim: Hvor kommer de fra?
+%
 We add two different control samples: one is videos with a random set of labels and segment lengths, and one where clips was picked totally at random.
 %
-% Noter fra Kim: See section XX WOOOOT???
+% Noter fra Kim: See section XX WOOOOT??? ANDERS
 %
 This will form the baseline for our test, ie. we expect these to perform poorly in all aspects. We also added videos edited by humans as a control sample. We expect these to perform as well as the designer recipies or better.
 %
@@ -86,7 +97,7 @@ We continue our analysis by employing the Friedman test\footnote{http://en.wikip
 \input{matrix2latex/datasets}
 \input{matrix2latex/alpha-span}
 %
-present notes
+present notes + v = DoF, p-value, $x^2$ . hvad er i tables % ANDERS
 %
 \subsection{Analysis}
 %
@@ -94,11 +105,13 @@ The only statistical significance is content in Table \ref{tab:fried_dataset}, w
 %
 \subsubsection{Risks \& Limitations}
 %
+% LAUGE
 % hvad skal der stå her????
 % limited dataset -> we did not have seperate training and test sets\\
-% barely acceptable amount of feedback -> could have cause
+% barely acceptable amount of feedback -> could have caused ...
+% search keywrod kunne måske have hjulpet på at forstå spøgsmål bedre.
 %
 \subsection{Conclusion}
 %
-results are statistically insignificant!!!!
+% ANDERS
 %
