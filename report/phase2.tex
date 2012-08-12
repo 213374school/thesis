@@ -23,7 +23,7 @@ Zhong et. al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised
 %
 %Anders:
 % describe Haar cascade classifiers (performance and an outline of how they work)
-With the introduction of Haar Cascade Classifiers (HCC) by Viola and Jones\cite{viola01}, later improved upon by Lienhart and Maydt\cite{lienhart01} and by Schmidt and Kasinski\cite{schmidt01}\cite{schmidt02}, there exists a very efficient tool for facial detection. The HCC uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions.
+With the introduction of Haar Cascade Classifiers (HCC) by Viola and Jones\cite{viola01}, later improved upon by Lienhart and Maydt\cite{lienhart01} and by Schmidt and Kasinski\cite{schmidt01}\cite{schmidt02}, there exists a very efficient tool for facial detection. The HCC uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.
 %
 % Lauge: Måske skal vi lige skrive lidt mere om Haar cascade. Enten flytte noget op fra Facial Detection afsnittet eller uddybe en lille smule hvordan det fungerer.
 %
@@ -50,6 +50,7 @@ Each label classifier relies on different sets of metadata for the videos as inp
 %
 % Noter fra Kim: Yes, i det mindste nogle flere detaljer. DESCRIBE HAAR CASCADE CLASSIFIER IN MORE DETAIL.
 %
+Detecting the presence of people will help us determine if footage was recorded from within a crowd, described in detail in section \ref{sec:incrowd}, or if the footage has focus on a specific person, described in detail in section \ref{sec:infocus}, which indicates that this person is of special interest, ex. a speaker.\\
 An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img}. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions.
 %
 \begin{figure}[h]
@@ -62,10 +63,11 @@ AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning a
 A method of using less complex processing to detect promising regions, and then apply the more complex processing on these regions.\\\\
 %
 OpenCV provides a python-implementation of an already trained Haar cascade classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
-By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate, and we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set).\\
-Initial measurements by Viola achives 15 frames per second detection in an 384 by 288 pixel image on, by todays standards, outdated hardware, we are working with 480 by 640 pixel images, an almost 3 times larger area, we still had close to real-time facial detection (working on video with 24 frames per second). This is however not practical if a computer had to analyze multiple video-streams (as in our case). For the sake of simplicity we did not perform the obvious optimization of only analayzing select frames (ex. every third frame). Analyzing all of our footage was still done overnight, but as we interpolate the results afterswards, we would not expect these to suffer much from the before-mentioned optimization.\\
+By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate, and we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set).BELONGS IN RESULTS\\
+We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second). BELONGS IN RESULTS\\
+For the sake of simplicity we have not implemented the optimization of only analayzing select frames (ex. every third frame) which we do not believe will have a significant impact on the detection rate as we interpolate the detected objects between frames already.\\
 We suggest that further optimizations involve exploiting the ready-at-hand metadata such as the general frame quality which severely impacts facial detection rates in a negative fashion.\\
-This method can be optimized further by exploiting the temporal data gained between frames of the bounding boxes (of detected objects). Ie. instead of analyzing the entire frame by expanding the search windowd incrementally, we utilize knowledge of where people were present in the previous frame.
+Further optimization can be achived by exploiting the temporal data. Ie. instead of analyzing the entire frame by expanding the search window incrementally, we utilize knowledge of where people were present in the previous frame. This would require a customized HCC which is a major increase in complexity compared to the other mentioned optimizations.
 %
 \subsubsection{Brightness}
 %
@@ -121,7 +123,7 @@ An average movement and the average length of all movements are calculated for e
 % REMEMBER: Describe RISKS (zooming)
 \subsubsection{Blue color channel}\label{sec:blue_channel}
 %
-Each frame in a video consists of a matrix of pixels in 3 channels, red, green, and blue. For the purpose of police detection, described in detail in section \ref{sec:police_detection}, and day/night detection, described in detail in section \ref{blah}, we extracted the blue channel in each frame and computed the mean pixel intensity.
+Each frame in a video consists of a matrix of pixels in 3 channels; red, green, and blue. For the purpose of police blinker detection, described in detail in section \ref{sec:police_detection}, and day/night detection, described in detail in section \ref{blah}, we extract the blue channel in each frame and compute the mean pixel intensity.
 %
 \subsubsection{Contrast}
 %
@@ -174,7 +176,16 @@ for some constant $\tau_1$ where std is the standard deviation. Analogously for 
 \[
 \text{std}([\|e\|,\|f\|]) < \tau_2,
 \]
-for some constant $\tau_2$.
+for some constant $\tau_2$.\\
+The blue channel mean is lightly smoothed using triangle smoothing with a degree of 5 as this give softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 48 frames apart are interpolated into a single segment, and segments shorter than 24 frames are removed.
+%
+\subsubsection{Segment Interpolation}\label{sec:labelmerge}
+%
+Segments in a video is easilly fragmented and two segments with the same label just a single frame apart will by all means and purposes be interpreted as such. This is often a result of fragmented metadata, ex. several consequtive frames with people present that our people presence detection algorithm failed to detect. To patch this fault we interpolate the segments by applying the label, $l$, to the frames between segment $a$ and segment $b$ if these are not too far apart (by default 24 frames) and both segments share the same label, $l$. As we are already analyzing segments we also filter out segments of diminutive length, which by default is 5 seconds.
+%
+\subsubsection{Segment Smoothing}\label{sec:labelsmooth}
+%
+If segments are higly fragmented because the label-algorithm that produced them made no attempt to smooth the frames and their respective label (or absence of same) we apply triangle smoothing on the segments, defaulting to a degree of $36$ frames equal to $1.5s$, and subsequently cut off values below a certain treshold, defaulting to $1/3$, ie. values below the treshold are truncated to $0$.
 %
 \subsubsection{Overview}
 %
@@ -209,7 +220,7 @@ We then iterate through all frames and for each of them look in each bin to see 
 %
 % TODO: Little bit more here...
 %
-\subsubsection{In crowd}
+\subsubsection{In crowd}\label{sec:incrowd}
 %
 % We exploited an inherent limitation in facial detection; that faces far away in the image are rarely detected. Due to the nature of our datasets, and we do not try to cover up in any way that this particular label is highly overfitted for this exact purpose, waranted that when multiple faces,
 % %
@@ -223,11 +234,11 @@ We then iterate through all frames and for each of them look in each bin to see 
 % One must have in mind that there are 24 frames each second, and the facial detection will far from detect (the same) faces/people in each consequtive frame, even for a fairly still image. Hence we had to interpolate the data to get a good estimate.\\
 % This method could be made even more accurate if we instead of employing a moving average would interpolate each bounding box (bounding the detected object), but also a more complex method.
 % REWRITE
-We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be "in crowd". Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate.\\
+We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be "in crowd". Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 24, equal to 1 second, and a truncation value of $0.9$. Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24 frames apart are interpolated into a single segment, and segments shorter than 60 frames, equal to $2.5$ seconds, are removed.\\
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 An alternative to this method is using optical flow... %LAUGE
 %
-\subsubsection{Person in Focus}
+\subsubsection{Person in Focus}\label{sec:infocus}
 %
 % The method for detected a person in focus was simple. It works much like the in crowd detection, with the extra constraint that the bounding box of the detected face must be centrally placed in the frame.
 % %
@@ -239,7 +250,7 @@ An alternative to this method is using optical flow... %LAUGE
 % % Noter fra Kim: I skriver stedvist som en dagbog! Hold den akedemiske stil!
 % %
 % REWRITE
-We compute a moving average (over 4 frames/166ms) of the people presence metadata but excluding objects detected (partially) outside a centrally placed bounding box. The moving average of only 4 frames requires a low frequency of false negatives between frames which in turn makes a greater demand on the quality of each frame (steady or no camera movement, a good shot angle, and little background clutter).
+We compute a moving average (over 4 frames/166ms) of the people presence metadata but excluding objects detected (partially) outside a centrally placed bounding box. The moving average of only 4 frames requires a low frequency of false negatives between frames which in turn makes a greater demand on the quality of each frame (steady or no camera movement, a good shot angle, and little background clutter). The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 36, equal to $1.5$ seconds, and a truncation value of $1/3$. Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24 frames apart are interpolated into a single segment, and segments shorter than 120 frames, equal to 5 seconds, are removed.
 %
 \subsubsection{Day \& Night}
 %
