@@ -2262,6 +2262,54 @@
                 "question_title": "content"
             }, 
             {
+                "answer_value": -1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 0, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "1e7de6ab35f572dL", 
+        "ytid": "5swFsRKsI7I"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 0, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "827072984628df8L", 
+        "ytid": "E1v6_GvB3j4"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
                 "answer_value": 2, 
                 "question_title": "editing"
             }, 
@@ -2906,6 +2954,54 @@
     {
         "answers": [
             {
+                "answer_value": -1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": -2, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": -2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "733ae6843e4c4cfL", 
+        "ytid": "a7k7gemEwsE"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 0, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "827072984628df8L", 
+        "ytid": "7sao2_7sKms"
+    }, 
+    {
+        "answers": [
+            {
                 "answer_value": -2, 
                 "question_title": "content"
             }, 
@@ -2998,6 +3094,30 @@
         "note": "", 
         "session_key": "484eba41015605fL", 
         "ytid": "hrxbQNTBqNQ"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "1e7de6ab35f572dL", 
+        "ytid": "MLzAuBHSiTU"
     }, 
     {
         "answers": [
@@ -3190,6 +3310,54 @@
         "note": "", 
         "session_key": "46fecbf1690a3e5L", 
         "ytid": "5swFsRKsI7I"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "65133a9a70dfadbL", 
+        "ytid": "XYHr6gZqkTs"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": -1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "65133a9a70dfadbL", 
+        "ytid": "ZFSYWB1BcxE"
     }, 
     {
         "answers": [
@@ -3410,6 +3578,30 @@
     {
         "answers": [
             {
+                "answer_value": -1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 0, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "827072984628df8L", 
+        "ytid": "75IHEvP7An4"
+    }, 
+    {
+        "answers": [
+            {
                 "answer_value": 1, 
                 "question_title": "content"
             }, 
@@ -3430,6 +3622,54 @@
         "note": "", 
         "session_key": "46fecbf1690a3e5L", 
         "ytid": "hrxbQNTBqNQ"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "733ae6843e4c4cfL", 
+        "ytid": "2C7Y5Shw5p8"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "733ae6843e4c4cfL", 
+        "ytid": "rEFkglQCcXg"
     }, 
     {
         "answers": [
@@ -3506,6 +3746,54 @@
     {
         "answers": [
             {
+                "answer_value": 2, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "65133a9a70dfadbL", 
+        "ytid": "hrxbQNTBqNQ"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": 1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": 2, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "827072984628df8L", 
+        "ytid": "HlOIeCzXSCI"
+    }, 
+    {
+        "answers": [
+            {
                 "answer_value": 1, 
                 "question_title": "content"
             }, 
@@ -3526,5 +3814,29 @@
         "note": "", 
         "session_key": "7f7e2ce92861eb9L", 
         "ytid": "ho1CjPB02F8"
+    }, 
+    {
+        "answers": [
+            {
+                "answer_value": -1, 
+                "question_title": "content"
+            }, 
+            {
+                "answer_value": 0, 
+                "question_title": "editing"
+            }, 
+            {
+                "answer_value": 1, 
+                "question_title": "clip len"
+            }, 
+            {
+                "answer_value": -1, 
+                "question_title": "video len"
+            }
+        ], 
+        "locale": "da", 
+        "note": "", 
+        "session_key": "827072984628df8L", 
+        "ytid": "BbS0GQLp4CQ"
     }
 ]
