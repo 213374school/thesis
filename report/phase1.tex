@@ -15,7 +15,8 @@ A more comprehensive approach described by Wu et al. \cite{10.1109/ICME.2005.152
 \subsection{Method}
 % ANDERS
 % kim: skal kunne implementere udfra beskrivelsen af metoden
-% vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
+% NOTE: vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
+% passer rigtig godt til "intro" afsnittet
 Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a method to compute a vector that indicates the displacement in two subsequent frames, where the direction of the vector corresponds to the direction of the displacement, and the magnitude of the vector shows how many pixels was displaced. The advantage of this method is the simplicity in implementation, and low computational costs. The authors suggests a shift of each subsequent frame in four directions of 32 pixels to start with, halving the number of pixels in each step. For each shift the Root-Mean-Square (\textit{RMS}) of the difference in the two frames is calculated, and the shift with the lowest \textit{RMS} is the basis for the following shift. Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
 The algorithm below illustrates how the displacement vector for two subsequent frames is computed.
 %
@@ -29,37 +30,21 @@ The algorithm below illustrates how the displacement vector for two subsequent f
                e <- compute RMS(f-s)
                if e < e’:
                     x,y <- i * (d[x],d[y])
-                    e’   <- e
+                    e’  <- e
           x’,y’ <- x,y
           f’ <- shift f’ x pixels right
           f’ <- shift f’ y pixels up
      yield x’,y’
 \end{verbatim}
 %
-% Note fra Kim: ^^ Det kan skrives mere kompakt vha. formler ^^
+% Note fra Kim: ^^ Det kan skrives mere kompakt vha. formler ^^ DET KAN DET MÅSKE NOK, MEN JEG KAN IKKE LURE HVORDAN. KAN GODT BRUGE MIN TID BEDRE PÅ ANDEN VIS. OG VIL ÆDE EN HAT PÅ AT KIM SKULLE BRUGE MINDST EN TIME PÅ AT SKRIVE DET OM TIL FORMLER.
 %
 With a frame dimension of $640\times480$ and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is then highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction. Images that are symmetrical around the vertical or horizontal center, ie. two almost identical local minima, can potentially fool the method into the wrong direction due to the greedy nature of the algorithm, but that is a rare statistical anomaly.\\
 Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a simple method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting (too) dark images, it does not take ex. extremely bright images into account, or closeups of a textureless surface. To counter this downside we instead computed a measure of contrast in a frame as the standard deviation of the pixel-values in the image-matrix, where a small standard deviation would indicate little contrast/diversity in pixel intensity, and a large standard deviation would indicate a high contrast/much diversity in pixel intensity. Hence, a very dark image or very bright image would have a low contrast as would images with little or no texture. It will however not detect an image where half of it has a very low contrast, ex. an image of clear sky in the top three-quarters, nor would we necessarily want to discard frames like these.\\\\ % skal vi have et par billeder med deres std. dev. sådan at man kan se med egne øjne, eller er det ikke for simpelt?
-%
-\textbf{There are several approaches to computing the suitability for a given frame: A binary approach in which a frame is simply deemed suitable or unsuitable for watching, and an approach where a frame is rated on a scale.\\
-If $W_{1}$ is the magnitude of the displacement vector, $W_{2}$ is a measure of the image contrast, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then a suitability-value could be computed as: $v = \alpha W_{1} + \beta W_{2}$, where $\alpha,\beta$ are weight-factors, and $s$ could then be determined by $s \equiv v \ge \tau$, where $\tau$ is some lower bound. If we wish that $s \equiv W_{1} \ge T_{1} \vee W_{2} \ge T_{2}$, the values of $\alpha$ and $\beta$ can be determined as follows:
-%
-\[
-W_{1} \ge T_{1} \equiv \alpha W_{1} + \beta W_{2} \ge \tau,
-\]
-%
-the point being that the contribution from $W_{1}$ alone can determine the outcome of $s$, hence we set $W_{2} = 0$ and $W_{1}$ assumes the lowest possible value, $W_{1} = T_{1}$, and we can determine the value of $\alpha$ as:
-%
-\[
-\alpha T_{1} \ge \tau \Leftrightarrow \alpha \ge \frac{\tau}{T_{1}}
-\]
-%
-The value of $\beta$ can be determined as $\beta \ge \frac{\tau}{T_{2}}$.\\
-With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.\\
-Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
-\\
-%
-Another way to compute $v$ is $v = \text{max}(\frac{W_{1}}{T_{1}}, \frac{W_{2}}{T_{2}})$ and $s = v >1$ where $T_{1}, T_{2}$ are the respective lower bounds.}
+There are several approaches to computing the suitability for a given frame: A binary approach in which a frame is simply deemed suitable or unsuitable for watching, and an approach where a frame is rated on a scale. These are discussed in detail in section REFERENCE TO SECTION "The Algorithms".
+% 
+% where does this belong (somewhere in algorithms section)
+% Another way to compute $v$ is $v = \text{max}(\frac{W_{1}}{T_{1}}, \frac{W_{2}}{T_{2}})$ and $s = v >1$ where $T_{1}, T_{2}$ are the respective lower bounds.
 %
 \subsection{Data-set for the frame quality assessment} \label{sec:framequalityassessmentdataset}
 %
@@ -127,7 +112,22 @@ S(c,s)=MAX(c \cdot (1-c_{lim}), s \cdot (1-s_{lim}))
 %
 \textbf{Cummulative contrast and shift magnitude (CCSM)}\\
 % ANDERS
-%Anders, beskriv hvad din algoritme gør % - det står i Method-afsnittet. er det “bare” en opsummering?
+%Anders, beskriv hvad din algoritme gør % - det står i Method-afsnittet. er det “bare” en opsummering? NOK FOR SPECIFIKT TIL METHOD-AFSNITTET. HAR RYKKET DET HERNED. RESTEN SKAL SÅ OGSÅ RYKKES ELLER FJERNES
+If $W_{1}$ is the magnitude of the displacement vector, $W_{2}$ is a measure of the image contrast, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then a suitability-value could be computed as: $v = \alpha W_{1} + \beta W_{2}$, where $\alpha,\beta$ are weight-factors, and $s$ could then be determined by $s \equiv v \ge \tau$, where $\tau$ is some lower bound. If we wish that $s \equiv W_{1} \ge T_{1} \vee W_{2} \ge T_{2}$, the values of $\alpha$ and $\beta$ can be determined as follows:
+%
+\[
+W_{1} \ge T_{1} \equiv \alpha W_{1} + \beta W_{2} \ge \tau,
+\]
+%
+the point being that the contribution from $W_{1}$ alone can determine the outcome of $s$, hence we set $W_{2} = 0$ and $W_{1}$ assumes the lowest possible value, $W_{1} = T_{1}$, and we can determine the value of $\alpha$ as:
+%
+\[
+\alpha T_{1} \ge \tau \Leftrightarrow \alpha \ge \frac{\tau}{T_{1}}
+\]
+%
+The value of $\beta$ can be determined as $\beta \ge \frac{\tau}{T_{2}}$.\\
+With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.\\
+Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
 %
 \textbf{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$))}
 %
@@ -173,11 +173,11 @@ All our algorithms, except one, only have one parameter. This makes them easy to
 \\
 The second problem is encountered when generating the cost/benefit diagrams and calculating the AUC. The effect of changing more than one variable is not illustrated very well in a two-dimensional cost/benefit diagram. The points, which really belong in a higher dimensional space, are flattened into the plane resulting in several curves without any clear connection to each other. This also causes problems when calculating the AUC for the algorithm, since curves generated by bad performing configurations can be hidden below curves generated by good performing ones, which in the end results in a over-optimistic robustness score.
 %
-\begin{figure}
-     \centering
-     \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample.jpg}
-     \caption{An example of a 2D cost/benefit diagram for an algorithm with two variables}
-\end{figure}
+% \begin{figure}
+%      \centering
+%      \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample.jpg}
+%      \caption{An example of a 2D cost/benefit diagram for an algorithm with two variables}
+% \end{figure}
 %
 %
 % Noter fra Kim: Y-axis = benefit? X-axis=cost? Ser mærkeligt ud, drop!
