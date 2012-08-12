@@ -69,7 +69,7 @@ For the sake of simplicity we have not implemented the optimization of only anal
 We suggest that further optimizations involve exploiting the ready-at-hand metadata such as the general frame quality which severely impacts facial detection rates in a negative fashion.\\
 Further optimization can be achived by exploiting the temporal data. Ie. instead of analyzing the entire frame by expanding the search window incrementally, we utilize knowledge of where people were present in the previous frame. This would require a customized HCC which is a major increase in complexity compared to the other mentioned optimizations.
 %
-\subsubsection{Brightness}
+\subsubsection{Brightness}\label{sec:brightnessdata}
 %
 The brightness of a video is expressed as a list of means of the color intensity through all frames in the video. Since the videos have already been converted to grayscale at this point in the pipe-line this is a trivial task, due to there only being a gray channel in the pixels.
 %
@@ -214,7 +214,7 @@ An alternative to this method is using optical flow... %LAUGE
 \subsubsection{Day \& Night classifier}
 %
 Our Day \& Night classifier is mostly a proof-of-concept. The time of creation is stored as part of the video file's metadata when it is recorded. As previously explained, this information is stripped away when the video is uploaded to Youtube, but should be available to us in a real scenario. However, Day \& Night classification can actually be done with high accuracy even without this informaton. In [REF] the authors describe how to classify still images through a hierachy of Support Vector Machines, including day/night classification. We have however come up with a much simpler approach, with a very high success rate.\\
-Based around the fact that night footage has a significantly less amount of blue compared to footage recorded during the day, we compare the Blue Channel metadata (described in section [SEC:REF]) with the Brightness metadata (described in [SEC:REF]) in order to determine how they correlate. Let $i$ be the frame number in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $C_{i}$ is defined as:\\
+Based around the fact that night footage has a significantly less amount of blue compared to footage recorded during the day, we compare the Blue Channel metadata (described in section \ref{sec:blue_channel}) with the Brightness metadata (described in section \ref{sec:brightnessdata}) in order to determine how they correlate. Let $i$ be the frame number in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $C_{i}$ is defined as:\\
 %
 \begin{equation}
 C_{i} = \frac{L_{i}}{R_{i}} - 1
@@ -243,7 +243,7 @@ with the number of frames in the higher end like this:
 %
 % Noter fra Kim: Forklar bedre. Evt. 'Compare the mass in the partitions' + evt. figur
 %
-Here $H$ is the histogram and $m$ is some value in the range $m\in [1..10]$ (we found $3$ to work quite well). If this statement is true or if the mean of $C$ is above zero we classify the video as day. Otherwise we classify it as night. With this modification we are able to increase the success-rate to ~97\%. And even then, some of the few false classifications that does occur would be difficult to classify manually since they occur in videos recorded in the evening or the late afternoon.
+Here $H$ is the histogram and $m$ is some value in the range $m\in [1..10]$ (we found $3$ to work quite well). If this statement is true or if the mean of $C$ is above zero we classify the video as day. Otherwise we classify it as night. With this modification we are able to increase the success-rate to ~97\%. And even then, some of the few false classification that does occur would be difficult to classify manually since they occur in videos recorded in the evening or the late afternoon.
 %
 \subsection{Post-processing}
 %
@@ -255,4 +255,14 @@ Segments in a video is easilly fragmented and two segments with the same label j
 %
 If segments are higly fragmented because the label-algorithm that produced them made no attempt to smooth the frames and their respective label (or absence of same) we apply triangle smoothing on the segments, defaulting to a degree of $36$ frames equal to $1.5s$, and subsequently cut off values below a certain treshold, defaulting to $1/3$, ie. values below the treshold are truncated to $0$.
 %
-\subsection{Test}
+\subsection{Performance of the classifiers}
+%
+% Lauge: Her skal skrives noget om at meget af nedenstående er baseret på uformelle tests
+%
+\subsubsection{Police Blinker Lights classifier}
+\subsubsection{Person in Focus classifier}
+\subsubsection{Overview classifier}
+\subsubsection{Vertical Oscillation classifier}
+\subsubsection{In-Crowd classifier}
+\subsubsection{Day \& Night classifier}
+%
