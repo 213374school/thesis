@@ -5,34 +5,12 @@
 %
 \subsection{Segment Database}
 %
-The is simply a list of segments,
-%
-% ^ Kim er ikke glad for denne sætning ^
-%
-where each segment consist of a number of values: The start and end frame for which a given label covers, the label, and the respective video.
+The segment database contains all computed segments where each segment is a start and end frame, and which label it contains and the respective video.
 %
 \subsection{Candidate Factory}
 %
-% candidate factory: get candidates with requested labels then compute overlapping segments and finally sort segments by number of overlapping labels ties resolved by segment frame-length and yet again ties resolved by ytid (to group them, but really not needed)
-% overlapping segments has a small required segment length (6 frames)
-% top candidates are resolved and their ytid is extracted and fed to segment score algorithm. segment is then selected with a propability as a function of their score: s^2/S, S=sum(scores^2) where scores = scores > 0
-%
-% Noter fra Kim: Nedenstående er meget implementationsnært. Beskriv algoritmen.
-%
-The candidate factory generates all permutation of segments for which a select set, $L$, of labels is present. Based on the segment database it filters out
-the segments for which a label $l$ in $L$ is not present. It then follows by computing the overlapping segments by checking if
-%
-% Kim bryder sig ikke om nedenstående linje:
-%
-segment $a$ and segment $b$ is true: $a$ and $b$ is in the same video and if they overlap:
-\[
-\text{max}(a_{\text{start}}, b_{\text{start}}) < \text{min}(a_{\text{end}}, b_{\text{end}}),
-\] % max(a.get('s')[0],b.get('s')[0]) < min(a.get('s')[1],b.get('s')[1])
-and to avoid creating duplicate segments it finally also checks that labels in $a$ is not present in $b$. If this is true a new segment, $c$, is created where 
-\[
-c_{\text{start}}, c_{\text{end}} = \text{max}(a_{\text{start}}, b_{\text{start}}), \text{min}(a_{\text{end}}, b_{\text{end}}),
-\]
-and labels in $c$ is the union of labels in $a$ and $b$, and the video source is set to the same source as in $a$ ($a$ and $b$ share the same source). Segment $c$ is then added to the list of candidates if the segment length, $c_{\text{end}} - c_{\text{start}}$, is larger than a treshold of 6 frames. We deemed a segment that short to be irrelevant.\\
+The candidate factory generates all permutations of segments for which a select set, $L$, of labels is present. The results is called a candidate list. Based on the segment database it filters out
+the segments for which a label $l$ in $L$ is not present. It then follows by computing the overlapping segments. Two segment are overlapping if they both originate from the same source video, do not share the same label, and $\text{max}(a, c) < \text{min}(b, d),$ where $a$ and $b$ are the start and end frame in the first segment, and $c$ and $d$ are the start and end frame in the second segment. If the segments overlap a new segment, $c$ is created where labels in $c$ is the union of labels in the two segments $x,y = \text{max}(a, c), \text{min}(b, d),$ where $x$ is the start frame in segment $c$ and $y$ is the end frame in segment $c$. if $y-x < 6$ segment $c$ is discarded, ie. the overlap is miniscule.\\
 The candidate list is then sorted by number of labels in each candidate (the most relevant candidate is usually the ones where multiple labels overlap). We then get the first twenty different videos and feed these to a segment score algorithm described in section \ref{sec:segment_score}.
 %
 \subsection{Segment Score}\label{sec:segment_score}
@@ -132,11 +110,13 @@ A probability score, $P$, is then computed for each candidate
 \[
 P = m \frac{s^2}{S} \text{ for } s \text{ in candidates if } s > 0.
 \] % probability_score = multiplier * candidate.get('score')**2 / score_sum
-Each candidate is then replicated $P$ times, ie. if candidate $a$ has a probability score of 4 and candidate $b$ has a probability score of 2 then the list of candidates is expanded to $C = [a,a,a,a,b,b]$. A final candidate, $c$, is selected at random in $C$.\\
+%
+The final candidate is then picked with probability $P$.
+%Each candidate is then replicated $P$ times, ie. if candidate $a$ has a probability score of 4 and candidate $b$ has a probability score of 2 then the list of candidates is expanded to $C = [a,a,a,a,b,b]$. A final candidate, $c$, is selected at random in $C$.\\
 %
 % Noter fra Kim: Hvorfor ikke bare skrive at i sampler med sandsynlighed P? (for implementationsnært)
 %
-This method has a minor rounding error which is roughly the decimal fraction of $P$ divided by the magnitude of $P$, which is in the order of $100\frac{1}{10^5} = 0.001\%$. IS IT NOW?????
+% This method has a minor rounding error which is roughly the decimal fraction of $P$ divided by the magnitude of $P$, which is in the order of $100\frac{1}{10^5} = 0.001\%$. IS IT NOW?????
 %
 % Noter fra Kim: ???
 %
