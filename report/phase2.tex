@@ -69,43 +69,26 @@ This method can be optimized further by exploiting the temporal data gained betw
 %
 \subsubsection{Brightness}
 %
-The brightness of a video is expressed as an array of means
-%
-% Noter fra Kim: Hvorfor et array? Er det ment som en funktion af tid/frame (brug ikke implementations sprog)
-%
-of the color intensity through all frames in the video. Since the videos have already been converted to grayscale at this point in the pipe-line this is a trivial task, due to there only being a gray channel in the pixels.
+The brightness of a video is expressed as a list of means of the color intensity through all frames in the video. Since the videos have already been converted to grayscale at this point in the pipe-line this is a trivial task, due to there only being a gray channel in the pixels.
 %
 \subsubsection{Optical Flow}
 %
 % TODO: Move this section below Shift Vector Magnitude
 %
-% TODO: Describe Optical Flow in general
-%
 Our experiments with Optical Flow are based on a wish to extract information about what is happening in the video. Whereas the Shift Vector Magnitude tells us something about how the camera itself moves, Optical Flow attempts to explain how the content within each frame moves. There has been a substancial amount of research put into this field. [REFS] describes ways to identify certain types of actions occuring within videos, such as violent behaviour, [REF] looks at general crowd movement in public places, and Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes how Optical Flow can be used to identify pedestrians, even at great distance where such methods as Facial- and People- Detection come up short.\\
 %
-One huge difference between our work and that of all the previous research we have been able to find is that we do not have the luxary of a stationary camera, or, in the case of the pedestrian detection \cite{CrowdDetectionInVideoSequences}, at least a fixed camera.
-%
-% Noter fra Kim: What? Knowing the camera motion(?)
-%
-Most of our footage is recorded by handheld cameras often under very poor conditions. Extracting the optical flow of our videos is therefore not only a matter of analysing how reference points move around in the frame. First we need to \textit{stabilise} the frame itself.\\
-%
-% Noter fra Kim:  Missing a definition: Optical Flow = Changes in the intesinty pattern. Indirectly changes in the 3D scene
-%
+One huge difference between our work and that of all the previous research we have been able to find is that we do not have the luxary of a stationary camera, or, in the case of the pedestrian detection \cite{CrowdDetectionInVideoSequences}, at least a camera fixed to a moving car. Most of our footage is recorded by handheld cameras often under very poor conditions. Extracting the optical flow of our videos is therefore not only a matter of analysing how reference points move around in the frame. First estimate the \textit{egomotion} (the motion of the camera) itself, in order to \textit{stabilise} the frame.
 %
 \paragraph{Frame stabilisation}
 %
-There are several obvious ways to do this, but each has its own limitations. The first that comes to mind is to simply use the Shift Vector Magnitudes that we have already computed. This intuitively makes a lot of sense since they are suppose to tell us something about how the camera moves at each point of the video. Thus, it should simply be a matter of subtracting this general movement from whatever individial movement is detected within the frame and the remaining movement would be the optical flow of the content. However, it turns out that although the Shift Vector approach is very suitable for describing the general type of cameara movement (shaking, panning), especially when the data is smoothed across several frames, it has a relatively high margin of error for individual frames. This is especially the case if the camera moves very fast or if there actually \textit{is} a lot of movement within the frame. Other approaches [REF] involve calculating the optical flow and then subsequently subtracting the mean of all the individual vectors it yields, from the each of the vectors.
-%
-% Noter fra Kim: Knudret sætning
-%
-Yet another way [REF] is to detect the most dominant vector direction and use that as a stabiliser. However, all our experimentation showed that these methods suffer from one serious limitaion. If moving objects in the frame a very close to the camera, they tend to become more influencial than the stationary background and they end up swapping roles. The very movement we want to extract is removed and everything we would like to get rid of remains. The border-case for this condition is especially problematic. This occurs when an object is at the exact distance from the the camera where it \textit{periodically} becomes the dominant set of movement. In these cases the stabilising vector will jump from one extreme to the other and thus be completely useless.\\
+There are several obvious ways to do this, but each has its own limitations. The first that comes to mind is to simply use the Shift Vector Magnitudes that we have already computed. This intuitively makes a lot of sense since they are suppose to tell us something about how the camera moves at each point of the video. Thus, it should simply be a matter of subtracting this general movement from whatever individial movement is detected within the frame and the remaining movement would be the optical flow of the content. However, it turns out that although the Shift Vector approach is very suitable for describing the general type of cameara movement (shaking, panning), especially when the data is smoothed across several frames, it has a relatively high margin of error for individual frames. This is especially the case if the camera moves very fast or if there actually \textit{is} a lot of movement within the frame. The simplest approach that come to mind is to simple use the mean of all the optical flow vectors as the egomotion. An alternative is to use the most commonly occuring vector. However, our experimentation showed that these two methods suffer from one serious limitaion. If moving objects in the frame are very close to the camera, they tend to become more influencial than the stationary background and they end up swapping roles. The very movement we want to extract is removed and everything we would like to get rid of remains. The border-case for this condition is especially problematic. This occurs when an object is at the exact distance from the the camera where it \textit{periodically} becomes the dominant set of movement. In these cases the stabilising vector will jump from one extreme to the other and thus be completely useless.\\
 Some of these problems could probably be alleviated through further analysis or averaging across time, however, through our experimentation we came up with an approach that seems quite promising.\\\\
 %
-We noticed that a preliminary detection of Good Features to Track was very beneficial. The method, described by [REF] is based around detecting pixels (or \textit{corners}) in an image, that has high eigenvalues.
+We noticed that a preliminary detection of Good Features to Track was very beneficial. Good Features to Track are areas (or points) in a frame, that are likely to be clearly distinguishable on the following frames. This is often done by locating areas with low \textit{self simmilarity}. That is, areas that do not look like other areas close by. The implementation we use is based on the Shi-Tomasi corner detection algorithm described by Shi et al. \cite{Shi_1994_3266}. We found that generally, these points has a tendency to be present in stationary objects in the frame far more often than in moving objects, and thus form a very decent base for our stabilising vector. We chose to calculate the mean of these vectors and use that as our egomotion vector, although it would also be possible to use the most commonly occuring vector, as described above.\\\\
 %
-% Noter fra Kim: Eigenvalues of what? Hessian matrix (second order derivatives)? How do you use these points?
-%
-These points has a tendency to be present in stationary objects in the frame far more often than in moving objects, and thus form a very decent base for our stabilising vector. We chose to calculate the mean of these vectors and use that, although it also would be possible to detect the most common direction as described above and in [REF].
+Note: We have later come across other, more advanced techniques for calculating the egomotion of a video. Raudies et al. \cite{Raudies:2009:ELM:1612122.1612125} describes such a method.
+% Lauge: Der skal skrives noget mere om denne metode, hvis den skal nævnes
+Unfortunately, do to our late discovery of this method we have not been able to test it.
 %
 \paragraph{Detecting movement}
 %
@@ -135,7 +118,7 @@ Like the contrast, the shift vector magnitudes for each video is already compute
 %
 
 %
-\subsubsection{Police Blinker Lights}\label{sec:police_detection}
+\subsubsection{Police Blinker Lights classifier}\label{sec:police_detection}
 %
 % By investigating the blue channel mean, see section \ref{sec:blue_channel}, in detail we are able to some degree detect if the police is present
 % %
@@ -176,10 +159,7 @@ for some constant $\tau_1$ where std is the standard deviation. Analogously for 
 \]
 for some constant $\tau_2$.
 %
-\subsubsection{Overview}
-%
-% Noter fra Kim: + Classifier
-%
+\subsubsection{Overview classifier}
 %
 Our Overview classifier attempts to detect footage with little camera movement, little internal movement within the frames, and which is not focusing on any particular single object.
 %
@@ -196,20 +176,14 @@ First we make sure that the frame has not already been classified as containing 
 Only if the frame passes all checks will it be classified with the Overview label.\\
 The many different thresholds, as well as the different phases of smoothing, allows for a lot of tweaking. It is also very difficult to test the overall correctness of the classifier, due to the subjectiveness of what makes an Overview shot. Our configuration have been derived through emperical testing and thus may be over-fittet to our specific dataset.
 %
-\subsubsection{Vertical Oscillation}
-%
-% TODO: Move this section below 'Overview'
+\subsubsection{Vertical Oscillation classifier}
 %
 The Vertical Oscillation classifier was made to experiment with extracting information from the Optical Flow metadata. It attempts to detect footage where objects in the frames moves up and down, over a period of time. This happens, for example, if people are jumping on the spot, if people close to the camera are gesticulating heavily whilst talking, or if people are thrusting signs into the air. In order to do this we look at the variance of the vertical direction of the optical flow vectors over some time.\\
-Like in the Overview classifier we have a set of thresholds, $s$, $t$, and $v$, which are used to regulate the classifier. We start by calculating the standard deviations of the vertical direction of the vectors, throughout the videos. Since the optical flow metadata consists of nine bins of data for each frame, each bin covering one uniuqe ninth of the frame, this is done sepeately for each bin. The parameter $v$ (in our case $v = 12$), determines over how many frames the standard deviation is calculated. Thus, $s$ can be used to determine the frequence of oscillation the classifier should detect. The resulting deviations in each bin are smoothed over 60 frames in order to remove noise, just like in the Overview classifier.
-%
-% Noter fra Kim: Hvor er den beskrevet (reference + ryk op før vertical oscillation)
-%
-We then iterate through all frames and for each of them look in each bin to see if the standard deviation in it is above our threshold, $s$. If this is the case for more than $t$ bins, we consider the frame to contain vertical oscillation.
+Like in the Overview classifier we have a set of thresholds, $s$, $t$, and $v$, which are used to regulate the classifier. We start by calculating the standard deviations of the vertical direction of the vectors, throughout the videos. Since the optical flow metadata consists of nine bins of data for each frame, each bin covering one uniuqe ninth of the frame, this is done sepeately for each bin. The parameter $v$ (in our case $v = 12$), determines over how many frames the standard deviation is calculated. Thus, $s$ can be used to determine the frequence of oscillation the classifier should detect. The resulting deviations in each bin are smoothed over 60 frames in order to remove noise, just like in the Overview classifier. We then iterate through all frames and for each of them look in each bin to see if the standard deviation in it is above our threshold, $s$. If this is the case for more than $t$ bins, we consider the frame to contain vertical oscillation.
 %
 % TODO: Little bit more here...
 %
-\subsubsection{In crowd}
+\subsubsection{In-Crowd classifier}
 %
 % We exploited an inherent limitation in facial detection; that faces far away in the image are rarely detected. Due to the nature of our datasets, and we do not try to cover up in any way that this particular label is highly overfitted for this exact purpose, waranted that when multiple faces,
 % %
@@ -223,7 +197,7 @@ We then iterate through all frames and for each of them look in each bin to see 
 % One must have in mind that there are 24 frames each second, and the facial detection will far from detect (the same) faces/people in each consequtive frame, even for a fairly still image. Hence we had to interpolate the data to get a good estimate.\\
 % This method could be made even more accurate if we instead of employing a moving average would interpolate each bounding box (bounding the detected object), but also a more complex method.
 % REWRITE
-We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be "in crowd". Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate.\\
+We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be \textit{in crowd}. Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate.\\
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 An alternative to this method is using optical flow... %LAUGE
 %

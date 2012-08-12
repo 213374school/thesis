@@ -110,7 +110,7 @@ S(c,s)=MAX(c \cdot (1-c_{lim}), s \cdot (1-s_{lim}))
 \]
 , where \text{c} and \textit{s} are the \textit{contrast-} and \textit{shift vector magnitude}-ratios respectively and $c_{lim}$ and $s_{lim}$ are the limits defined by our configuration. The function effectively normalises the effect of the limits so that the two values can be compared by the \textit{MAX} statement. If $S(c,s) > 1$, one of the two parameters is beyond its limit and the frame is marked as bad.\\\\
 %
-\textbf{Cummulative contrast and shift magnitude (CCSM)}\\
+\paragraph{Cummulative contrast and shift magnitude (CCSM)}
 % ANDERS
 %Anders, beskriv hvad din algoritme gør % - det står i Method-afsnittet. er det “bare” en opsummering? NOK FOR SPECIFIKT TIL METHOD-AFSNITTET. HAR RYKKET DET HERNED. RESTEN SKAL SÅ OGSÅ RYKKES ELLER FJERNES
 If $W_{1}$ is the magnitude of the displacement vector, $W_{2}$ is a measure of the image contrast, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then a suitability-value could be computed as: $v = \alpha W_{1} + \beta W_{2}$, where $\alpha,\beta$ are weight-factors, and $s$ could then be determined by $s \equiv v \ge \tau$, where $\tau$ is some lower bound. If we wish that $s \equiv W_{1} \ge T_{1} \vee W_{2} \ge T_{2}$, the values of $\alpha$ and $\beta$ can be determined as follows:
@@ -129,7 +129,7 @@ The value of $\beta$ can be determined as $\beta \ge \frac{\tau}{T_{2}}$.\\
 With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.\\
 Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
 %
-\textbf{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$))}
+\paragraph{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$)}
 %
 The last algorithm is a very simplified version of \textit{CCSM}. It attempts to classify the frames by simply taking the mean of \textit{contrast} and \textit{shift vector magnitude} and checking to see if it above a given threshold. The frame state classifier, \text{S(c,s)}, is defined as:
 \[
@@ -191,7 +191,6 @@ In order to overcome this problem we simulate having only one parameter by locki
 \end{figure}
 %
 \subsubsection{Test cases} \label{sec:testcases}
-% LAUGE
 %
 \paragraph{Frame by frame classification (FFC)}
 %
@@ -199,41 +198,25 @@ The first test case only looks at each frame independently. For each frame we de
 %
 \paragraph{Temporal classification (TC)} \label{sec:tctestcase}
 %
-In the second test case we extend the classification to take \textit{nearby} frames into account as well. Since the human eye does not perceive a movie as a sequence of frames but rather as a moving picture, we expect good and bad frames to show up in chunks. That is, we expect single bad frames to be ignored by a human observer, if all their surrounding frames are generally good.
+In the second test case we change the way we punish misclassifications. We instead consider the videos as switching back and forth between two states, \textit{good} and \textit{bad}. Misclassifications, which happen close to these change-of-state's are punished less than those that happens elsewhere. The rationale behind this is that it is very difficult to objectively determine the exact point (frame) where a human observer will consider the quality of a video as changing from one state to the other. Likewise, we expect a human observer to ignore very short sub-parts of good or bad quality footage, if it is surrounded by a significant amount of footage of the opposite type. Overall, we want to be more tolerant of misclassifications, where it makes sense. For this we need a more advanced \textit{penalty function} than the simple binary check from the FFC test case.\\
 %
-% Noter fra Kim: Uklart
-%
-We assume the same for single good frames surrounded by a lot of bad frames. In this test case the goal is to see how well the algorithms are able to switch into the correct state and stay there for its entirety. In order take this into account we have come up with the following method of measurement:\\\\
-%
-We start by identifying all the positions in the sequence of frames where the state changes from good to bad or vice versa. These are the areas where we are tolerant of mistakes by the classifier, that is, we will not punish it very hard for misclassifications around these positions. The areas between the the pointers correspond
-%
-% Noter fra Kim: Kan ikke lide sidste sætning
-%
-to the sub-sequence of the video where we stay in a state. Misclassification in these areas are not tolerated and should be punished harder. They way we accomplish this is
-%
-% Noter fra Kim: Kan ikke lide sidste sætning (blah blah?)
-%
- by generating a \emph{penalty function} defined as:
+We start by identifying all the positions in the sequence of frames where the state changes from good to bad or vice versa. Let $S$ be the set of all these positions. Also let $x$ any position in the video and let $c$ be some level of tolerance for mistakes. A \emph{penalty function} for determining the ratio of punishment for a misclassification at position $x$ is then defined as:
 %
 \begin{displaymath}
-P(x) =1 - MAX_{b\in B}(e^{-\frac{(x-b)^{2}}{2c^{2}}})
+P(x) =1 - MAX_{s\in S}(e^{-\frac{(x-s)^{2}}{2c^{2}}})
 \end{displaymath}
 %
-%
-% Noter fra Kim: What?
-%
-The content of the \emph{MAX} clause is just a Gaussian function, \emph{x} is the position at which we want to know how much we should punish mistakes, \emph{B} is a set of all positions where a change of state happens and \emph{c}
+This function places a series of inverted gaussian bell curves at the point of every change of state. Figure \ref{fig:penaltycurve} shows an example of this. The value $c$ defines the width of the curve and thus determines how tolerant we are.
 %
 % Noter fra Kim: Valgt hvordan?
 %
-is the level of tolerance we have for mistakes in general. The further away from a change of state a misclassification is the more it is punished. See [fig reference].
-%
 \begin{figure}
 \includegraphics[width=1\textwidth]{img/penaltyfunction.jpg}
-\caption{An illustration of a curve generated by the penalty function}
+\caption{An illustration of a curve generated by the penalty function P}
+\label{fig:penaltycurve}
 \end{figure}
 %
-What the function does is that i places a reverse Gaussian bell curve at each position of change of state. \emph{P(x)} always returns a value between 0 and 1, that tells us how severe a misclassification in this area is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the classification should be scored. However, this makes maintaining accurate true and false negative and positive values slightly less trivial. If a misclassification occurs at frame \textit{x} and \emph{P(x)} is very close to 0, how true (or false) is the classification)? The way we handle this is simply by adding \textit{P(x)} to the \textit{false} ratio for this type (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.
+\emph{P(x)} always returns a value between 0 and 1, that tells us how severe a misclassification at position $x$ is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the classification should be scored. There is one problem with this appraoch. It makes maintaining accurate true- and false- negative and positive values slightly less trivial. If a misclassification occurs at frame \textit{x} and \emph{P(x)} is very close to 0, how true (or false) is the classification)? The way we handle this is simply by adding \textit{P(x)} to the \textit{false} ratio for this type (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.
 %
 \paragraph{Smoothing of the algorithm suggestions}
 %
