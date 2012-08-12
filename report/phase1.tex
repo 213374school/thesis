@@ -1,16 +1,17 @@
 %
 \section{Frame quality assessment}
-% LAUGE
-% mangler
+%
+As described earlier, frame quality assessment refers to estimating the frame-by-frame image quality in a video. This forms the basis for knowing which parts of the videos are suitable for human observation in a final video summary.
 %
 \subsection{Literature study}
 % kim: findes der ikke andre metoder? (til segmentering) - vi har faktisk kun 2 artikler omkring video kvalitet. resten er om semantisk indhold.
 We have found several articles describing methods for segmenting and detecting (un)suitable areas in a video clip.\\
-Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a simple method to measure how shaky a picture is at a given point by computing a displacement-vector. Another measure of image quality proposed by Girgensohn et al. is testing if a certain percentage of pixels is above some threshold; an indication of image brightness.\\
-The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415} is a way to balance clip lengths. It is a measure of how much a clip can be expanded or contracted as a function of the area under the curve describing the unsuitability of the region the clip would expand into. The purpose of this is to automatically fit segmented clips to match a desired total clip length.\\
+Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a simple method to measure how shaky a picture is at a given point by computing a displacement-vector between two neighbouring frames. They also look into the lighting conditions in the individual frames by calculating the certain percentage of pixels, whos intesity is within some upper and lower limit; an indication of reasonable exposure levels in the frames.\\
+The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415}, also described by Girgensohn et al. is a way to balance clip lengths. It treats the \textit{unsuitability} of the surrounding frames as an additional cost for including them in the clip. The purpose of this is to automatically fit segmented clips to match a desired total clip length.\\
 %
-A more comprehensive approach described by ??? \cite{10.1109/ICME.2005.1521399} is a multi-level classifier that labels each frame as belonging to one of the groups: "blurred", "shaky", "inconsistent" and "stable". Their solution is based on Support Vector Machines (SVMs) and yield satisfactory results.
+A more comprehensive approach described by Wu et al. \cite{10.1109/ICME.2005.1521399} is a multi-level classifier that labels each frame as belonging to one of the groups: \textit{blurred}, \textit{shaky}, \textit{inconsistent} and \textit{stable}. Their solution is based on Support Vector Machines (SVMs) and yield satisfactory results.
 %
+% Lauge: Har fundet to andre artikler om image quality assessment. Skal lige have skimmet dem og sat dem ind her.
 \subsection{Method}
 % ANDERS
 % kim: skal kunne implementere udfra beskrivelsen af metoden
@@ -60,21 +61,18 @@ Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$
 %
 Another way to compute $v$ is $v = \text{max}(\frac{W_{1}}{T_{1}}, \frac{W_{2}}{T_{2}})$ and $s = v >1$ where $T_{1}, T_{2}$ are the respective lower bounds.}
 %
-\subsection{Data set for the video-clip segmentation} \label{sec:videoclipsegmentationdataset}
+\subsection{Data-set for the frame quality assessment} \label{sec:framequalityassessmentdataset}
 %
-% LAUGE
-The main purpose of the video-clip segmentation is to be able to identify regions in the video-clips, that are suitable quality-wise. We do this by looking at the level of contrast in the frames and by estimating the amount of movement and shakiness of the camera. For simplicity we convert all our footage to gray-scale, which brings decreases the complexity and computational costs significantly. Most of the videos used for this data set was found on Youtube and collected as described in section~\ref{sec:dataset} on page~\pageref{sec:dataset}.\\
-We can roughly divide the videos from YouTube in two: raw and pre-edited video. What we generally want is raw video, but since this is by far the lesser portion of the two we decided to utilise the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\\\
+Most of the videos used for this data set was found on Youtube and collected as described in section~\ref{sec:dataset} on page~\pageref{sec:dataset}.\\
+We can roughly divide the videos from YouTube in two; raw and pre-edited video. What we generally want is raw video, but since this is by far the lesser portion of the two we use the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\
 %
-\textbf{Raw Youtube videos}\\
-The data set contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage. All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the data set, we generate a ‘gold standard’ manually for each video. This is done by watching the video and recording every time the footage switches state from ‘bad’ to ‘good’ or vice versa. % Der skal siges noget mere om hvordan vi gør det her
-.\\\\
+\paragraph{Raw Youtube videos}
+The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage.
+% Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har
+All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the data set, we generate a \textit{gold standard} manually for each video. This is done by watching the video and recording every time the footage switches state from \textit{bad} to \textit{good} or vice versa.
 %
-\textbf{Pre-edited Youtube videos}\\
-The data set furthermore contains a fair amount of pre-edited videos. This is because far the most videos available on Youtube have already been edited in some way. Many of these are videos consisting of several different video-clips, which themselves was once raw footage. In order to use these clips we split the edited videos up around their scene boundaries. This is done manually in much the same way as the when generating ‘gold standard’ for the raw Youtube videos: by simply watching the videos and recording the time of scene boundaries. Since a lot of these edited videos contain segments of unsuitable images, like photos or introduction text, only the parts that actually depict the event is kept. Because the resulting set of video-clips have in fact already been screened and deemed watchable by a human (namely the producer of the edited video), we assume that all of this footage is of a decent quality.\\\\
-%
-In the edited videos we are actually interested in each individual video-segment. In order to obtain these we manually cut each video into chunks with a simple script that would perform the cut on demand as we watched the clip.\\ % [MORE ON THE SPECIFICS???] - skal merges med ovenstående.
-The segmented video-clips were then reviewed, and some discarded based on the following criteria:
+\paragraph{Pre-edited Youtube videos}
+The dataset furthermore contains a alot pre-edited videos. This is because far the most videos available on Youtube have already been edited in some way. Many of these videos consist of several different video-clips, which themselves was once raw footage. In order to use these clips we split the edited videos up around their scene boundaries. This is done manually in much the same way as the when generating the \textit{gold standard} for the raw Youtube videos; by watching the videos and marking the points of change of scene. Since a lot of these edited videos contain (for our purpose) unsuitable footage, like photos or on-screen text, only the parts that actually depict the event is kept. Because the resulting set of video-clips have in fact already been screened and deemed watchable by a human (namely the producer of the edited video), we assume that all of this footage is of a decent quality. During review we discard some of the the segmented video-clips, namely:
 %
 \begin{itemize}
 \item very short segments - usually a 1 second segment would be discarded
@@ -83,46 +81,45 @@ The segmented video-clips were then reviewed, and some discarded based on the fo
 \end{itemize}
 %
 Keep in mind that some of these segments are discarded as they are out of context of the entirety of the video-clip, where they would (presumably) make sense to include, but not as standalone segments.\\
-We also accept some “noise” in each end of the segment to complement ex. overly long crossfades. In the end we end up with a large selection of short segments of video-footage that we expect to be of good quality.\\\\
+We also accept some \textit{noise} in each end of the segment to complement ex. overly long crossfades. In the end we end up with a large selection of short segments of video-footage that we expect to be of good quality.
 %
-\textbf{Our own recordings}\\
-Finally, the data set also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. The idea is that these videos serve as more controlled samples for what to tweak and test for.
+\paragraph{Our own recordings}
+Finally, the data set also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for our parameter tuning.
 %
 \subsection{Test}
 %
-The purpose of our tests and analyses are to estimate the overall ability of several different algorithm, to correctly estimate the qualities of the frames in a video and classify them as either good and bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
+Our tests attempts to estimate several different algorithms overall ability to correctly estimate the qualities of the frames in a video and classify them as either good or bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
 %
 \subsubsection{Overall procedure}
-% LAUGE
+%
 Since our dataset is limited in size we perform 5-fold cross validation on it in order to increase the amount of videos in the training set. The dataset is split into five buckets by sorting the video-clips by length and inserting them, one at a time, in a circular manner. The result is five sub-sets each containing more or less the same amount of frames between all the videos in each set. We then tweak each algorithm's parameter(s) on each of the training sets created by combining four out of the five sub-set and subsequently test the configuration on the remaining test set (the remaining fifth sub-set) and average the results into final scores. We also attempt to estimate how \textit{robust} each algorithm is against changes to its parameter(s). That is, we want to quantify how good the algorithm is overall. This analysis is based on the entire dataset and happens after the 5-fold cross validation.
 %
 \subsubsection{The Algorithms}
-% LAUGE
-% Der skal skrives noget om at der ikke er meget tidligere forskning til rådighed omkring algoritmer til at afgøre om en frame er god eller ej, og at det er derfor vi selv har fundet på nogen %
-All our algorithms work solely with the two variables \textit{shift vector magnitude} and \textit{contrast}. The values of these variables are quantified as how good (or bad) they are compared to how bad they can be.\\
+%
+All our algorithms work solely with the two variables \textit{shift vector magnitude} and \textit{contrast}. The values of these variables are quantified as how bad they are compared to how bad they can be.\\
 \\
-The magnitude of a shift is limited to 63 pixels, which would happen if the image is shifted in the same direction in each shift-iteration. The \textit{shift vector magnitude} ratio, \textit{S(s)} is therefore simply defined as the \textit{shift vector magnitude} normalised into the [0,1] range:
+The magnitude of a shift is limited to 63 pixels, which would happen if the image is shifted in the same direction in each shift-iteration. The \textit{shift vector magnitude ratio}, \textit{S(s)} is therefore simply defined as the \textit{shift vector magnitude} normalised into the [0,1] range:
 \[
 S(s) = s / 63 
 \]
 , where \textit{s} is the \textit{shift vector magnitude}.\\
 \\
-Since we work with 8 bit gray-scale images we know that all pixels in all our frames are in the color range [0,255]. If the \textit{contrast}, \textit{c}, is defined as the standard deviation between the lightest and the darkest pixel in the frame, we know that the maximum value of \textit{c} is 127.5 (if these two pixels have the values 0 and 255, respectively). The \textit{contrast} ratio, \textit{C(c)} is therefore defined as:
+Since we work with 8 bit gray-scale images we know that all pixels in all our frames are in the intensity range [0,255]. We define the \textit{contrast}, \textit{c}, as the standard deviation between the lightest and the darkest pixel in the frame, we know that the maximum value of \textit{c} is 127.5 (if these two pixels have the values 0 and 255, respectively). The \textit{contrast} ratio, \textit{C(c)} is therefore defined as:
 \[
 C(c) = 1 - (c / 127.5)\\
 \]
 The reason we subtract the amount of contrast from one is because we want the value to be comparable to that of the \textit{shift vector magnitude}, where smaller values are preferred over bigger ones\\
 \\
-We found it advantageous to square the values of these variables in order to increase the algorithm’s sensitivity toward those in the bad end of the spectrum. Obviously, the squared values are still normalised into the [0,1] range. Secondly we deploy \textit{triangular smoothing} on the values using a smoothing degree of $12$ which roughly translates to averaging over a number of frames equal to one second, in order to remove some of the worst noise in the data.\\\\
+We further square these values of these variables in order to increase the algorithm’s sensitivity toward those in the bad end of the spectrum. The squared values are then normalised back into the [0,1] range. We also perform \textit{triangular smoothing} on the values using a smoothing degree of $12$ which roughly translates to averaging over a number of frames equal to one second, in order to remove some of the worst noise in the data.
 %
-\textbf{Contrast only (CO)}\\
-This algorithm only takes the level of \textit{contrast} in the frames into consideration. If the \textit{contrast} is above the limit defined in the configuration of the algorithm, the frame is marked as bad.\\\\
+\paragraph{Contrast only (CO)}
+This algorithm only takes the level of \textit{contrast} in the frames into consideration. If the \textit{contrast} is above the limit defined in the configuration of the algorithm, the frame is marked as bad.
 %
-\textbf{Shift magnitude only (SMO)}\\
-This algorithm only considers how much a frame was shifted in order to attempt to match it to the frame before it. That is, it only looks at how much the images are moving or shaking. Just like with the CO algorithm we simply measure if the \textit{shift vector magnitude} is beyond the configured limit, and mark the frame good or bad accordingly.\\\\
+\paragraph{Shift magnitude only (SMO)}
+This algorithm only considers how much a frame was shifted in order to attempt to match it to the frame before it. That is, it only looks at how much the images are moving or shaking. Just like with the CO algorithm we simply measure if the \textit{shift vector magnitude} is beyond the configured limit, and mark the frame good or bad accordingly.
 %
-\textbf{Independent contrast and shift magnitude (ICSM)}\\
-This algorithm takes both parameters into consideration and looks at if any of the two exceeds a given threshold. This mean that we ignore the cumulative effect of the two as a determinant for whether the video segment is unsuitable. The frame state classifier, \text{S(c,s)}, is defined as:
+\paragraph{Independent contrast and shift magnitude (ICSM)}
+This algorithm takes both parameters into consideration and looks at if any of the two exceeds a given threshold. This mean that we ignore the cumulative effect of the two as a determinant for whether the video segment is unsuitable. This is simmilar to the approach taken by Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415}. The frame state classifier, \text{S(c,s)}, is defined as:
 \[
 S(c,s)=MAX(c \cdot (1-c_{lim}), s \cdot (1-s_{lim}))
 \]
@@ -140,31 +137,21 @@ S(c,s)=\sqrt[3]{\frac{c^{3}+s^{3}}{2}}
 \]
 The parameter values are cubed (and the result normalised to the [0,1] range) in order further increase their sensitivity toward bad values. Informal experimentation shows that the power of sensitivity does not effect the outcome result in any significant way, so it has been left out as a parameter.
 %
-\subsubsection{Tweaking} \label{sec:ph1tweaking}
-% LAUGE
-In turns out that defining what final score to tweak for is not as simple as it sounds. Ordinary approaches usually tend to focus on the maximisation of positive precision and recall. A very effective method for determining the overall performance of an algorithm, with this as an priority, is to use ROC diagrams, as described by [REFERENCE]. However, due the disproportion
+\subsubsection{Parameter tuning} \label{sec:ph1tweaking}
 %
-% Noter fra Kim: Kim bryder sig ikke om sidste sætning
-%
-between the number of good and bad frames in our dataset this approach is not very suitable for us. Instead we decided that our priority would be to maximise the negative recall as well as the positive precision, since this would mean that a good score signified an algorithm/parameter combination that was not only good at avoiding unsuitable frames, but also could be relied on for delivering mostly true-positive good frames.
-%
-% Noter fra Kim: Hvad med at definere disse begreber (positive precision etc..)
-%
-Of course we do not want to throw away too many good frames due to a low positive recall and a low negative precision, so any negative performance of these two factors should be considered as a cost. What we have come up with is a homemade measuring tool inspired by ROC diagrams. The cost, \textit{C}, and benefit, \text{B}, are defined as:
+Parameter tuning is usually a matter of maximising positive precision and recall. Positive precision is the certainty with which we can believe that a positive classification is correct whereas positive recall is the ratio of true positives we find compared to how many actually exists. Relative Operating Characteristics (ROC) diagrams, as described by Fawcett \cite{Fawcett06a}, are very useful tool for quantifying the overall stability of an algorithm, for this purpose. The ROC diagrams plot different parameter settings as the relation between their \textit{true positive rates} (the benefit) compared to their \textit{false positive rates} (the cost). Plotting this relation yields a curve, whos underlying area can be used as an estimate of the algorithms stability.
+% Lauge: Vi skal sgu nok lige smide en lille figur ind her...
+However, due to the disproportion between \textit{good} and \textit{bad} frames in our dataset (there are a lot more of the former), this approach is not suitable in our case. We want to maximise the positive precision \textit{and} the negative recall. Effectively, this means that we reward algorithms/parameters, that were not only good at avoiding unsuitable frames, but also delivered mostly true-positive good frames. We are willing to do this at the cost of dismissing some of the suitable frames. However, in order to limit this \textit{waste} we still consider low positive recall and low negative precision a cost, which should be limited. Inspired by the structure of ROC diagrams we established our own meassuring tool. However, in our case the cost, \textit{C}, and benefit, \text{B}, are defined as:
 \[
-C = 2 \cdot \frac{positive_{recall} \cdot negative_{precision}}{positive_{recall} + negative_{precision}}
+C = 1 - 2 \cdot \frac{positive_{recall} \cdot negative_{precision}}{positive_{recall} + negative_{precision}}
 \]
 and
 \[
 B = 2 \cdot \frac{negative_{recall} \cdot positive_{precision}}{negative_{recall} + positive_{precision}}
 \]
-%
-% Noter fra Kim: Giver det mening at kalde dem cost og benefit? Mix af positive og negative, hvad er definationerne på disse? F-meassure? Forklar? Hvor kommer det fra, Fawcett?
-%
-We create a cost/benefit diagram, by defining the benefit as the harmonic mean of the positive precision and the negative recall and the cost as one minus the harmonic mean of the positive recall and negative precision. These values can be used to produce a diagram, which in many ways resembles a classic ROC diagram (see fig. [REFERENCE]). The resulting cost and benefits based on different parameter choices for an algorithm are plotted along the two axis and as with a normal ROC diagram we want the points to lie as close to the top left corner as possible, as this signifies a large benefit with a small cost. We calculate the distance from each point to this corner and use it as a final score, that can be used to measure how well that specific configuration performs.
-%
+In both cases we combine the two influencing parameters by calculating their harmonic mean. Obviously we want \textit{C} to be as small as possible and \textit{B} to be as large as possible. In the final step we visualise this, by plotting the result of different parameter setting in a ROC-like diagram. The costs and benefits are plotted along the two axis, and as with a normal ROC diagram we want the points to lie as close to the top left corner as possible, as this signifies a large benefit with a small cost. From this diagram we are able to estimate the specific algorithms overall performance, across many different choices of parameter values, by calculating the area under the curve the plots form. However, we are also able to identify the single best parameter choice. We do this by calculate the distance from each point to the [0,1] coordinate (the optimal configuration) and use it as a final score. The smaler the score, the more optimal the configuration is.
 % Noter fra Kim: What? Hvorfor ikke areal? Forklar!
-%
+% Lauge: Der er faktisk nogle ting vi lige skal have overvejet med det her. (Se notesbog!)
 %
 \begin{figure}
      \centering
@@ -205,13 +192,14 @@ In order to overcome this problem we simulate having only one parameter by locki
 %
 \subsubsection{Test cases} \label{sec:testcases}
 % LAUGE
-\textbf{Frame by frame classification (FFC)}\\
 %
-The first test case only looks at each frame independently. For each frame we determine the level of contrast and the shift vector magnitude and use this information solely to perform a binary classification of the frame as good or bad using the algorithms described above. The results are compared with our gold standard for the videos and the amount of true and false positives and negatives are used to calculate precision and recall for both classes.\\\\
+\paragraph{Frame by frame classification (FFC)}
 %
-\textbf{Temporal classification (TC)} \label{sec:tctestcase}\\
+The first test case only looks at each frame independently. For each frame we determine the level of contrast and the shift vector magnitude and use this information alone to perform a binary classification of the frame as \textit{good} or \textit{bad} using the algorithms described above. The results are compared with our \textit{gold standard} for the videos and the amount of true and false positives and negatives are used to calculate precision and recall for both classes.
 %
-In the second test case we extend the classification to take the surrounding frames into account as well. Since the human eye does not perceive a movie as a sequence of frames but rather as a moving picture, we expect good and bad frames to show up in chunks. That is, we expect single bad frames to be ignored by a human observer, if all their surrounding frames are generally good.
+\paragraph{Temporal classification (TC)} \label{sec:tctestcase}
+%
+In the second test case we extend the classification to take \textit{nearby} frames into account as well. Since the human eye does not perceive a movie as a sequence of frames but rather as a moving picture, we expect good and bad frames to show up in chunks. That is, we expect single bad frames to be ignored by a human observer, if all their surrounding frames are generally good.
 %
 % Noter fra Kim: Uklart
 %
@@ -245,9 +233,9 @@ is the level of tolerance we have for mistakes in general. The further away from
 \caption{An illustration of a curve generated by the penalty function}
 \end{figure}
 %
-What the function does is that i places a reverse Gaussian bell curve at each position of change of state. \emph{P(x)} always returns a value between 0 and 1, that tells us how severe a misclassification in this area is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the classification should be scored. However, this makes maintaining accurate true and false negative and positive values slightly less trivial. If a misclassification occurs at frame \textit{x} and \emph{P(x)} is very close to 0, how true (or false) is the classification)? The way we handle this is simply by adding \textit{P(x)} to the \textit{false} ratio for this type (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.\\\\
+What the function does is that i places a reverse Gaussian bell curve at each position of change of state. \emph{P(x)} always returns a value between 0 and 1, that tells us how severe a misclassification in this area is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the classification should be scored. However, this makes maintaining accurate true and false negative and positive values slightly less trivial. If a misclassification occurs at frame \textit{x} and \emph{P(x)} is very close to 0, how true (or false) is the classification)? The way we handle this is simply by adding \textit{P(x)} to the \textit{false} ratio for this type (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.
 %
-\textbf{Smoothing of the algorithm suggestions}\\
+\paragraph{Smoothing of the algorithm suggestions}
 %
 Finally, for both algorithms, we also investigate the effect of smoothing the classification results. This is done to remove outliers in the final results and should not be confused with the smoothing of the \textit{contrast} and \textit{shift vector magnitudes} in the algorithms themselves.
 %
@@ -434,7 +422,7 @@ Also mentioned ealier, when calculating the AUC's for each algorithm we insert t
 \\
 In the \textit{ICSM} algorithm we chose to simplify our tweaking process by decreasing the precision on the second parameter, \textit{contrast}. The rationale for this is described in section~ \ref{sec:ph1multiparameter} on page ~\pageref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
 \\
-Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation} on page ~\pageref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section~ \ref{sec:videoclipsegmentationdataset} on page ~\pageref{sec:videoclipsegmentationdataset}), requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case (page ~\pageref{sec:tctestcase}), which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
+Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation} on page ~\pageref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section~ \ref{sec:framequalityassessmentdataset} on page ~\pageref{sec:framequalityassessmentdataset}), requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case (page ~\pageref{sec:tctestcase}), which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
 %
 \subsection{Section summary}
 %
