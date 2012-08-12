@@ -460,7 +460,5 @@ def main():
 	# post-hoc test #
 	#################
 
-	# everything is inconclusive
-
 if __name__ == '__main__':
 	main()

@@ -15,13 +15,13 @@ All our video summaries are hosted on YouTube.
 %
 The questionnaire was structured as a statement and 5 options
 %
-% Noter fra Kim: Vis figur med spørgsmål
+% Noter fra Kim: Vis figur med spørgsmål ANDERS: DE STÅR JO LIGE NEDE UNDER (begin itemize)
 %
-where the test user could either agree, disagree, or indicate that they were unable to respond to the statement. An example of a statement was INSERT STATEMENT HERE and the possible replies was Totally agree, Somewhat agree, Somewhat disagree, Totally disagree, and Don't know, in that order. We initially had "dont't know" in the middle, but we learned that placing it last would result in a higher rate of usable responses.\\
+where the test user could either agree, disagree, or indicate that they were unable to respond to the statement. An example of a statement was INSERT STATEMENT HERE and the possible replies was Totally agree, Somewhat agree, Somewhat disagree, Totally disagree, and Don't know, in that order. We initially had "dont't know" in the middle, but we learned from a test-run of our questionnaire that placing it last would result in a higher rate of usable responses.\\
 %
 % Noter fra Kim: Har i så smidt resultater væk?
 %
-% Noter fra Lauge: Bør vi nok fjerne. Ikke super relevant. 
+% Noter fra Lauge: Bør vi nok fjerne. Ikke super relevant. JO I HØJ GRAD RELEVANT.
 %
 %
 We want to investigate a few crucial points in depth which resulted in 4 very different statements:
@@ -38,7 +38,7 @@ We also added an optional note to each questionnaire in case a user wanted to el
 %
 \subsubsection{Setup}
 %
-As we both have a good deal of experience with \textit{Google App Engine} we choose to deploy a small website where our test panel could rate video-summaries. We used a spartan styling of the site such as a white background.
+As we both have a good deal of experience with \textit{Google App Engine} we choose to deploy a small website where our test panel could rate video-summaries.\\%We used a spartan styling of the site such as a white background.
 %
 % Noter fra Kim: What?
 %
@@ -64,16 +64,15 @@ We designed the test so that the test-user can watch as many or as few videos as
 %
 \subsubsection{Control Samples}
 %
-We also added two different control samples: one was randomly generated videos, but from a random set of labels and segment lengths, but also some where sections of a video was picked totally at random.
+We add two different control samples: one is videos with a random set of labels and segment lengths, and one where clips was picked totally at random.
 %
-% Noter fra Kim: See section XX
+% Noter fra Kim: See section XX WOOOOT???
 %
-This will form the baseline for our test, ie. we expect these to perform poorly in all aspects. We also added the opposite, videos edited by humans as another control sample. We expect these to perform better than all other videos.
+This will form the baseline for our test, ie. we expect these to perform poorly in all aspects. We also added videos edited by humans as a control sample. We expect these to perform as well as the designer recipies or better.
 %
 \subsection{Results}
 %
-% discussion on: histograms and Friedman tests
-The first step in our analysis of the collected data is to plot histograms of the answers in each method, as seen in Figure \ref{fig:hist_design} (remaining figures can be found in Appendix \ref{app:histograms}), in order to investigate the distribution of answers. As see in Figure \ref{fig:hist_design} the answers are unevenly distributed with a skew to the right with the exception of the first histogram (content). The answers are generally unevenly distributed in the other histograms which allows us to analyze further. Had there been a trend of an even distribution the data would have been inconclusive.
+The first step in our analysis of the collected data is to plot histograms of the answers in each method, as seen in Figure \ref{fig:hist_design} (additional figures can be found in Appendix \ref{app:histograms}), in order to investigate the distribution of answers. As see in Figure \ref{fig:hist_design} the answers are unevenly distributed with a skew to the right with the exception of the first histogram (content). The answers are generally unevenly distributed in the other histograms which allows us to continue our analysis. Had there been a trend of an even distribution of answers the data would have been inconclusive by definition.
 %
 \begin{figure}
      \centering
@@ -81,20 +80,25 @@ The first step in our analysis of the collected data is to plot histograms of th
      \caption{Histogram of answers to videos created with the "designer method"}\label{fig:hist_design}
 \end{figure}
 %
-We continue our analysis by employing the Friedman test\footnote{http://en.wikipedia.org/wiki/Friedman\_test} which is a non-parametric statistical test (we make no assumptions on the normality of our data). The results can be found in Table \ref{tab:blah}
+We continue our analysis by employing the Friedman test\footnote{http://en.wikipedia.org/wiki/Friedman\_test} which is a non-parametric statistical test (we make no assumptions on the normality of our data). The results can be found in Tables \ref{tab:fried_alpha}, \ref{tab:fried_dataset}, and \ref{tab:fried_recip}. 
 %
 \input{matrix2latex/recipies}
 \input{matrix2latex/datasets}
 \input{matrix2latex/alpha-span}
 %
+present notes
+%
 \subsection{Analysis}
 %
-
+The only statistical significance is content in Table \ref{tab:fried_dataset}, which is no surprise as the datasets differ primarily on content as described in section \ref{section that describes datasets}. As everything else is statistically insignificant we do not pursue further analysis KIM: VI SKAL LIGE SNAKKE OM HVAD VI GØR HER.
 %
 \subsubsection{Risks \& Limitations}
 %
-
-
+% hvad skal der stå her????
+% limited dataset -> we did not have seperate training and test sets\\
+% barely acceptable amount of feedback -> could have cause
 %
 \subsection{Conclusion}
+%
+results are statistically insignificant!!!!
 %
