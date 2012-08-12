@@ -5,26 +5,15 @@ test site can be found at thesis.fmitcar.appspot.com/thesis/start/
 %
 \subsection{Test Environment}
 %
-
-%
-All our video summaries are hosted on YouTube.
+Our test environment consists of a website showing a collection of generated videos, hosted on YouTube. Users see one video on each page and are presented with a questionnaraire after the video is done playing.
 %
 \subsubsection{Questionnaire}
 %
 % reverse engineer questions (find lit. on how to write a questionnaire)
 %
-The questionnaire was structured as a statement and 5 options
+The questionnaire for each video consists of four statements to which the user can \textit{disagree}, \textit{somewhat disagree}, \textit{somewhat agree}, \textit{agree} or declare that she \textit{does not know}. In an attempt to discourage the user from selecting the latter option it is shown last in the list. Based on feedback from an initial, single-user test run we also added and introduction page that explains the purpose of the test and shows the available statements and options. The description is also present throughout the test.\\
 %
-% Noter fra Kim: Vis figur med spørgsmål ANDERS: DE STÅR JO LIGE NEDE UNDER (begin itemize)
-%
-where the test user could either agree, disagree, or indicate that they were unable to respond to the statement. An example of a statement was INSERT STATEMENT HERE and the possible replies was Totally agree, Somewhat agree, Somewhat disagree, Totally disagree, and Don't know, in that order. We initially had "dont't know" in the middle, but we learned from a test-run of our questionnaire that placing it last would result in a higher rate of usable responses.\\
-%
-% Noter fra Kim: Har i så smidt resultater væk? LAUGE
-%
-% Noter fra Lauge: Bør vi nok fjerne. Ikke super relevant. JO I HØJ GRAD RELEVANT.
-%
-%
-We want to investigate a few crucial points in depth which resulted in 4 very different statements:
+The four statements shown after each video are:
 %
 \begin{itemize}
 \item The individual video clips are interesting
@@ -33,34 +22,15 @@ We want to investigate a few crucial points in depth which resulted in 4 very di
 \item The length of the entire video is fitting
 \end{itemize}
 %
-The first statement investigates the quality of our labeller. The second statement investigates how well we are able to combine segments (in other words the quality of our recipe, ie. the order and context of the ingredients). The third statement investigates the general attitude towards clip-length, which is chosen somewhat at random within boundaries determined by the recipe. The fourth statement investigates the general attitude towards the total length of a video-summary. The ordering of statements changes between asking to the enterity of the video to each individual clip.\\
-We also added an optional note to each questionnaire in case a user wanted to ellaborate on their answer(s).
+The first statement investigates the quality of our labeller. The second statement investigates how well we are able to combine segments (in other words the quality of our recipe, ie. the order and context of the ingredients). The third statement investigates the general attitude towards clip-length, which is chosen somewhat at random within boundaries determined by the recipe. The fourth statement investigates the general attitude towards the total length of a video-summary. We also added an optional note to each questionnaire in case a user wanted to ellaborate on their answer(s).
 %
 \subsubsection{Setup}
 %
-As we both have a good deal of experience with \textit{Google App Engine} we choose to deploy a small website where our test panel could rate video-summaries.\\%We used a spartan styling of the site such as a white background.
-%
-% Noter fra Kim: What?
-%
-% Noter fra Lauge: Minimalistic? 
-%
-%
-To discern interuptive elements we removed player-controls from the YouTube embedded player (the user could still pause the video by clicking on it or using the space-bar on their keyboard), and also disable the recommended videos that appear after playing a YouTube video to the end. The questionnaire was not shown before the end of the video in order not to disctract attention to it. The video-title, which would appear briefly in the top of the player was the hex-value of a randomly generated number to ensure a non-descript title.\\
-We supplied each session with a unique identifier. This means that we are unable to track a returning test-user, as they would get a new session id, but it does give us a rough measure of how many different test-users we get, how many questionnaires answered on average, and also investigate the progress of a test-user (they may generally rate a video worse as they watch more videos) - the time at which a result is recorded is saved along with the data.\\
-To increase the availability of our test environment everything is localized into danish and english - especially elderly danish people may have a hard time answering an english questionnaire.
-%
-% Noter fra Kim: Hvad er de danske oversættelser? De skal angives LAUGE
-%
-The resulting locale is recorded along with each result. This will also allow us to measure any significant difference between the two locales - as it is impossible to make a 1-to-1 translation of the statements.\\
-To ensure a proper shuffling of each video-summary we record how many times a given summary is shown (it counts as shown when a test-user has completed the questionnaire). We consequently enforce a balance of this counter amongst all the videoes. Furthermore we restrict, if possible, that a video has not been shown recently (within the last 3 minutes). This would allow us to easily add more videos later on should the need arise, while getting results from the entire range of summaries.\\
-%
-% Noter fra Kim: Det forstår jeg ikke
-%
-% Noter fra Lauge: Det er heller ikke helt tilfældet som vi også sidenhen snakkede om. LAUGE
-%
-%
-We initially spread the survey on Facebook by messaging friends and family and making a public wall post. To further increase the chance of the survey going viral we placed a Facebook Like-button and a Twitter button discretely in the bottom of the site to allow test-users to further spread the word.\\
-We designed the test so that the test-user can watch as many or as few videos as they want, ie. each video-summary is a self-contained questionnaire.
+Our test environment runs on \textit{Google App Engine} and consist of a minimalistic website. To discern interuptive elementsplayer-controls are removed from the YouTube embedded player (the user can still pause the video by clicking on it or by using the space-bar on their keyboard). The questionnaire was not shown before the end of the video in order not to disctract attention to it. The video-title, which would appear briefly in the top of the player is the hex-value of a randomly generated number to ensure a non-descript title.\\
+Each user session is tracked using a randomly generated identifier. We do not make any attempt to track users across different sessions so we are unable to track a returning test-user, but it does give us a rough measure of how many different test-users we have, how many questionnaires they answered on average.\\
+To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test is available in Appendix XX, in both languages.\\
+The test is designed so that the test user can see as few or as many videos as she wants. A circular queue of videos is shared between all users, meaning that a new user will start at the video following the one that was last rated. Answers are stored after each succesful rating.\\
+The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\
 %
 \subsubsection{Control Samples}
 %
@@ -105,9 +75,11 @@ The only statistical significance is content in Table \ref{tab:fried_dataset}, w
 %
 \subsubsection{Risks \& Limitations}
 %
+User based tests are inherently risky. Our choice of statements and options are bound to have had a huge influence on the results. As is the choice of supporting two languages. Based on feedback from users (both through the test and in person) we have come to understand that several things could have been done better. Several users complained over the lack of context in which they were watching the video. They claimed, rightfully, that it is almost impossible to determine whether clips were interresting or whether the length of a video is fitting, when they did not know what they were watching. The lack of sound only makes this more difficult.\\\\
+%
+Lots more here...
 % LAUGE
-% hvad skal der stå her????
-% limited dataset -> we did not have seperate training and test sets\\
+% limited dataset -> we did not have seperate training and test sets\\     <- Skal stå i forrige sektion
 % barely acceptable amount of feedback -> could have caused ...
 % search keywrod kunne måske have hjulpet på at forstå spøgsmål bedre.
 %
