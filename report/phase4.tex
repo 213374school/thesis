@@ -1,7 +1,8 @@
 %
 \section{Testing}
 %
-test site can be found at thesis.fmitcar.appspot.com/thesis/start/
+Test site can be found at thesis.fmitcar.appspot.com/thesis/start/\\
+TODO: WRITE MORE
 %
 \subsection{Test Environment}
 %
@@ -50,7 +51,7 @@ We expect these to perform as well as the designer recipies or better.
 %
 \subsection{Results}
 %
-The first step in our analysis of the collected data is to plot histograms of the answers in each method, as seen in Figure \ref{fig:hist_design} (additional figures can be found in Appendix \ref{app:histograms}), in order to investigate the distribution of answers. As see in Figure \ref{fig:hist_design} the answers are unevenly distributed with a skew to the right with the exception of the first histogram (content). The answers are generally unevenly distributed in the other histograms which allows us to continue our analysis. Had there been a trend of an even distribution of answers the data would have been inconclusive by definition.
+The first step in our analysis of the collected data is to plot histograms of the answers in each method in order to investigate the distribution of answers. As see in Figure \ref{fig:hist_design} (additional figures can be found in Appendix \ref{app:histograms}) the answers are unevenly distributed with a skew to the right with the exception of the first histogram (content). The answers are generally unevenly distributed in all histograms, and they do not seem to follow any specific distribution. % which allows us to continue our analysis. Had there been a trend of an even distribution of answers the data would have been inconclusive by definition. DETTE ER EN FORKERT CONCLUSION. LÆS WIKIPEDIA! - RATHER WE COULD INVESTIGATE IF WE HAVE NORMAL DISTRIBUTED DATA (DOES NOT LOOK LIKE IT).
 %
 \begin{figure}
      \centering
@@ -58,8 +59,9 @@ The first step in our analysis of the collected data is to plot histograms of th
      \caption{Histogram of answers to videos created with the "designer method"}\label{fig:hist_design}
 \end{figure}\\
 %
-We continue our analysis by employing the Friedman test which is a non-parametric statistical test (we make no assumptions on the normality of our data).The results can be found in Tables \ref{tab:fried_alpha}, \ref{tab:fried_dataset}, and \ref{tab:fried_recip} where $\nu$ denotes degrees of freedom, $\chi^2$ denotes SKAL VI HAVE DENNE MED NÅR VI HAR P-VÆRDI?, and p-value is \textit{"the probability of obtaining a test statistic at least as extreme as the one that was actually observed, assuming that the null hypothesis is true."}\footnote{http://en.wikipedia.org/wiki/P-value} - HVOR MEGET KAN MAN FORVENTE AT LÆSEREN VED OM STATISTIK?\\
-FORMULER NULL HYPOTHESIS???\\
+We continue our analysis by employing the Friedman rank sum test which is a non-parametric statistical test. We must employ a non-parametric test as parametric tests require the data to follow a specific distribution (the histograms shows that it does not). The values related to each answer are also not compareable value-wise (there is no clear numerical interpretation), ie. \textit{Totally disagree} $(-2)$ is not twice as bad as \textit{Somewhat disagree} $(-1)$, but \textit{Totally disagree} is ranked lower than \textit{Somewhat disagree}. The Friedman test ranks all answers, where answers with equal values get the same rank, and then counts occurence of each rank MORE?. The disadvantage of employing a non-parametric test is that it requires are larger sample size to draw conclusions with the same degree of confidence as a parametric test.\\ 
+The results can be found in Tables \ref{tab:fried_alpha}, \ref{tab:fried_dataset}, and \ref{tab:fried_recip} where $\nu$ denotes degrees of freedom, and p-value is \textit{"the probability of obtaining a test statistic at least as extreme as the one that was actually observed, assuming that the null hypothesis is true."}\footnote{http://en.wikipedia.org/wiki/P-value}.\\
+FORMULER NULL HYPOTHESIS\\
 %
 \input{matrix2latex/recipies}
 \input{matrix2latex/datasets}
@@ -86,7 +88,13 @@ Lots more here...
 \subsection{Conclusion}
 %
 % ANDERS
-As we are unable to reject the null hypothesis in almost all regards we must conclude that the various methods of generating a video have no significant effect on the resulting video. This also means that there is no significant difference between a human edited video and one that is generated at random. We believe that this is an effect of high quality raw material, and we would suspect that there would be a noticeable difference if our dataset had contained a larger amount of video footage of questionable quality; visual, contextual, or both.\\
-There is also no significant effect of choosing different $\alpha$-values which leads us to conclude that we must test for values closer to the extreme to get a definite answer. We only tested for two different values to keep the number of test videos at a manageable level. FURTHER ANALYSIS COULD BE TO INVESTIGATE THE EFFECT OF ALPHA VALUES, IE. FOR ALPHA VALUE X WE GET A TOTAL AVR. VIDEO LENGTH OF SO AND SO SECONDS, AND SEGMENT LENGTHS OF SO AND SO SECONDS, COMPARE THAT TO AN ALPHA VALUE OF 2X.\\
-There was also no significant difference between the three data-sets except in content, which is no surprise as the datasets differ primarily on content as described in section \ref{section that describes datasets}.
+As we are unable to reject the null hypothesis in almost all regards we conclude that the questionaires reveal no significant effect of the various methods of generating a the resulting video. This also means that there is no significant measureable difference between a human edited video and one that is generated at random.\\
+There is also no significant measureable effect of choosing different $\alpha$-values, ref to section with alpha-values explained. We only tested for two different values to keep the number of test videos at a manageable level.\\
+There was also no significant measureable difference between the three datasets, except in content which is no surprise as the datasets differ primarily on content as described in section \ref{section that describes datasets}.
+%
+\subsection{Discussion OR MAYBE SECTION SUMMARY?}
+%
+COPY PASTA FROM CONCLUSION:
+We believe that this is an effect of high quality raw material, and we would suspect that there would be a noticeable difference if our dataset had contained a larger amount of video footage of questionable quality; visual, contextual, or both.\\
+which leads us to conclude that we must test for values closer to the extreme to get a definite answer. FURTHER ANALYSIS COULD BE TO INVESTIGATE THE EFFECT OF ALPHA VALUES, IE. FOR ALPHA VALUE X WE GET A TOTAL AVR. VIDEO LENGTH OF SO AND SO SECONDS, AND SEGMENT LENGTHS OF SO AND SO SECONDS, COMPARE THAT TO AN ALPHA VALUE OF 2X.\\
 %
