@@ -1,24 +1,28 @@
 %
-\section{Frame quality assessment}
+\section{Image Quality Assessment}
 %
-As described earlier, frame quality assessment refers to estimating the frame-by-frame image quality in a video. This forms the basis for knowing which parts of the videos are suitable for human observation in a final video summary.
+Image quality assessment is estimating the frame-by-frame image quality in a video. %This forms the basis for knowing which parts of the videos are suitable for human observation in a final video summary.
 %
 \subsection{Literature study}
 % kim: findes der ikke andre metoder? (til segmentering) - vi har faktisk kun 2 artikler omkring video kvalitet. resten er om semantisk indhold.
-We have found several articles describing methods for segmenting and detecting (un)suitable areas in a video clip.\\
-Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a simple method to measure how shaky a picture is at a given point by computing a displacement-vector between two neighbouring frames. They also look into the lighting conditions in the individual frames by calculating the certain percentage of pixels, whos intesity is within some upper and lower limit; an indication of reasonable exposure levels in the frames.\\
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method to measure how shaky a video is frame-by-frame by computing a shift-vector between subsequent frames. They also look into lighting conditions in individual frames by calculating the percentage of pixels within a specific boundary; an indication of reasonable exposure levels in the frame.\\
 The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415}, also described by Girgensohn et al. is a way to balance clip lengths. It treats the \textit{unsuitability} of the surrounding frames as an additional cost for including them in the clip. The purpose of this is to automatically fit segmented clips to match a desired total clip length.\\
 %
-A more comprehensive approach described by Wu et al. \cite{10.1109/ICME.2005.1521399} is a multi-level classifier that labels each frame as belonging to one of the groups: \textit{blurred}, \textit{shaky}, \textit{inconsistent} and \textit{stable}. Their solution is based on Support Vector Machines (SVMs) and yield satisfactory results.
-%
+A more comprehensive approach described by Wu et al.\cite{10.1109/ICME.2005.1521399} is a multi-level classifier that labels each frame as belonging to one of the groups: \textit{blurred}, \textit{shaky}, \textit{inconsistent} and \textit{stable}. Their solution is based on Support Vector Machines (SVMs) and yield satisfactory results.\\ %Uddybes
+LAUGE SKRIVER MERE!
 % Lauge: Har fundet to andre artikler om image quality assessment. Skal lige have skimmet dem og sat dem ind her.
+%
 \subsection{Method}
-% ANDERS
+%
 % kim: skal kunne implementere udfra beskrivelsen af metoden
 % NOTE: vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
 % passer rigtig godt til "intro" afsnittet
-Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} describes a method to compute a vector that indicates the displacement in two subsequent frames, where the direction of the vector corresponds to the direction of the displacement, and the magnitude of the vector shows how many pixels was displaced. The advantage of this method is the simplicity in implementation, and low computational costs. The authors suggests a shift of each subsequent frame in four directions of 32 pixels to start with, halving the number of pixels in each step. For each shift the Root-Mean-Square (\textit{RMS}) of the difference in the two frames is calculated, and the shift with the lowest \textit{RMS} is the basis for the following shift. Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
-The algorithm below illustrates how the displacement vector for two subsequent frames is computed.
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method that estimates the shift in two subsequent frames, where the direction of a vector is the direction of the shift, and the magnitude of that vector how many pixels was shifted. The advantage of this method is the simplicity in implementation, and low computational costs.\\
+We have adopted this method and details are as follows. Each frame is initially shifted 32 frames, as suggested by Girgensohn et al. in four directions (up, down, left, right), halving the number of pixels shifted in each iteration down to 1 pixel.
+%The authors suggests a shift of each subsequent frame in four directions of 32 pixels, halving the number of pixels in each iteration to 1 pixel. 
+For each shift the Root-Mean-Square (\textit{RMS}) of the difference between the frame and the previous unchanged frame is calculated, and the shift with the lowest \textit{RMS} is the basis for the following iteration. %Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
+%The algorithm below illustrates how the shift vector for two subsequent frames is computed.
+PASSER DENNE FORKLARING MED NEDENSTÅENDE ALGORITME???
 %
 \begin{verbatim}
      f  <- read frame
@@ -37,67 +41,99 @@ The algorithm below illustrates how the displacement vector for two subsequent f
      yield x’,y’
 \end{verbatim}
 %
-% Note fra Kim: ^^ Det kan skrives mere kompakt vha. formler ^^ DET KAN DET MÅSKE NOK, MEN JEG KAN IKKE LURE HVORDAN. KAN GODT BRUGE MIN TID BEDRE PÅ ANDEN VIS. OG VIL ÆDE EN HAT PÅ AT KIM SKULLE BRUGE MINDST EN TIME PÅ AT SKRIVE DET OM TIL FORMLER.
+EVT DROP DETTE? DET VIRKER LIDT LIGEGYLDIGT\\
+A $640\times360$ pixels frame and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is here highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction.\\
 %
-With a frame dimension of $640\times480$ and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is then highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction. Images that are symmetrical around the vertical or horizontal center, ie. two almost identical local minima, can potentially fool the method into the wrong direction due to the greedy nature of the algorithm, but that is a rare statistical anomaly.\\
-Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a simple method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting (too) dark images, it does not take ex. extremely bright images into account, or closeups of a textureless surface. To counter this downside we instead computed a measure of contrast in a frame as the standard deviation of the pixel-values in the image-matrix, where a small standard deviation would indicate little contrast/diversity in pixel intensity, and a large standard deviation would indicate a high contrast/much diversity in pixel intensity. Hence, a very dark image or very bright image would have a low contrast as would images with little or no texture. It will however not detect an image where half of it has a very low contrast, ex. an image of clear sky in the top three-quarters, nor would we necessarily want to discard frames like these.\\\\ % skal vi have et par billeder med deres std. dev. sådan at man kan se med egne øjne, eller er det ikke for simpelt?
-There are several approaches to computing the suitability for a given frame: A binary approach in which a frame is simply deemed suitable or unsuitable for watching, and an approach where a frame is rated on a scale. These are discussed in detail in section REFERENCE TO SECTION "The Algorithms".
+Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting dark images, it does not detect very bright or textureless images, in which features are harder to distinguish. Our method does not have this disadvantage as we compute a measure of contrast in a frame as the standard deviation of the pixel-intensity in the image.
+A small standard deviation indicates little contrast/diversity in pixel intensity, ie. a textureless or overly dark/bright image which is less desireable.
+A high standard deviation indicates a high contrast/much diversity in pixel intensity, ie. a textured image or an image with a high variation of pixel intensity which is deseriable.\\
+% Hence, a very dark image or very bright image would have a low contrast as would images with little or no texture. It will however not detect an image where half of it has a very low contrast, ex. an image of clear sky in the top three-quarters, nor would we necessarily want to discard frames like these.\\\\ % skal vi have et par billeder med deres std. dev. sådan at man kan se med egne øjne, eller er det ikke for simpelt?
 % 
 % where does this belong (somewhere in algorithms section)
 % Another way to compute $v$ is $v = \text{max}(\frac{W_{1}}{T_{1}}, \frac{W_{2}}{T_{2}})$ and $s = v >1$ where $T_{1}, T_{2}$ are the respective lower bounds.
 %
-\subsection{Data-set for the frame quality assessment} \label{sec:framequalityassessmentdataset}
+\subsection{Data-set for the Image quality assessment}\label{sec:framequalityassessmentdataset}
 %
-Most of the videos used for this data set was found on Youtube and collected as described in section~\ref{sec:dataset} on page~\pageref{sec:dataset}.\\
-We can roughly divide the videos from YouTube in two; raw and pre-edited video. What we generally want is raw video, but since this is by far the lesser portion of the two we use the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\
+Most of the videos used for this data set was found on YouTube and collected as described in section \ref{sec:dataset}.\\
+We can categorize the videos from YouTube as unedited video and pre-edited video where the non-edited video is the most desireable as this is presumeably raw footage.
+%What we generally want is raw video, but since this is by far the lesser portion of the two we use the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\
 %
-\paragraph{Raw Youtube videos}
-The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage.
+\paragraph{Unedited YouTube Videos}
+%
+The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage. \textbf{Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har}
 % Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har
-All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the data set, we generate a \textit{gold standard} manually for each video. This is done by watching the video and recording every time the footage switches state from \textit{bad} to \textit{good} or vice versa.
+All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the data set, we generate a \textit{gold standard} manually for each video, by watching the video and marking sections of high and low quality. %This is done by watching the video and recording every time the footage switches state from \textit{bad} to \textit{good} or vice versa.
 %
 \paragraph{Pre-edited Youtube videos}
-The dataset furthermore contains a alot pre-edited videos. This is because far the most videos available on Youtube have already been edited in some way. Many of these videos consist of several different video-clips, which themselves was once raw footage. In order to use these clips we split the edited videos up around their scene boundaries. This is done manually in much the same way as the when generating the \textit{gold standard} for the raw Youtube videos; by watching the videos and marking the points of change of scene. Since a lot of these edited videos contain (for our purpose) unsuitable footage, like photos or on-screen text, only the parts that actually depict the event is kept. Because the resulting set of video-clips have in fact already been screened and deemed watchable by a human (namely the producer of the edited video), we assume that all of this footage is of a decent quality. During review we discard some of the the segmented video-clips, namely:
 %
-\begin{itemize}
-\item very short segments - usually a 1 second segment would be discarded
-\item contextually invalid - ex. a montage of still-images or ending credits
-\item lack of visual quality - in some extreme cases an entire segment can be extremely dark/bright or shaky. This is obviously not acceptable since we assume all these segments to be of a decent quality in our later tests.
-\end{itemize}
+%The dataset furthermore contains a alot pre-edited videos. This is because far the m
+Most videos available on Youtube have already been edited in some way. 
+%Many of these videos consist of several different video-clips, which themselves was once raw footage. 
+In order to use these clips we cut these pre-edited videos into multiple videos at their scene boundaries. The editing is done manually without too much concern of loosing a few hundred milliseconds of footage the scene boundaries in order to speed up editing. Some of these scenes are undesireable, such as scenes with much on-screen text, credits, montages, ie. scenes that would not be considered raw footage. Also very short scenes are discarded. Because the resulting set of videos have already been screened and deemed watchable by a human (the producer of the video), we assume that all of this footage is a \textit{gold standard} in regards to later testing.
+%This is done manually in much the same way as the when generating the \textit{gold standard} for the raw Youtube videos; by watching the videos and marking the points of change of scene. 
+%Since a lot of these edited videos contain (for our purpose) unsuitable footage, like photos or on-screen text, only the parts that actually depict the event is kept. Because the resulting set of video-clips have in fact already been screened and deemed watchable by a human (namely the producer of the edited video), we assume that all of this footage is of a decent quality. During review we discard some of the the segmented video-clips, namely:
+% ALLEREDE NÆVNT
+% \begin{itemize}
+% \item very short segments - usually a 1 second segment would be discarded
+% \item contextually invalid - ex. a montage of still-images or ending credits
+% \item lack of visual quality - in some extreme cases an entire segment can be extremely dark/bright or shaky. This is obviously not acceptable since we assume all these segments to be of a decent quality in our later tests.
+% \end{itemize}
 %
-Keep in mind that some of these segments are discarded as they are out of context of the entirety of the video-clip, where they would (presumably) make sense to include, but not as standalone segments.\\
-We also accept some \textit{noise} in each end of the segment to complement ex. overly long crossfades. In the end we end up with a large selection of short segments of video-footage that we expect to be of good quality.
+%Keep in mind that some of these segments are discarded as they are out of context of the entirety of the video-clip, where they would (presumably) make sense to include, but not as standalone segments.\\
+We also accept some \textit{noise} in each end of the segment to complement ex. overly long crossfades. LAUGE %In the end we end up with a large selection of short segments of video-footage that we expect to be of good quality.
 %
-\paragraph{Our own recordings}
-Finally, the data set also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for our parameter tuning.
+\paragraph{Own recordings}
+%
+The dataset also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for parameter tuning. They are however not used in later phases.
 %
 \subsection{Test}
 %
-Our tests attempts to estimate several different algorithms overall ability to correctly estimate the qualities of the frames in a video and classify them as either good or bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
+%Our tests attempts to estimate several different algorithms overall ability to correctly estimate the qualities of the frames in a video and classify them as either good or bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
+%The dataset is trained using 5-fold cross validation (described in detail in the following). 
 %
-\subsubsection{Overall procedure}
+%\subsubsection{Overall procedure}
 %
-Since our dataset is limited in size we perform 5-fold cross validation on it in order to increase the amount of videos in the training set. The dataset is split into five buckets by sorting the video-clips by length and inserting them, one at a time, in a circular manner. The result is five sub-sets each containing more or less the same amount of frames between all the videos in each set. We then tweak each algorithm's parameter(s) on each of the training sets created by combining four out of the five sub-set and subsequently test the configuration on the remaining test set (the remaining fifth sub-set) and average the results into final scores. We also attempt to estimate how \textit{robust} each algorithm is against changes to its parameter(s). That is, we want to quantify how good the algorithm is overall. This analysis is based on the entire dataset and happens after the 5-fold cross validation.
+Due to a limited size dataset we perform a k-fold cross validation. Our dataset is randomly partitioned into $k$ subsets of which one is retained for testing the method and the remaining $k-1$ subsets are used for training. The cross validation is repeated $k$ times where each of the subsets are used only once for testing. The resulting score and parameter(s) from each fold is averaged. The metric of success is whether a method correctly estimates the quality of a frame, in respect to the \text{gold standard}, and the parameters used in the specific configuration of that method. We investigate both the performance of various methods, and also their robustness as a measure of how sensitive they are to parameter change. VI SKAL LIIIIIGE KIGGE PÅ OM ALT DETTE ER KORREKT. MEN K-FOLD X-VAL. ER DOG BESKREVET I "DETALJER".
+%The cross-validation process is then repeated k times (the folds), with each of the k subsamples used exactly once as the validation data. The k results from the folds then can be averaged (or otherwise combined) to produce a single estimation. The advantage of this method over repeated random sub-sampling is that all observations are used for both training and validation, and each observation is used for validation exactly once. 10-fold cross-validation is commonly used[5], but in general k remains an unfixed parameter
+%Since our dataset is limited in size we perform 5-fold cross validation on it in order to increase the amount of videos in the training set. 
+%
+%The dataset is split into five buckets by sorting the video-clips by length and inserting them, one at a time, in a circular manner. The result is five sub-sets each containing more or less the same amount of frames between all the videos in each set. We then tweak each algorithm's parameter(s) on each of the training sets created by combining four out of the five sub-set and subsequently test the configuration on the remaining test set (the remaining fifth sub-set) and average the results into final scores. 
+%We also attempt to estimate how \textit{robust} each algorithm is against changes to its parameter(s). That is, we want to quantify how good the algorithm is overall. This analysis is based on the entire dataset and happens after the 5-fold cross validation.
 %
 \subsubsection{The Algorithms}
 %
-All our algorithms work solely with the two variables \textit{shift vector magnitude} and \textit{contrast}. The values of these variables are quantified as how bad they are compared to how bad they can be.\\
-\\
-The magnitude of a shift is limited to 63 pixels, which would happen if the image is shifted in the same direction in each shift-iteration. The \textit{shift vector magnitude ratio}, \textit{S(s)} is therefore simply defined as the \textit{shift vector magnitude} normalised into the [0,1] range:
+%There are several approaches to computing the suitability for a given frame: A binary approach in which a frame is simply deemed suitable or unsuitable for watching, and an approach where a frame is rated on a scale. These are discussed in detail in section REFERENCE TO SECTION "The Algorithms".
+%
+%The values of these variables are quantified as how bad they are compared to how bad they can be.\\
+%
+The \textit{shift vector magnitude ratio}, $S$, is defined as: %as the \textit{shift vector magnitude} normalised into the [0,1] range:
 \[
-S(s) = s / 63 
+S = (\|v\|)^2 / M^2, 
 \]
-, where \textit{s} is the \textit{shift vector magnitude}.\\
-\\
-Since we work with 8 bit gray-scale images we know that all pixels in all our frames are in the intensity range [0,255]. We define the \textit{contrast}, \textit{c}, as the standard deviation between the lightest and the darkest pixel in the frame, we know that the maximum value of \textit{c} is 127.5 (if these two pixels have the values 0 and 255, respectively). The \textit{contrast} ratio, \textit{C(c)} is therefore defined as:
+where $v$ is the \textit{shift vector} (The shift vector magnitude is squared as we wish to increase sensitivity to less desireable values.), and $M$ is the largest possible magnitude of the shift vector. A shift in the same direction in each iteration of the shift vector computation will in our configuration at most shift $32+16+8+4+2+1=63$ pixels.\\
+%
+The \textit{contrast} ratio, $C$, is defined as:
 \[
-C(c) = 1 - (c / 127.5)\\
+C = 1 - (c^2 / N^2),
 \]
-The reason we subtract the amount of contrast from one is because we want the value to be comparable to that of the \textit{shift vector magnitude}, where smaller values are preferred over bigger ones\\
-\\
-We further square these values of these variables in order to increase the algorithm’s sensitivity toward those in the bad end of the spectrum. The squared values are then normalised back into the [0,1] range. We also perform \textit{triangular smoothing} on the values using a smoothing degree of $12$ which roughly translates to averaging over a number of frames equal to one second, in order to remove some of the worst noise in the data.
+where $c$ is the standard deviation of the pixel intensity in a frame ($c$ is squared as we wish to increase sensitivity to less desireable values), and $N$ is the largest possible value of $c$. The pixel intensity is in the range $[0,255]$ (grayscale image), hence $N$ is at most $127.5$ (an image-matrix exclusively containing values of 0 and 255 in an equal amount). $c \to N$ indicates a high quality image, but as we wish that $C$ is compareable to $S$ where a value of $S$ close to 0 is desireable $c/N$ is substracted from $1$.\\
+%
+Finally $S$ and $C$ are smoothed using \textit{trianglur smoothing} with a degree of $12$ in order to remove outliers. Triangular smoothing is a weighted smoothing function where the degree of smoothing determines the distribution of weights. As the name suggests the weights are distributed in a triangular fashion where the highest weight is the middle one and the remainder of the weights diminish in a linear fashion as a function of distance from the middle. Triangular smoothing can then be described by:
+%
+\[
+s_{j} = 
+\begin{cases}
+\frac{\sum_{i=0}^{2d} w_{i}x_{j+i-d}}{T} & j=\{1,...,n-1\}\\
+x_{j} & j=\{0,n\}
+\end{cases}
+\]
+%
+where $d$ is the degree of smoothing, $w$ is the weight, $x$ is the value in the original data, $T = \sum_{i=0}^{2d}(w_{i})$ ie. the triangle sum, and $s$ is the smoothed value. If the subscript of $x$ is less than 0 the triangle is decreased accordingly in size. VI LADER DEN LIGE LIGGE\\
+%
+The methods described below are functions of aforementioned $S$, $C$, and one or more tresholds.
 %
 \paragraph{Contrast only (CO)}
+%
 This algorithm only takes the level of \textit{contrast} in the frames into consideration. If the \textit{contrast} is above the limit defined in the configuration of the algorithm, the frame is marked as bad.
 %
 \paragraph{Shift magnitude only (SMO)}
@@ -113,7 +149,7 @@ S(c,s)=MAX(c \cdot (1-c_{lim}), s \cdot (1-s_{lim}))
 \paragraph{Cummulative contrast and shift magnitude (CCSM)}
 % ANDERS
 %Anders, beskriv hvad din algoritme gør % - det står i Method-afsnittet. er det “bare” en opsummering? NOK FOR SPECIFIKT TIL METHOD-AFSNITTET. HAR RYKKET DET HERNED. RESTEN SKAL SÅ OGSÅ RYKKES ELLER FJERNES
-If $W_{1}$ is the magnitude of the displacement vector, $W_{2}$ is a measure of the image contrast, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then a suitability-value could be computed as: $v = \alpha W_{1} + \beta W_{2}$, where $\alpha,\beta$ are weight-factors, and $s$ could then be determined by $s \equiv v \ge \tau$, where $\tau$ is some lower bound. If we wish that $s \equiv W_{1} \ge T_{1} \vee W_{2} \ge T_{2}$, the values of $\alpha$ and $\beta$ can be determined as follows:
+If $W_{1}$ is the magnitude of the shift vector, $W_{2}$ is a measure of the image contrast, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then a suitability-value could be computed as: $v = \alpha W_{1} + \beta W_{2}$, where $\alpha,\beta$ are weight-factors, and $s$ could then be determined by $s \equiv v \ge \tau$, where $\tau$ is some lower bound. If we wish that $s \equiv W_{1} \ge T_{1} \vee W_{2} \ge T_{2}$, the values of $\alpha$ and $\beta$ can be determined as follows:
 %
 \[
 W_{1} \ge T_{1} \equiv \alpha W_{1} + \beta W_{2} \ge \tau,

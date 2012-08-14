@@ -126,6 +126,7 @@ class Data:
 				return dataset
 		# missing some filenames it seems...
 		# raise Exception('no matching dataset found for %s' % filename)
+		print 'no matching dataset found for %s' % filename
 		return 'N/A'
 
 	def get_video_with_filename(self, filename):
@@ -539,7 +540,7 @@ def main():
 	#################
 
 	notes = data.get_notes()
-	print json.dumps(notes, sort_keys=True, indent=4)
+	# print json.dumps(≤notes, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
 	main()
