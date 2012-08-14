@@ -101,6 +101,33 @@ class Data:
 		scores = Data.get_scores(video=video)
 		return np.mean(scores)
 
+	@staticmethod
+	def __get_dataset_filenames(dataset):
+
+		if dataset == 'cop15':
+			return ['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi']
+		if dataset == 'acta_aarhus':
+			return ['2806c14722.avi']
+		if dataset == 'acta_cph':
+			return ['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+
+	@staticmethod
+	def __get_dataset_from_filename(filename):
+
+		def f(x):
+			return x
+		if len(filename.split('.')) == 1:
+			# raise Exception('filename "%s" must include extension' % filename)
+			def f(x):
+				return [z.split('.')[0] for z in x]
+
+		for dataset in ['cop15', 'acta_aarhus', 'acta_cph']:
+			if filename in f(Data.__get_dataset_filenames(dataset)):
+				return dataset
+		# missing some filenames it seems...
+		# raise Exception('no matching dataset found for %s' % filename)
+		return 'N/A'
+
 	def get_video_with_filename(self, filename):
 
 		for video in self.videos:
@@ -120,11 +147,11 @@ class Data:
 					filenames.append(filename)
 					break
 		if 'cop15' in datasets:
-			filenames += ['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi']
+			filenames += Data.__get_dataset_filenames('cop15') #['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi']
 		if 'acta_aarhus' in datasets:
-			filenames += ['2806c14722.avi']
+			filenames += Data.__get_dataset_filenames('acta_aarhus') #['2806c14722.avi']
 		if 'acta_cph' in datasets:
-			filenames += ['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+			filenames += Data.__get_dataset_filenames('acta_cph') #['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
 		return filenames
 
 	# get: total random, label random, edited, recipe
@@ -157,6 +184,24 @@ class Data:
 
 		filenames = self.__get_filenames_with_dataset(datasets=datasets)
 		return self.__filenames_to_ytids(filenames=filenames)
+
+	def __is_total_random__recipe(self, filename):
+		return filename in self.__get_filenames_with_total_random_recipe()
+
+	def __is_random_label_recipe(self, filename):
+		return filename in self.__get_filenames_with_random_label_recipe()
+
+	def __is_designer__recipe(self, filename):
+		return filename in self.__get_filenames_with_designer_recipe()
+
+	def __is_human_edited(self, filename):
+		return filename in self.__get_filenames_human_edited()
+
+	def _get_recipe_type(self, filename):
+
+		for t, m in [('total random', self.__is_total_random__recipe), ('random label', self.__is_random_label_recipe), ('designer', self.__is_designer__recipe), ('human edited', self.__is_human_edited)]:
+			if m(filename):
+				return t
 
 	def __get_filenames_with_span_alpha(self, span_alpha):
 
@@ -223,6 +268,33 @@ class Data:
 
 		filenames = self.__get_filenames_with_org_ytids(ytids=ytids)
 		return self.__filenames_to_ytids(filenames=filenames)
+
+	def _get_note(self, ytid):
+
+		for d in self.dump:
+			if d.get('ytid') == ytid:
+				return d.get('note')
+
+	def get_notes(self):
+
+		out = []
+		# return a dict of notes along with dataset, name of recipe, and ?
+		for video in self.dump:
+			# print video
+			ytid = video.get('ytid')
+			filename = self.__ytid_to_filename(ytid)
+			dataset = Data.__get_dataset_from_filename(filename)
+			recipe_type = self._get_recipe_type(filename)
+			note = video.get('note')
+			if not note:
+				note = ''
+			out.append(dict(
+				ytid = ytid,
+				dataset = dataset,
+				recipe_type = recipe_type,
+				note = note,
+				))
+		return out
 
 def friedman(ys):
 
@@ -362,38 +434,38 @@ def main():
 		total_score = [float(x/4.0) for x in list(np.sum([content, editing, clip_len, video_len], 0))]
 		return content, editing, clip_len, video_len, total_score
 
+	##################
+	# plot barcharts #
+	##################
 	plot_barcharts = 0
+
+	# number of bins
+	N = 5
+	# figure export format
+	format = 'png'
+
+	# http://matplotlib.sourceforge.net/examples/pylab_examples/histogram_demo_extended.html
+	# http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.bar
+	for j, (va, fig_title) in enumerate([(tr_video_answers, 'Totally random'), (lr_video_answers, 'Label random'), (des_video_answers, 'Designer'), (hum_video_answers, 'Human edited')]):
+	# for j, (va, fig_title) in enumerate([(tr_video_answers, 'Totally random')]):
+		content, editing, clip_len, video_len, final_score = get_answers(va)
+		pylab.figure(j+1) # figsize=(10,10)
+		pylab.suptitle(fig_title, fontsize=16)
+		for i, (x, title) in enumerate([(content, 'Content'), (editing, 'Editing'), (clip_len, 'Clip length'), (video_len, 'Video length')]):
+			pylab.subplot(2,2,i+1, title=title)
+			# x = filter(lambda z: z, x) # remove 0's
+			# histogram functions counts occurence of each element in different bins (into the 'n' variable)
+			n, bins, patches = pylab.hist(x, bins=N); # print n, bins, patches
+			# setting alpha to 0 to not show this plot
+			pylab.setp(patches, 'alpha', 0.0, 'facecolor', 'b')
+			ind = np.arange(N) - 2 # [-2,-1,0,1,2]
+			plt.bar(left=ind, height=n, width=1.0, color='g')
+			plt.xticks(ind + 1/2.0, ('TD', 'SD', 'DK', 'SA', 'TA'))
+			pylab.grid(True)
+		# http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.savefig
+		fname = './figs/%s_barplot.%s' % (fig_title.lower().replace(' ', ''), format)
+		plt.savefig(fname, format=format)
 	if plot_barcharts:
-		##################
-		# plot barcharts #
-		##################
-
-		# number of bins
-		N = 5
-		# figure export format
-		format = 'png'
-
-		# http://matplotlib.sourceforge.net/examples/pylab_examples/histogram_demo_extended.html
-		# http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.bar
-		for j, (va, fig_title) in enumerate([(tr_video_answers, 'Totally random'), (lr_video_answers, 'Label random'), (des_video_answers, 'Designer'), (hum_video_answers, 'Human edited')]):
-		# for j, (va, fig_title) in enumerate([(tr_video_answers, 'Totally random')]):
-			content, editing, clip_len, video_len = get_answers(va)
-			pylab.figure(j+1) # figsize=(10,10)
-			pylab.suptitle(fig_title, fontsize=16)
-			for i, (x, title) in enumerate([(content, 'Content'), (editing, 'Editing'), (clip_len, 'Clip length'), (video_len, 'Video length')]):
-				pylab.subplot(2,2,i+1, title=title)
-				# x = filter(lambda z: z, x) # remove 0's
-				# histogram functions counts occurence of each element in different bins (into the 'n' variable)
-				n, bins, patches = pylab.hist(x, bins=N); # print n, bins, patches
-				# setting alpha to 0 to not show this plot
-				pylab.setp(patches, 'alpha', 0.0, 'facecolor', 'b')
-				ind = np.arange(N) - 2 # [-2,-1,0,1,2]
-				plt.bar(left=ind, height=n, width=1.0, color='g')
-				plt.xticks(ind + 1/2.0, ('TD', 'SD', 'DK', 'SA', 'TA'))
-				pylab.grid(True)
-			# http://matplotlib.sourceforge.net/api/pyplot_api.html#matplotlib.pyplot.savefig
-			fname = './figs/%s_barplot.%s' % (fig_title.lower().replace(' ', ''), format)
-			plt.savefig(fname, format=format)
 		pylab.show()
 
 	#################
@@ -415,10 +487,12 @@ def main():
 
 	# used by matrix2latex
 	# header row
-	hr = ['', 'v', 'p-value', '$x^2$']
+	# hr = ['', '$\\nu$', 'p-value', '$\\chi^2$']
+	hr = ['', '$\\nu$', 'p-value']
 	# format column
-	fc = ['%s', '$%d$', '$%1.4f$', '$%1.4f$']
-	alignment = 'lccc'
+	# fc = ['%s', '$%d$', '$%1.4f$', '$%1.4f$']
+	fc = ['%s', '$%d$', '$%1.4f$']
+	alignment = 'lcc'
 
 	m = []
 	y1 = get_answers(tr_video_answers)
@@ -428,7 +502,7 @@ def main():
 	for i, t in enumerate(['Content', 'Editing', 'Clip length', 'Video length', 'Total score']):
 		print 'doing Friedman test for %s (recipies)' % t
 		df, p, v = friedman([y1[i], y2[i], y3[i], y4[i]])
-		m.append([t, df, p, v])
+		m.append([t, df, p])
 	caption = 'Friedman rank sum test for recipies'
 	label = 'tab:fried_recip'
 	t = matrix2latex(m, 'recipies', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)
@@ -440,7 +514,7 @@ def main():
 	for i, t in enumerate(['Content', 'Editing', 'Clip length', 'Video length', 'Total score']):
 		print 'doing Friedman test for %s (datasets)' % t
 		df, p, v = friedman([y1[i], y2[i], y3[i]])
-		m.append([t, df, p, v])
+		m.append([t, df, p])
 	caption = 'Friedman rank sum test for datasets'
 	label = 'tab:fried_dataset'
 	t = matrix2latex(m, 'datasets', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)
@@ -451,7 +525,7 @@ def main():
 	for i, t in enumerate(['Content', 'Editing', 'Clip length', 'Video length', 'Total score']):
 		print 'doing Friedman test for %s (alpha-span)' % t
 		df, p, v = friedman([y1[i], y2[i]])
-		m.append([t, df, p, v])
+		m.append([t, df, p])
 	caption = 'Friedman rank sum test for $\\alpha$-span'
 	label = 'tab:fried_alpha'
 	t = matrix2latex(m, 'alpha-span', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)
@@ -459,6 +533,13 @@ def main():
 	#################
 	# post-hoc test #
 	#################
+
+	#################
+	# note #
+	#################
+
+	notes = data.get_notes()
+	print json.dumps(notes, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
 	main()
