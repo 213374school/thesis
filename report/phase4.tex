@@ -33,24 +33,54 @@ To increase the availability of our test environment everything is localised int
 The test is designed so that the test user can see as few or as many videos as she wants. A circular queue of videos is shared between all users, meaning that a new user will start at the video following the one that was last rated. Answers are stored after each succesful rating.\\
 The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\
 %
-\subsubsection{Control Samples}
+\subsection{Generated Videos}
 %
 We have 3 different control samples: one is videos with randomly picked labels and segment lengths, second is videos where clips was picked totally at random, and the third is a set of human edited videos.
+% datasets, alpha span, recipe, 
 %
-\paragraph{Random Segments}
-% 
+\subsubsection{Totally Random}
+%
 For each dataset we generate a videoclip by picking random videos, and random segments within each video, and edit it all together. The segment length was chosen such that each video would not differ significanytly from the general length of other computer generated videoclips. These videoclips are thought of as a baseline - we expect them to perform poorly.
 %
-\paragraph{Human Edited}
-% 
-We used human edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips.
+\subsubsection{Random Label}
 %
-% Noter fra Kim: Hvor kommer de fra? LAUGE
+The length of each segment is also selected at random such that it is at least 2 seconds long, and the maximum length is selected such that the complete videoclip is somewhere between 25-35 seconds. If $mil$ is the minimum length of a segment and $k=9$ then $mil=\text{random}(48,24k)$ in frames, ie. between 2 and 9 seconds. The maximum segment length is then $mal=\text{random}(mil+6, 2mil+6)$. $mil$ would average $\frac{2+9}{2}=5.5$ seconds hence $mal$ would average $\frac{5.5+0.25+11+0.25}{2}=8.5$ seconds, and the total clip length, with 5 segments, then averages around $5\frac{5.5+8.5}{2}=35$ seconds.
 %
-We expect these to perform as well as the designer recipies or better.
+\subsubsection{Designer}
+%
+We designed a recipe to be used on all three datasets. Ingredients outlined below:
+\begin{itemize}
+\item Overview shot, 3-5 seconds, no person in focus
+\item Overview shot, 3-6 seconds, no person in focus
+\item Crowd shot, 3-6 seconds, no person in focus
+\item Crowd shot, 3-6 seconds, no person in focus
+\item Person in focus shot, 4-8 seconds, not in a crowd
+\item Person in focus shot, 4-8 seconds, not in a crowd
+\item Overview shot, 3-5 seconds, no person in focus
+\end{itemize}
+%
+During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
+Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
+%
+\subsubsection{Human Edited}
+%
+We used human edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips. We expect these to perform as well as the designer recipies or better.
+%
+\subsubsection{Table}
+%
+INSERT TABLE HERE!!!
 %
 \subsection{Results}
 %
+INTRO
+%
+\subsubsection{Feedbackme}
+%
+% OVERVIEW OVER ANSWERS (TABLE) #ANSWERS, #SESSIONS, #ANSWERS/SESSION, ETC. 
+%
+\subsubsection{Histograms}
+%
+% ANDERS
 The first step in our analysis of the collected data is to plot histograms of the answers in each method in order to investigate the distribution of answers. As see in Figure \ref{fig:hist_design} (additional figures can be found in Appendix \ref{app:histograms}) the answers are unevenly distributed with a skew to the right with the exception of the first histogram (content). The answers are generally unevenly distributed in all histograms, and they do not seem to follow any specific distribution. % which allows us to continue our analysis. Had there been a trend of an even distribution of answers the data would have been inconclusive by definition. DETTE ER EN FORKERT CONCLUSION. LÆS WIKIPEDIA! - RATHER WE COULD INVESTIGATE IF WE HAVE NORMAL DISTRIBUTED DATA (DOES NOT LOOK LIKE IT).
 %
 \begin{figure}
@@ -59,16 +89,23 @@ The first step in our analysis of the collected data is to plot histograms of th
      \caption{Histogram of answers to videos created with the "designer method"}\label{fig:hist_design}
 \end{figure}\\
 %
+\subsubsection{Friedman Test}
+%
+% ANDERS
+FORMULER NULL HYPOTHESIS\\ %ANDERS
+%
 We continue our analysis by employing the Friedman rank sum test which is a non-parametric statistical test. We must employ a non-parametric test as parametric tests require the data to follow a specific distribution (the histograms shows that it does not). The values related to each answer are also not compareable value-wise (there is no clear numerical interpretation), ie. \textit{Totally disagree} $(-2)$ is not twice as bad as \textit{Somewhat disagree} $(-1)$, but \textit{Totally disagree} is ranked lower than \textit{Somewhat disagree}. The Friedman test ranks all answers, where answers with equal values get the same rank, and then counts occurence of each rank MORE?. The disadvantage of employing a non-parametric test is that it requires are larger sample size to draw conclusions with the same degree of confidence as a parametric test.\\ 
 The results can be found in Tables \ref{tab:fried_alpha}, \ref{tab:fried_dataset}, and \ref{tab:fried_recip} where $\nu$ denotes degrees of freedom, and p-value is \textit{"the probability of obtaining a test statistic at least as extreme as the one that was actually observed, assuming that the null hypothesis is true."}\footnote{http://en.wikipedia.org/wiki/P-value}.\\
-FORMULER NULL HYPOTHESIS\\
-%
+% INPUT IS 3 TABLES
 \input{matrix2latex/recipies}
 \input{matrix2latex/datasets}
 \input{matrix2latex/alpha-span}
 %
-Table \ref{tab:fried_recip} shows the result from videos generated by the each method, Table \ref{tab:fried_dataset} shows the results from videos partitioned by video-footage a given video is generated from, and Table \ref{tab:fried_alpha} shows the effect of different $\alpha$-span values (described in section \ref{sec:})\\
+Table \ref{tab:fried_recip} shows the result from videos generated by the each method, Table \ref{tab:fried_dataset} shows the results from videos partitioned by video-footage a given video is generated from, and Table \ref{tab:fried_alpha} shows the effect of different $\alpha$-span values (described in section \ref{sec:})
 %
+\subsubsection{Notes}
+%
+% ANDERS
 PRESENT QUEST. NOTES (need to extract these first)
 %
 \subsection{Analysis}
@@ -87,14 +124,14 @@ Lots more here...
 %
 \section{Summary}
 %
+% LAUGE
+
+%
 % ANDERS
 As we are unable to reject the null hypothesis in almost all regards we conclude that the questionaires reveal no significant effect of the various methods of generating a the resulting video. This also means that there is no significant measureable difference between a human edited video and one that is generated at random.\\
 There is also no significant measureable effect of choosing different $\alpha$-values, ref to section with alpha-values explained. We only tested for two different values to keep the number of test videos at a manageable level.\\
 There was also no significant measureable difference between the three datasets, except in content which is no surprise as the datasets differ primarily on content as described in section \ref{section that describes datasets}.\\
 %
-% \subsection{Discussion OR MAYBE SECTION SUMMARY?}
-%
-% COPY PASTA FROM CONCLUSION:
 We believe that this is an effect of high quality raw material, and we would suspect that there would be a noticeable difference if our dataset had contained a larger amount of video footage of questionable quality; visual, contextual, or both.\\
 which leads us to conclude that we must test for values closer to the extreme to get a definite answer. FURTHER ANALYSIS COULD BE TO INVESTIGATE THE EFFECT OF ALPHA VALUES, IE. FOR ALPHA VALUE X WE GET A TOTAL AVR. VIDEO LENGTH OF SO AND SO SECONDS, AND SEGMENT LENGTHS OF SO AND SO SECONDS, COMPARE THAT TO AN ALPHA VALUE OF 2X.\\
 %

@@ -144,24 +144,24 @@ Unless otherwise noted we did 2 permutations on each dataset, each with a varyin
 %
 \subsubsection{Random Labels}
 % 
-Our baseline recipe in its purest form selects random labels to feed the candidate factory, but in order to avoid idiosyncrasies we have made some minor tweaks to this selection. We will for instance not choose to have both the night and the day label in the same segment as they are by definition mutually exclusive. The length of each segment is also selected at random such that it is at least 2 seconds long, and the maximum length is selected such that the complete videoclip is somewhere between 25-35 seconds. If $mil$ is the minimum length of a segment and $k=9$ then $mil=\text{random}(48,24k)$ in frames, ie. between 2 and 9 seconds. The maximum segment length is then $mal=\text{random}(mil+6, 2mil+6)$. $mil$ would average $\frac{2+9}{2}=5.5$ seconds hence $mal$ would average $\frac{5.5+0.25+11+0.25}{2}=8.5$ seconds, and the total clip length, with 5 segments, then averages around $5\frac{5.5+8.5}{2}=35$ seconds.
+Our baseline recipe in its purest form selects random labels to feed the candidate factory, but in order to avoid idiosyncrasies we have made some minor tweaks to this selection. We will for instance not choose to have both the night and the day label in the same segment as they are by definition mutually exclusive. 
 % SPAN ALPHA?
 %
-\subsubsection{Designer}
+% \subsubsection{Designer}
 % designer algo
-We designed a recipe to be used on all three datasets. Ingredients outlined below:
-\begin{itemize}
-\item Overview shot, 3-5 seconds, no person in focus
-\item Overview shot, 3-6 seconds, no person in focus
-\item Crowd shot, 3-6 seconds, no person in focus
-\item Crowd shot, 3-6 seconds, no person in focus
-\item Person in focus shot, 4-8 seconds, not in a crowd
-\item Person in focus shot, 4-8 seconds, not in a crowd
-\item Overview shot, 3-5 seconds, no person in focus
-\end{itemize}
-%
-During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
-Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
+% We designed a recipe to be used on all three datasets. Ingredients outlined below:
+% \begin{itemize}
+% \item Overview shot, 3-5 seconds, no person in focus
+% \item Overview shot, 3-6 seconds, no person in focus
+% \item Crowd shot, 3-6 seconds, no person in focus
+% \item Crowd shot, 3-6 seconds, no person in focus
+% \item Person in focus shot, 4-8 seconds, not in a crowd
+% \item Person in focus shot, 4-8 seconds, not in a crowd
+% \item Overview shot, 3-5 seconds, no person in focus
+% \end{itemize}
+% %
+% During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
+% Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
 % Ingredient(labels=['is_overview'], min_span=72, max_span=120, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
 % Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
 % Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),

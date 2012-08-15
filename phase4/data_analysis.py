@@ -105,11 +105,11 @@ class Data:
 	def __get_dataset_filenames(dataset):
 
 		if dataset == 'cop15':
-			return ['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi']
+			return ['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi', '90fe6adcd2.avi', '625838c2b1.avi', 'bf7dc9f5ca.avi', 'd370ccc56c.avi'] # 7
 		if dataset == 'acta_aarhus':
-			return ['2806c14722.avi']
+			return ['2806c14722.avi', '3b95a67d38.avi', '7babfd31c4.avi', '98b1d02056.avi', 'a8d1de1e81.avi'] # 5
 		if dataset == 'acta_cph':
-			return ['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+			return ['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v', '80a451d4c2.avi', '143a413f62.avi', '913eef2ed2.avi', '9891596ecf.avi'] # 9
 
 	@staticmethod
 	def __get_dataset_from_filename(filename):
@@ -125,9 +125,9 @@ class Data:
 			if filename in f(Data.__get_dataset_filenames(dataset)):
 				return dataset
 		# missing some filenames it seems...
-		# raise Exception('no matching dataset found for %s' % filename)
-		print 'no matching dataset found for %s' % filename
-		return 'N/A'
+		raise Exception('no matching dataset found for %s' % filename)
+		# print 'no matching dataset found for %s' % filename
+		# return 'N/A'
 
 	def get_video_with_filename(self, filename):
 
@@ -276,25 +276,25 @@ class Data:
 			if d.get('ytid') == ytid:
 				return d.get('note')
 
-	def get_notes(self):
+	def _get_notes(self):
 
 		out = []
 		# return a dict of notes along with dataset, name of recipe, and ?
 		for video in self.dump:
 			# print video
-			ytid = video.get('ytid')
-			filename = self.__ytid_to_filename(ytid)
-			dataset = Data.__get_dataset_from_filename(filename)
-			recipe_type = self._get_recipe_type(filename)
 			note = video.get('note')
-			if not note:
-				note = ''
-			out.append(dict(
-				ytid = ytid,
-				dataset = dataset,
-				recipe_type = recipe_type,
-				note = note,
-				))
+			if note:
+				# note = note.encode('utf-8')
+				ytid = video.get('ytid')
+				filename = self.__ytid_to_filename(ytid)
+				dataset = Data.__get_dataset_from_filename(filename)
+				recipe_type = self._get_recipe_type(filename)
+				out.append(dict(
+					ytid = ytid,
+					dataset = dataset,
+					recipe_type = recipe_type,
+					note = note,
+					))
 		return out
 
 def friedman(ys):
@@ -539,8 +539,8 @@ def main():
 	# note #
 	#################
 
-	notes = data.get_notes()
-	# print json.dumps(≤notes, sort_keys=True, indent=4)
+	notes = data._get_notes()
+	print json.dumps(notes, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
 	main()
