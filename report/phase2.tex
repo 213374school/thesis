@@ -1,55 +1,73 @@
 % NEED TO WRITE ABOUT HOW THE LABELLER WORKS: THROWS AWAY SMALL SEGMENTS (< 6 FRAMES), MERGES NEARBY SEGMENTS, GENERALLY SMOOTHES DATA
 %
-\section{Grouping and labeling}
-%
 % Remember to mention that video quality isn't used after phase 1 due to the side effects cased by labeling the video (namely that bad quality segments don't receive any labels). in a real world application this quality measure could be used to reduce the amount of data to analyze. This should probably be in the discussion section or the summary section for this phase.
-Grouping and labeling comes down to extracting information about what is happening in a piece of video footage. We want to be able to distinguish between different \textit{types} of scenes so we have a way to construct final videos using a \textit{recipe} of some sort. This recipe would define what kinds of clips we want in the video and in what order they should appear.
 %
-\subsection{Literature Study}
+% Contrast metadata er faktisk aldrig brugt, er det?
 %
-% Noter fra Kim: Mangler noget i denne sektion
+\chapter{Grouping and labeling}
 %
-%Lauge:
+Grouping and labeling comes down to extracting information about what is happening in a piece of video footage. We want to be able to distinguish between different \textit{types} of scenes so we have a way to structure the final video summaries. We want to be able to define a sequence of different scene types that should be put together.
+%
+\section{Literature Study}
+%
 There are many ways to extract context from images, sound and video. Some focus on the depicted scene itself, while others look at the events happening in the scene. Location and time of day would be an example of the former while elements such as excitement, violence and other specific behaviour are examples of the later.\\
-For example, Hanjalic, A. \cite{citeulike:405480} describes a way to identify regions of high levels of excitement in sports video-clips based on a manually selected set of features. These features can be both visuals (like the movement in an image or the change of camera positions) or audial (namely the energy contained in the audio track).\\
-Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow looks at changes in the intensinty pattern in images. In many cases this indirectly indicate changes in the 3D scene caused by moving objects or a change of view-point.\\
-% Flere optical flow artikler her
-Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds from a moving vehicle by looking for inward moving optical flow. That is, flow which is highly likely to be caused by moving objects and not a change of view-point.\\
-Arandjelović \cite{Arandjelovic08crowddetection} takes a different approach and attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure. That is that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will containt repetative structures.\\
-% Flere crowd detection artikler?
-Zhong et. al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream, based individual video segments likeness to the overall events in the video.
-% Day/Night article her?
+Hanjalic, A. \cite{citeulike:405480} describes a way to identify regions of high levels of excitement in sports videos based on a manually selected set of features. These features can be both visual (e.g. movement in an image or change of camera position) or audial (based on the energy contained in the audio track).\\
+Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow analyses changes in the intensity pattern in images. In many cases this indirectly indicate changes in the 3D scene caused by moving objects or a change of view-point. [REFS] describes ways to identify certain types of actions occuring within videos, such as violent behaviour and [REF] looks at general crowd movement in public places.\\
+% Lauge: Der skal skrives lidt mere til disse artikler.
+Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds of pedestrians from a moving vehicle by detecting inward moving optical flow. I.e. flow which is highly likely to be caused by moving objects and not a change of view-point.\\
+Arandjelović \cite{Arandjelovic08crowddetection} attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure, namely that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will contain repetative structures.\\
+% Lauge: Flere crowd detection artikler?
+Zhong et. al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream. The entire stream is divided into overlapping 4 second segments from which an overall movement pattern is established. Individual segments that differ too much from this patter are considered unusual.\\
+% Lauge: Day/Night article her?
+% Lauge: Jeg har rykket Haar Cascade classifier ned i sit eget afsnit under Method, men måske skal vi lige have en enkelt linje om det her
+Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically detecting the color of traffic lights. % Lauge: Vi skal lige have læst/skrevet lidt mere om denne og evt. relation til police blinker detecion
+%
+\section{Method}
+%
+The labeling happens in two phases. First we extract different kinds of metadata from the individual videos. This is done frame-by-frame, for each type of metadata, so we end up with a collection of describing properties throughout each video. Some of the metadata is directly available from the earlier phases of the project. The level of \textit{contrast} and the \textit{shift vector magnitudes} described in section \ref{} and revisited below in sections \ref{sec:contrastdata} and \ref{sec:svmdata}, are examples of this. We use the frame mean pixel intentisity to estimate overall brightness (section \ref{sec:brightnessdata}) and seperate the blue color channel (section \ref{sec:blue_channel}). People detection (section \label{sec:peopledata}) is done using Haar cascade classifiers and Optical flow (section \ref{sec:opticalflowdata}) is used for extracting additional event information.\\
 \\
-%
-%Anders:
-% describe Haar cascade classifiers (performance and an outline of how they work)
-With the introduction of Haar Cascade Classifiers (HCC) by Viola and Jones\cite{viola01}, later improved upon by Lienhart and Maydt\cite{lienhart01} and by Schmidt and Kasinski\cite{schmidt01}\cite{schmidt02}, there exists a very efficient tool for facial detection. The HCC uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.
-%
-% Lauge: Måske skal vi lige skrive lidt mere om Haar cascade. Enten flytte noget op fra Facial Detection afsnittet eller uddybe en lille smule hvordan det fungerer.
-%
-% anything on police detection (maybe violence detection)? crowd detection? 
-%
-Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically detecting the color of traffic lights.
-%
-% Lauge: Vi skal lige have læst/skrevet lidt mere om denne ^
-%
-\subsection{Method}
-%
-The labeling happens in two phases. First we extract different kinds of metadata from the individual videos. This is done frame-by-frame, for each type of metadata, so we end up with a collection of describing properties throughout each video. Some of the metadata is simple in nature. We use the frame mean pixel intentisity to estimate overall brightness and seperate the blue color channel from the original videos in order to estimate conditions such as time of day and the presence of police blinkers.\\
-Other parts of the metadata is directly available from the ealier phases of the project. This includes both the contrast level throughout the videos as well as the shift vector magnitude described in section [SEC:REF].\\
-Finally we also explore several of the methods described by the authors of the work described in the previous section [SEC:REF]. We use Haar cascade classifiers \cite{viola01}\cite{lienhart01}\cite{schmidt01}\cite{schmidt02} to detect people and faces in individual frames. For event classification we experiment with optical flow \cite{Bouguet2000}. Unfortunately most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. The only case where this is not the case is with Reisman et. al. \cite{CrowdDetectionInVideoSequences}, who work with images from a camera fixed on a moving vehicle. Neither case is anywhere close to what we are doing, since our videos are recorded mostly by handheld devices. The Optical Flow [SEC:REF] further down will describe our experimentation with overcoming this problem.\\
-\\
-With the metadata gathered from the videos, we move on to the labelling itself where we use it as input to the various classifiers. These classifiers each look at one labeling aspect of the video and construct a library of potentially overlapping segments, each containing a single lable.\\
-Section [SEC:REF] describes how we attempt to detect areas in the videos containing blue strobe light, by searching for oscillation in the blue channel from the individual video frames. In section [SEC:REF] we look at defining and detecting characteristic properties in video segments containing broad overview shots without too much nearby action. Section [SEC:REF] describes a specific attempt to extract information about particular movement within the frames of each video. We look for vertical oscillating movement as an indicator for people jumping or signs being lifted into the air. Section [SEC:REF] describes how we attempt to detect video segments containing several people in near proximity to the camera, so called Crowd shots. We part with some of the more advanced techniques described previously and simply focus on person- and facial- detection. In section [SEC:REF] we further explore this area as we attempt to distinguis video segments focusing on a specific (assumably interresting) person for a duration of time. Finally, in section [SEC:REF] we look at classifying between day- and night- time video segments by working with the different brightness and color intensity metadata we have extracted.
+The actual labeling is subsequently done by analysing the metadata in a collection of classifiers. Section \ref{sec:police_detection} describes a \textit{police blinker} classifier, which searches for oscillation in the blue channel from the individual frames. Section \ref{sec:overviewclassifier} describes an \textit{overview} classifier, which attempts to detect footage containing litle egomotion (camera movement). In section \ref{sec:verticaloscillationclassifier} we attempt to identify vertical oscillating movement in the optical flow, using it as an indicator for people jumping or signs being lifted into the air. Section \ref{sec:incrowd} describes an \textit{in-crowd} classifier, which uses facial- and person- detection to detect footage with several people in it. In section \label{sec:infocus} we further explore the area of people detection, by looking for footage, which focuses on a specific (assumably interesting) person for a duration of time. Finally, in section \ref{sec:daynightclassifier} we look at differentiating between day- and night- time footage by working with the different brightness and color intensity metadata we have extracted.
 %
 \subsection{Metadata}
 %
-Each label classifier relies on different sets of metadata for the videos as input. This metadata is first extracted using the various methods described in this section.
+This section describes the different type of metadata we extract.
 %
-\subsubsection{The presence of people}
+\subsubsection{Contrast}\label{sec:contrastdata}
 %
-% Noter fra Kim: Yes, i det mindste nogle flere detaljer. DESCRIBE HAAR CASCADE CLASSIFIER IN MORE DETAIL.
+The \textit{contrast} in a frame is defined as being the standard deviation of the intensity values in the image-matrix. This is described in detail in section \ref{}. A small deviation would indicate little contrast/diversity in color-intensity, and a large deviation would indicate a high contrast/much diversity in intensity. The \textit{contrast} metadata for each video consist of the set of these standard deviations for each frame.
 %
+\subsubsection{Shift vector magnitude}\label{sec:svmdata}
+%
+Like the contrast, the \textit{shift vector magnitudes} for each video is already computed as a part of the initial image quality assessment, as described in section \ref{}. We make a rough estimation of the egomotion (camera movement) by shifting all pairs of neighbouring frames until they more or less alligns up. This shift is expressed as a vector, whos magnitude tells us how much the camera is moving/shaking at each frame point in the video. The \textit{shift vector magnitude} metadata consists of set of these magnitudes throughout the video. It is used in the \textit{overview} classifier described in section \ref{sec:overviewclassifier}
+%
+\subsubsection{Brightness}\label{sec:brightnessdata}
+%
+The \textit{brightness} metadata consists of the mean pixel intensity in each frame throughout the video. It is used in the \textit{day/night} classifier described in section \ref{sec:daynightclassifier}.
+%
+\subsubsection{Blue color channel}\label{sec:blue_channel}
+%
+This particular type of metadata is extracted from the original videos (before grayscale conversion). Each frame in a video consists of a matrix of pixels in 3 channels; red, green, and blue. We extract the blue channel for the purpose of police blinker detection, described in detail in section \ref{sec:police_detection}, and day/night detection, described in detail in section \ref{sec:daynightclassifier}.
+%
+\subsubsection{The presence of people}\label{sec:peopledata}
+%
+%
+%
+%
+% Lauge: Her skal ryddes op og skrives om. Haar cascade classifier tekst fra andre steder er samlet her under sin egen paragraf.
+%
+%
+%
+\paragraph{Haar cascade classifier}
+%
+With the introduction of Haar Cascade Classifiers (HCC) % Anders: Hvad er dette?
+by Viola and Jones\cite{viola01}, later improved upon by Lienhart and Maydt\cite{lienhart01} and by Schmidt and Kasinski\cite{schmidt01}\cite{schmidt02}, there exists a very efficient tool for facial detection. The HCC uses a data-structure called an integral image, an algorithm based on AdaBoost % Lauge: Reference
+that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
+\\
+We use Haar cascade classifiers \cite{viola01}\cite{lienhart01}\cite{schmidt01}\cite{schmidt02} to detect people and faces in individual frames.
+%
+%
+%
+\paragraph{Originalt inhold}
 Detecting the presence of people will help us determine if footage was recorded from within a crowd, described in detail in section \ref{sec:incrowd}, or if the footage has focus on a specific person, described in detail in section \ref{sec:infocus}, which indicates that this person is of special interest, ex. a speaker.\\
 An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img}. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions.
 %
@@ -69,128 +87,147 @@ For the sake of simplicity we have not implemented the optimization of only anal
 We suggest that further optimizations involve exploiting the ready-at-hand metadata such as the general frame quality which severely impacts facial detection rates in a negative fashion.\\
 Further optimization can be achived by exploiting the temporal data. Ie. instead of analyzing the entire frame by expanding the search window incrementally, we utilize knowledge of where people were present in the previous frame. This would require a customized HCC which is a major increase in complexity compared to the other mentioned optimizations.
 %
-\subsubsection{Brightness}\label{sec:brightnessdata}
-%
-The brightness of a video is expressed as a list of means of the color intensity through all frames in the video. Since the videos have already been converted to grayscale at this point in the pipe-line this is a trivial task, due to there only being a gray channel in the pixels.
-%
 \subsubsection{Optical Flow}\label{sec:opticalflowdata}
 %
-% TODO: Move this section below Shift Vector Magnitude
+\paragraph{Optical Flow - Hvordan virker lortet?}
 %
-Our experiments with Optical Flow are based on a wish to extract information about what is happening in the video. Whereas the Shift Vector Magnitude tells us something about how the camera itself moves, Optical Flow attempts to explain how the content within each frame moves. There has been a substancial amount of research put into this field. [REFS] describes ways to identify certain types of actions occuring within videos, such as violent behaviour, [REF] looks at general crowd movement in public places, and Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes how Optical Flow can be used to identify pedestrians, even at great distance where such methods as Facial- and People- Detection come up short.\\
+For in-frame event extraction we use optical flow \cite{Bouguet2000}.
 %
-One huge difference between our work and that of all the previous research we have been able to find is that we do not have the luxary of a stationary camera, or, in the case of the pedestrian detection \cite{CrowdDetectionInVideoSequences}, at least a camera fixed to a moving car. Most of our footage is recorded by handheld cameras often under very poor conditions. Extracting the optical flow of our videos is therefore not only a matter of analysing how reference points move around in the frame. First estimate the \textit{egomotion} (the motion of the camera) itself, in order to \textit{stabilise} the frame.
+% Lauge: Her skal skrives noget om hvordan optical flow (Lucas Kanade, artiklen ovenfor) fungerer
+%
+Unfortunately, most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. Although Reisman et. al. \cite{CrowdDetectionInVideoSequences} \textit{do} work with images from a camera fixed on a moving vehicle, their appraoch is still not applicable to our scenario, since our videos are recorded mostly by handheld devices, whose movement are a lot less predictable.\\
+%
+\paragraph{Optical Flow - Hvad gør vi?}
+%
+Where \textit{shift vector magnitudes} tells us something about how the camera itself moves, optical flow attempts to explain how the content within each frame moves. There has been a substancial amount of research put into this field. Most of our footage is recorded by handheld cameras often under very poor conditions. Extracting the optical flow of our videos is therefore not only a matter of analysing how reference points move around in the frame. First we must estimate the \textit{egomotion} (the motion of the camera) itself, in order to \textit{stabilise} the frame.
 %
 \paragraph{Frame stabilisation}
 %
-There are several obvious ways to do this, but each has its own limitations. The first that comes to mind is to simply use the Shift Vector Magnitudes that we have already computed. This intuitively makes a lot of sense since they are suppose to tell us something about how the camera moves at each point of the video. Thus, it should simply be a matter of subtracting this general movement from whatever individial movement is detected within the frame and the remaining movement would be the optical flow of the content. However, it turns out that although the Shift Vector approach is very suitable for describing the general type of cameara movement (shaking, panning), especially when the data is smoothed across several frames, it has a relatively high margin of error for individual frames. This is especially the case if the camera moves very fast or if there actually \textit{is} a lot of movement within the frame. The simplest approach that come to mind is to simple use the mean of all the optical flow vectors as the egomotion. An alternative is to use the most commonly occuring vector. However, our experimentation showed that these two methods suffer from one serious limitaion. If moving objects in the frame are very close to the camera, they tend to become more influencial than the stationary background and they end up swapping roles. The very movement we want to extract is removed and everything we would like to get rid of remains. The border-case for this condition is especially problematic. This occurs when an object is at the exact distance from the the camera where it \textit{periodically} becomes the dominant set of movement. In these cases the stabilising vector will jump from one extreme to the other and thus be completely useless.\\
-Some of these problems could probably be alleviated through further analysis or averaging across time, however, through our experimentation we came up with an approach that seems quite promising.\\\\
+There are several ways to do this. An option is to use the \textit{shift vector magnitudes} that we have already computed. This intuitively makes sense since they are suppose to describe the movement of the camera at at each frame in the video. However, it turns out that although this data may be suitable for describing the general type of cameara movement (shaking, panning), especially when the data is smoothed across several frames, it has a relatively high margin of error for individual frames. This is especially the case if the camera moves very fast or if there actually \textit{is} a lot of movement within the frame. Another option is use the mean of all the optical flow vectors as the egomotion. Alternatively one could use the most commonly occuring vector. However, our experimentation showed that these two methods suffer from one serious limitation. If moving objects in the frame are very close to the camera, they tend to become more influencial than the stationary background and they end up swapping roles. The egomotion is then based on the movement of the large object, the opposite of what we want. The border-case for this condition is especially problematic. This occurs when a moving object takes up half of the frame. Often, changes in position will then \textit{periodically} cause it to be more or less dominant than the background. In these cases the egomotion vector will jump from one extreme to the other, in close succession, and thus become completely useless.\\
+Some of these problems could probably be alleviated through further analysis or averaging across time. However, through our experimentation we came up with an approach that seems more promising.\\
+\\
+\textit{Corner detection} refers to identifying features in a frame, which are \textit{good to track}. They are areas (or points), which are likely to be clearly distinguishable on the following frames. This is often done by locating areas with low \textit{self simmilarity}. That is, areas that do not look like other areas close by. We found that generally, these points has a tendency to be present in stationary objects in the frame far more often than in moving objects, and thus form a very decent base for our egomotion vector. The implementation we use to identify these features is based on the Shi-Tomasi corner detection algorithm described by Shi et al. \cite{Shi_1994_3266}. We track these features and define our egomotion to be the mean of all the resulting displacement vectors.\\\\
 %
-We noticed that a preliminary detection of Good Features to Track was very beneficial. Good Features to Track are areas (or points) in a frame, that are likely to be clearly distinguishable on the following frames. This is often done by locating areas with low \textit{self simmilarity}. That is, areas that do not look like other areas close by. The implementation we use is based on the Shi-Tomasi corner detection algorithm described by Shi et al. \cite{Shi_1994_3266}. We found that generally, these points has a tendency to be present in stationary objects in the frame far more often than in moving objects, and thus form a very decent base for our stabilising vector. We chose to calculate the mean of these vectors and use that as our egomotion vector, although it would also be possible to use the most commonly occuring vector, as described above.\\\\
-%
-Note: We have later come across other, more advanced techniques for calculating the egomotion of a video. Raudies et al. \cite{Raudies:2009:ELM:1612122.1612125} describes such a method.
-% Lauge: Der skal skrives noget mere om denne metode, hvis den skal nævnes
-Unfortunately, do to our late discovery of this method we have not been able to test it.
+Note: We have later come across other, more advanced techniques for calculating the egomotion of a video. Raudies et al. \cite{Raudies:2009:ELM:1612122.1612125} describes such a method. Unfortunately, do to our late discovery of this method we have not been able to test it.
+% Lauge: Der skal skrives noget mere om denne metode, hvis den skal nævnes, desuden skal dette rykkes til future work
 %
 \paragraph{Detecting movement}
 %
-With the frame itself stabilised it is possible to analyse the movement within it. We do this by placing a grid of points across the frame and then feed these points to an Optical Flow algorithm, more specifically a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet \cite{Bouguet2000}. We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels through two iterations.\\% TODO: ACTUALLY UNDERSTAND THIS!!!
-Some of the resulting vectors are considered invalid if the algorithm is unable to track them (this is often the case with points in the sky or in surfaces without any distinct features), if the algorithm estimate a too large margin of error, or if the point being tracked ends up outside of the subsequent frame. For the rest, we then subtract the stabilising vector we computed earlier from each them. The result should (at least in theory) be a set of vectors describing how different parts of the image move in relation to each other. For simplicty we group these vectors into nine groups each representing one of nine boxes each covering their own part of the frame.
+We now look at the movement within the frames. We do this by placing a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet \cite{Bouguet2000}.
+% Flyt til parameter tuning:
+We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels through two iterations.\\% TODO: ACTUALLY UNDERSTAND THIS and describe it here!!!
 %
-% Noter fra Kim: Figure
+Some of the resulting vectors are considered invalid if we are unable to track them. This is often the case with points in the sky or in surfaces without any distinct features) or if the point being tracked ends up outside of the subsequent frame. Let $E$ be our egomotion vector. Then, for every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
+\begin{equation}
+v' = v - E
+\end{equation}
+Let $V'$ describe the set of all isolated movement vectors $v'$. $V'$ then describes the movement of objects within the frames.\\
+Each vector $v' \in V'$ describes the movement of one particular point in the original grid. By looking at the different directions of flow we may be able to say something about what is going on in the video. We simplify the data dividing the image up into nine segments as shown in figure [FIGURE REF]. We calculate the mean of the movement vectors in each group, seperately, and use these nine new vectors to describe the overall flow in different parts of the frame.
 %
-An average movement and the average length of all movements are calculated for each box and these nine vectors are stored for each frame.
+% Lauge: RISK - This model may be too simple, for good results
 %
-% TODO: Write a bit more about how these nine vectors tells us how objects in that part of the image generally moves
+[FIGURE OF BOXES AND GRID]
 %
-% REMEMBER: Describe RISKS (zooming)
-\subsubsection{Blue color channel}\label{sec:blue_channel}
+The \textit{optical flow} metadata consist of sets of these nine vectors, calculated for each frame in the video. It is used in the \textit{vertical oscillation} classifier described in secion \ref{sec:verticaloscillationclassifier}.
 %
-Each frame in a video consists of a matrix of pixels in 3 channels; red, green, and blue. For the purpose of police blinker detection, described in detail in section \ref{sec:police_detection}, and day/night detection, described in detail in section \ref{blah}, we extract the blue channel in each frame and compute the mean pixel intensity.
 %
-\subsubsection{Contrast}\label{sec:contrastdata}
 %
-Some of the metadata is already extracted in earlier phases. The contrast is an example of this. The contrast in a frame is defined as being the standard deviation of the intensity values in the image-matrix. A small deviation would indicate little contrast/diversity in color-intensity, and a large deviation would indicate a high contrast/much diversity in intensity. Again, the contrast metadata for each video is expressed as an array of these standard deviations in each frame.
 %
-\subsubsection{Shift Vector Magnitude}\label{sec:svmdata}
-%
-Like the contrast, the shift vector magnitudes for each video is already computed as a part of the initial image quality assessment. We attempt to estimate the camera movement by \textit{shifting} each frame until its content more or less alligns with the content of the previous frame. This shift is expressed as a vector, whos magnitude tells us how much the camera is moving/shaking at each frame point in the video.
 %
 \subsection{Label classifiers}
 %
-\subsubsection{Police Blinker Lights classifier}\label{sec:police_detection}
+Each classifier performs a binary classifaction on a specific label. It analyses all the available footage and returns a collection of indexes to all the segments where it believs the specific label it to be present. These indexes consist of a reference to the video in question, as well as a start and end index. Depending on the classifier, these segments are then post-processed using \textit{segment interpolation} and/or \textit{segment smoothing}
 %
-% By investigating the blue channel mean, see section \ref{sec:blue_channel}, in detail we are able to some degree detect if the police is present
-% %
-% % Noter fra Kim: Police vehicles with flasing light. (Omdøb classifieren) NOW CALLED Police Blinker Lights
-% %
-% in part of a video, under the circumstance that the police blinker lights are active. The hypothesis was simple: we would expect the blue channel mean to oscilate over time. If we plot the mean values as a function of time (frames) we can easily distinguish oscilating areas visually, and then check if this oscillation corresponds to police being present in the video at that point in time. Somewhat to our surprise this was amazingly accurate. We did get a rather large number of false negatives, but almost no false positives.\\
-% %
-% % Noter fra Kim: Upræcist. Pas på med blah blah. Ryk til Results
-% %
-% We did not find any ready-at-hand code for detecting oscillations so we rolled
-% %
-% % Noter fra Kim: What?
-% %
-% something ourselves. What we ended up with was a simple approach based on the realization that the points (local minima/maxima) in an oscillating graph could be connected by triangular shapes (bottom facing up) illustrated in Figure \ref{fig:triangles}, and each consequtive triangle is roughly the same shape and size. The problem was boiled down to comparing these triangles.\\
-% We compute the magnitude of the vectors $a,b,c,d,e,f$ and check if the relative standard deviation of $[\|a\|,\|b\|,\|c\|,\|d\|]$
-% %
-% % Noter fra Kim: Hvad betyder denne notation? Måske mængde {a,b,c,d}? 
-% %
-% respectively $[\|e\|,\|f\|]$ is below a certain treshold (meaning that $a,b,c,d$ respectively $e,f$ are roughly the same length).
-% %%%%%%%%%%
-% \\REWRITE:\\
-%%%%%%%%%%
-By investigating the blue channel mean of each frame (section \ref{sec:blue_channel}) we are able to some degree detect if the police blinker lights are present in part of a video. We analyze the blue channel mean as a function of time, and if these values are oscillating within certain parameters, we have detected a police blinker light.
+\subsubsection{Segment Interpolation}\label{sec:labelmerge}
+%
+% Lauge: Denne sektion skal skrives om. Den giver ikke meget mening som den er. Desuden skal der skrives noget om 'truncation' som bliver refereret til flere steder senere
+%
+Segments in a video is easilly fragmented and two segments with the same label just a single frame apart will by all means and purposes be interpreted as such. This is often a result of fragmented metadata, ex. several consequtive frames with people present that our people presence detection algorithm failed to detect. To patch this fault we interpolate the segments by applying the label, $l$, to the frames between segment $a$ and segment $b$ if these are not too far apart (by default 24 frames) and both segments share the same label, $l$. As we are already analyzing segments we also filter out segments of diminutive length, which by default is 5 seconds.
+%
+\subsubsection{Segment Smoothing}\label{sec:labelsmooth}
+%
+% Lauge: Denne sektion skal skrives om. Den giver ikke meget mening som den er. Desuden skal der skrives noget om 'truncation' som bliver refereret til flere steder senere
+%
+If segments are higly fragmented because the label-algorithm that produced them made no attempt to smooth the frames and their respective label (or absence of same) we apply triangle smoothing on the segments, defaulting to a degree of $36$ frames equal to $1.5s$, and subsequently cut off values below a certain treshold, defaulting to $1/3$, ie. values below the treshold are truncated to $0$.
+%
+\subsubsection{Police Blinker classifier}\label{sec:police_detection}
+%
+By investigating the blue channel mean of each frame (section \ref{sec:blue_channel}) we are able to detect if the police blinker lights are present in part of a video.% Resultat
+We analyze the blue channel mean as a function of time, and if these values are oscillating within certain parameters,% Specific frequency
+we have an indication of the precense police blinker lights.
 %
 \begin{figure}[h]
      \centering
      \includegraphics[width=1.05\textwidth]{img/triangles.jpg}
      \caption{}\label{fig:triangles}
 \end{figure}\\
-%
+% Lauge: Mangler title + Lav rigtig figur
 Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. As an alternative to computing the area of each triangle we investigate how the length of the vertices in each triangle deviate from each other
 \[
 \text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1,
 \]
-for some constant $\tau_1$ where std is the standard deviation. Analogously for the horizontal vertices
+% a,b,c, og d skal defineres i tekst
+for some threshold $\tau_1$ where std is the standard deviation. Analogously for the horizontal vertices
 \[
 \text{std}([\|e\|,\|f\|]) < \tau_2,
 \]
-for some constant $\tau_2$.\\
-The blue channel mean is lightly smoothed using triangle smoothing with a degree of 5 as this give softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 48 frames apart are interpolated into a single segment, and segments shorter than 24 frames are removed.
+% e og f skal defineres i tekst
+for some threshold $\tau_2$.\\
+The blue channel mean is smoothed using triangle smoothing with a degree of 5% paramter tuning
+as this give softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 48 frames% paramter tuning
+ apart are interpolated into a single segment, and segments shorter than 24 frames% paramter tuning
+  are removed.
 %
 \subsubsection{Person in Focus classifier}\label{sec:infocus}
 %
-% The method for detected a person in focus was simple. It works much like the in crowd detection, with the extra constraint that the bounding box of the detected face must be centrally placed in the frame.
-% %
-% % Noter fra Kim: Mere detaljer
-% %
-% The data was interpolated over 4 frames of a moving average as we wanted a more consistent detection.
-% %
-% %
-% % Noter fra Kim: I skriver stedvist som en dagbog! Hold den akedemiske stil!
-% %
-% REWRITE
-We compute a moving average (over 4 frames/166ms) of the people presence metadata but excluding objects detected (partially) outside a centrally placed bounding box. The moving average of only 4 frames requires a low frequency of false negatives between frames which in turn makes a greater demand on the quality of each frame (steady or no camera movement, a good shot angle, and little background clutter). The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 36, equal to $1.5$ seconds, and a truncation value of $1/3$. Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24 frames apart are interpolated into a single segment, and segments shorter than 120 frames, equal to 5 seconds, are removed.
+We compute a moving average (over 4 frames ~ 166ms)% paramter tuning
+of the people presence metadata but excluding objects detected (partially) outside a centered bounding box.
+% Lauge: Det er ikke klart hvad vi prøver at sige her:
+A moving average of only 4 frames requires a low frequency of false negatives between frames which in turn makes a greater demand on the quality of each frame (steady or no camera movement, a good shot angle, and little background clutter). The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 36,% paramter tuning
+equal to $1.5$ seconds, and a truncation value of $1/3$.% paramter tuning
+ Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24% paramter tuning
+  frames apart are interpolated into a single segment, and segments shorter than 120% paramter tuning
+  frames, equal to 5 seconds, are removed.
 %
 %
-\subsubsection{Overview classifier}
+\subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
-Our Overview classifier attempts to detect footage with little camera movement and little internal movement within the frames. Furthermore, in order to avoid overlap with the Person in Focus footage, which also often has these charactetistics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the Support Vector Magnitude metadata described in section \ref{sec:svmdata}, the Optical Flow metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the Person in Focus classifier described in section \ref{sec:infocus}. First the Optical Flow data is smoothed over 60 frames (slightly less than 3 seconds) in order to remove noise. The other two sets of metadata have already been smoothed or de-noised during their computation.\\
-First we make sure that the frame has not already been classified as containing a Person in Focus. Now, let $s$, $t$ and $u$ be the threshold that we use to regulate the classifier. We then look at the mean vector length of the optical flow. Since each frame contains nine seperate optical flow means (for different parts of the image), we start by looking at how many of these means are below the threshold $s$. In our case $s=2$ made sense, but different resolutions will require different values. If the number of bins passing the test is larger than $t$ (in our case $7$, meaning that almost the entire image must have very little movement within), we futher make sure that the shift vector magnitude is less than $u$ (again, $10$ made sense in our case, but it will be dependant on resolution).
+The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. Furthermore, in order to avoid overlap with the \textit{person in focus} footage, which often also holds these charactetistics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the \textit{support vector magnitude} metadata described in section \ref{sec:svmdata}, the \textit{optical flow} metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
+We perform a slight triangular smoothing on the metadata in order to remove outliers. We also discard all footage, which has already been classified with the \textit{person in focus} label.\\
+% RISK: One label takes precedence over another (not isolated)
+We now look at the amount of movement in each part of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f_{i} = [m_{1},m_{2} \dots m_{9}]$, where $m_{x}$ is the distance of movement occuring in a specific part the frame, calculated as the mean of the magnitude of all adjusted optical flow vectors, in an area. The number of areas exceeding a given limit, $s$, is then defined as:
 %
-% Noter fra Kim: Mange af jeres variable valg virker sat arbitrært! Kan i dokumentere(?) jeres valg?
+\begin{equation}
+A_{f} = \sum_{i=1}^{9}
+\begin{cases}
+0 & \text{, if } m_{i} \leq s\\
+1 &  \text{, otherwise}
+\end{cases}
+\end{equation}
 %
-Only if the frame passes all checks will it be classified with the Overview label.\\
-The many different thresholds, as well as the different phases of smoothing, allows for a lot of tweaking. It is also very difficult to test the overall correctness of the classifier, due to the subjectiveness of what makes an Overview shot. Our configuration have been derived through emperical testing and thus may be over-fittet to our specific dataset.
+This way of analysing sub-parts of the image should improve the chance of detecting local charactaristics, which would be lost in an overall analysis of the frame. %Flyt til metadata afsnit?
+ Next we combine this meassure with the egomotion in the frame, defined as $f_{e}$. The binary \textit{overview} classification of a frame is defined as:
+\begin{equation}
+O(f) =
+\begin{cases}
+0 & \text{, if } A_{f} > t \vee f_{e} > u \\
+1 &  \text{, otherwise}
+\end{cases},
+\end{equation}
+where $t$ is a threshold that defines how many areas are allowed to contain too much internal movement, and $u$ is a threshold defining the maximimum \textit{shift vector magnitude} we accept for the frame.
 %
-\subsubsection{Vertical Oscillation classifier}
+\subsubsection{Vertical Oscillation classifier}\label{sec:verticaloscillationclassifier}
 %
-The Vertical Oscillation classifier was made to experiment with extracting information from the Optical Flow metadata. It attempts to detect footage where objects in the frames moves up and down, over a period of time. This happens, for example, if people are jumping on the spot, if people close to the camera are gesticulating heavily whilst talking, or if people are thrusting signs into the air. In order to do this we look at the variance of the vertical direction of the optical flow vectors over some time.\\
-Like in the Overview classifier we have a set of thresholds, $s$, $t$, and $v$, which are used to regulate the classifier. We start by calculating the standard deviations of the vertical direction of the vectors, throughout the videos. Since the optical flow metadata consists of nine bins of data for each frame, each bin covering one uniuqe ninth of the frame, this is done sepeately for each bin. The parameter $v$ (in our case $v = 12$), determines over how many frames the standard deviation is calculated. Thus, $s$ can be used to determine the frequence of oscillation the classifier should detect. The resulting deviations in each bin are smoothed over 60 frames in order to remove noise, just like in the Overview classifier. We then iterate through all frames and for each of them look in each bin to see if the standard deviation in it is above our threshold, $s$. If this is the case for more than $t$ bins, we consider the frame to contain vertical oscillation.
+The \textit{vertical oscillation} classifier attempts to detect footage with vertical movement of objects. Such movement can be caused by people jumping, by people gesticulating heavily whilst talking, or if people are raising signs into the air. In order to do this we look at the variance of the vertical direction of the optical flow vectors over some time.\\
+As with the \textif{overview} classifier we analyse the internal movement in different parts of the image, in order to detect local charactaristics. Let the vertical movement in a frame be defined as $f_{v} = [m_{1},m_{2} \dots m_{9}]$, where $m_{x}$ is the vertical movement, calculated as the mean of the vertical movement of the adjusted optical flow vectors, in an area.
+
+
+we have a set of thresholds, $s$, $t$, and $v$, which are used to regulate the classifier. We start by calculating the standard deviations of the vertical direction of the vectors, throughout the videos. Since the optical flow metadata consists of nine bins of data for each frame, each bin covering one uniuqe ninth of the frame, this is done sepeately for each bin. The parameter $v$ (in our case $v = 12$), determines over how many frames the standard deviation is calculated. Thus, $s$ can be used to determine the frequence of oscillation the classifier should detect. The resulting deviations in each bin are smoothed over 60 frames in order to remove noise, just like in the Overview classifier. We then iterate through all frames and for each of them look in each bin to see if the standard deviation in it is above our threshold, $s$. If this is the case for more than $t$ bins, we consider the frame to contain vertical oscillation.
 %
 % TODO: Little bit more here...
+%
+% REMEMBER: Describe RISKS (zooming)
+%
 %
 \subsubsection{In-Crowd classifier}\label{sec:incrowd}
 %
@@ -211,7 +248,7 @@ We compute a moving average (over 12 frames/500ms) of the people presence metada
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 An alternative to this method is using optical flow... %LAUGE
 %
-\subsubsection{Day \& Night classifier}
+\subsubsection{Day \& Night classifier}\label{sec:daynightclassifier}
 %
 Our Day \& Night classifier is mostly a proof-of-concept. The time of creation is stored as part of the video file's metadata when it is recorded. As previously explained, this information is stripped away when the video is uploaded to Youtube, but should be available to us in a real scenario. However, Day \& Night classification can actually be done with high accuracy even without this informaton. In [REF] the authors describe how to classify still images through a hierachy of Support Vector Machines, including day/night classification. We have however come up with a much simpler approach, with a very high success rate.\\
 Based around the fact that night footage has a significantly less amount of blue compared to footage recorded during the day, we compare the Blue Channel metadata (described in section \ref{sec:blue_channel}) with the Brightness metadata (described in section \ref{sec:brightnessdata}) in order to determine how they correlate. Let $i$ be the frame number in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $C_{i}$ is defined as:\\
@@ -245,24 +282,33 @@ with the number of frames in the higher end like this:
 %
 Here $H$ is the histogram and $m$ is some value in the range $m\in [1..10]$ (we found $3$ to work quite well). If this statement is true or if the mean of $C$ is above zero we classify the video as day. Otherwise we classify it as night. With this modification we are able to increase the success-rate to ~97\%. And even then, some of the few false classification that does occur would be difficult to classify manually since they occur in videos recorded in the evening or the late afternoon.
 %
-\subsection{Post-processing}
+\section{Dataset}
 %
-\subsubsection{Segment Interpolation}\label{sec:labelmerge}
+Here we should have a brief explanation of what videos are in our dataset.
 %
-Segments in a video is easilly fragmented and two segments with the same label just a single frame apart will by all means and purposes be interpreted as such. This is often a result of fragmented metadata, ex. several consequtive frames with people present that our people presence detection algorithm failed to detect. To patch this fault we interpolate the segments by applying the label, $l$, to the frames between segment $a$ and segment $b$ if these are not too far apart (by default 24 frames) and both segments share the same label, $l$. As we are already analyzing segments we also filter out segments of diminutive length, which by default is 5 seconds.
+\section{Parameter tuning}
 %
-\subsubsection{Segment Smoothing}\label{sec:labelsmooth}
+\subsection{Police Blinker Lights classifier}
+\subsection{Person in Focus classifier}
+\subsection{Overview classifier}
 %
-If segments are higly fragmented because the label-algorithm that produced them made no attempt to smooth the frames and their respective label (or absence of same) we apply triangle smoothing on the segments, defaulting to a degree of $36$ frames equal to $1.5s$, and subsequently cut off values below a certain treshold, defaulting to $1/3$, ie. values below the treshold are truncated to $0$.
+The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
+The classifier has three thresholds, $s$, $t$ and $u$. $s$ is the maximum internal movement allowed in an area. $t$ is the maximum number of areas, which are allowed to break this limit, and $u$ is the maximum allowed egomotion for the entire frame.\\
+All three thresholds are chosen through emperical (and intuitive) testing on a subset of the dataset. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
+Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.
 %
-\subsection{Performance of the classifiers}
+\subsection{Vertical Oscillation classifier}
+\subsection{In-Crowd classifier}
+\subsection{Day \& Night classifier}
+%
+\section{Performance of the classifiers}
 %
 % Lauge: Her skal skrives noget om at meget af nedenstående er baseret på uformelle tests
 %
-\subsubsection{Police Blinker Lights classifier}
-\subsubsection{Person in Focus classifier}
-\subsubsection{Overview classifier}
-\subsubsection{Vertical Oscillation classifier}
-\subsubsection{In-Crowd classifier}
-\subsubsection{Day \& Night classifier}
+\subsection{Police Blinker Lights classifier}
+\subsection{Person in Focus classifier}
+\subsection{Overview classifier}
+\subsection{Vertical Oscillation classifier}
+\subsection{In-Crowd classifier}
+\subsection{Day \& Night classifier}
 %
