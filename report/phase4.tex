@@ -1,12 +1,11 @@
 %
 \section{Findings}
 %
-Test site can be found at thesis.fmitcar.appspot.com/thesis/start/\\
-TODO: WRITE MORE
+Due to the subjective nature of estimating the overall quality of our video summaries we test our results on a panel of test users. We use various methods to generate the summaries and present them to this panel for review.
 %
 \subsection{Test Environment}
 %
-Our test environment is a website showing a collection of generated videos, hosted on YouTube. Users will be shown one video at a time, and are presented with a questionnaraire after the video is done playing.
+Our test environment is a website showing a collection of generated videos, hosted on YouTube. Visitors are shown one video at a time, and are presented with a questionnaraire after the video is done playing.
 %
 \subsubsection{Questionnaire}
 %
@@ -23,31 +22,34 @@ The four statements shown after each video are:
 \item The length of the entire video is fitting
 \end{itemize}
 %
-The first statement investigates the quality of our labeller. The second statement investigates how well we are able to combine segments (in other words the quality of our recipe, ie. the order and context of the ingredients). The third statement investigates the general attitude towards clip-length, which is chosen somewhat at random within boundaries determined by the recipe. The fourth statement investigates the general attitude towards the total length of a video-summary. We also added an optional note to each questionnaire in case a user wanted to ellaborate on their answer(s).
+The first statement investigates the quality of our choice of labels, and to some degree also the quality of our classifiers. The second statement investigates how well we are able to combine segments (in other words the quality of our recipe, ie. the order and context of the ingredients). The third statement investigates the general attitude towards clip-length, which is chosen somewhat at random within boundaries determined by the recipe. The fourth statement investigates the general attitude towards the total length of a video-summary. We also added an optional note to each questionnaire in case a user wanted to ellaborate on her answer(s).
 %
 \subsubsection{Setup}
 %
 Our test environment runs on \textit{Google App Engine} and consist of a minimalistic website. To discern interuptive elementsplayer-controls are removed from the YouTube embedded player (the user can still pause the video by clicking on it or by using the space-bar on their keyboard). The questionnaire was not shown before the end of the video in order not to disctract attention to it. The video-title, which would appear briefly in the top of the player is the hex-value of a randomly generated number to ensure a non-descript title.\\
 Each user session is tracked using a randomly generated identifier. We do not make any attempt to track users across different sessions so we are unable to track a returning test-user, but it does give us a rough measure of how many different test-users we have, how many questionnaires they answered on average.\\
-To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test is available in Appendix XX, in both languages.\\
+To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test is available in Appendix [SEC:REF], in both languages.\\
 The test is designed so that the test user can see as few or as many videos as she wants. A circular queue of videos is shared between all users, meaning that a new user will start at the video following the one that was last rated. Answers are stored after each succesful rating.\\
-The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\
+The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\\\
 %
-\subsection{Generated Videos}
+The test website can be found at http://thesis.fmitcar.appspot.com/thesis/start/
 %
-We have 3 different control samples: one is videos with randomly picked labels and segment lengths, second is videos where clips was picked totally at random, and the third is a set of human edited videos.
-% datasets, alpha span, recipe, 
+\subsection{Test videos}
 %
-\subsubsection{Totally Random}
+We investigate several aspects of the video summary aggregation. Most importantly we investigate how our automatically generated video summaries compare to human edited ones, and how both these groups compare to randomly generated video summaries.
 %
-For each dataset we generate a videoclip by picking random videos, and random segments within each video, and edit it all together. The segment length was chosen such that each video would not differ significanytly from the general length of other computer generated videoclips. These videoclips are thought of as a baseline - we expect them to perform poorly.
+\subsubsection{Random}
 %
-\subsubsection{Random Label}
+\textit{Random} video summaries are generated without any use of labels. They consist of 6 videclips selected randomly from the footage for a particular event. Each clip has a random length between 2 and 10 seconds. Only one clip is selected from each video, in order to avoid repeating or overlapping footage, which would be a dead giveaway. These video summaries are thought of as a baseline - we expect them to perform poorly.
 %
-The length of each segment is also selected at random such that it is at least 2 seconds long, and the maximum length is selected such that the complete videoclip is somewhere between 25-35 seconds. If $mil$ is the minimum length of a segment and $k=9$ then $mil=\text{random}(48,24k)$ in frames, ie. between 2 and 9 seconds. The maximum segment length is then $mal=\text{random}(mil+6, 2mil+6)$. $mil$ would average $\frac{2+9}{2}=5.5$ seconds hence $mal$ would average $\frac{5.5+0.25+11+0.25}{2}=8.5$ seconds, and the total clip length, with 5 segments, then averages around $5\frac{5.5+8.5}{2}=35$ seconds.
+\subsubsection{Random label}
+%
+These video summaries are slightly \textit{less} random. Instead of selecting video clips randomly from the footage, we instead generate a random recipe and create a video summary from it. This is done by generating a sequence of 5 \textit{ingredients} (described in section [SEC:REF]), each containing a random set of 1 to 3 \textit{requested labels}. The minimum length of a video clip, $min$, is set to be somewhere between 2 and 9 seconds. The maximum length is set to be somewhere between $min$ and $2 \cdot min$.\\
+Because these video summaries are based on footage where labels were detected, we expect their content to be of higher quality than the videos described in the previous section.
 %
 \subsubsection{Designer}
 %
+The \textit{designer} video summaries are based on our own recipe.
 We designed a recipe to be used on all three datasets. Ingredients outlined below:
 \begin{itemize}
 \item Overview shot, 3-5 seconds, no person in focus
@@ -62,9 +64,13 @@ We designed a recipe to be used on all three datasets. Ingredients outlined belo
 During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
 Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
 %
-\subsubsection{Human Edited}
+\subsubsection{Human edited}
 %
 We used human edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips. We expect these to perform as well as the designer recipies or better.
+%
+\subsubsection{Other aspects}
+%
+% datasets, alpha span
 %
 \subsubsection{Table}
 %
