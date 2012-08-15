@@ -18,7 +18,8 @@ Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes a way to identif
 Arandjelović \cite{Arandjelovic08crowddetection} attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure, namely that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will contain repetative structures.\\
 % Lauge: Flere crowd detection artikler?
 Zhong et. al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream. The entire stream is divided into overlapping 4 second segments from which an overall movement pattern is established. Individual segments that differ too much from this patter are considered unusual.\\
-% Lauge: Day/Night article her?
+% Lauge: Day/Night article her skal uddybes og omskrives:
+In [REF] the authors describe how to classify still images through a hierachy of Support Vector Machines, including day/night classification.\\
 % Lauge: Jeg har rykket Haar Cascade classifier ned i sit eget afsnit under Method, men måske skal vi lige have en enkelt linje om det her
 Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically detecting the color of traffic lights. % Lauge: Vi skal lige have læst/skrevet lidt mere om denne og evt. relation til police blinker detecion
 %
@@ -255,49 +256,43 @@ where $t$ is a threshold defining the minimum number of areas in which vertical 
 % Dette skal omskrives og rykkes rundt således at meget af det kommer ned i parameter tuning.
 We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be \textit{in crowd}. Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 24, equal to 1 second, and a truncation value of $0.9$. Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24 frames apart are interpolated into a single segment, and segments shorter than 60 frames, equal to $2.5$ seconds, are removed.\\
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
-An alternative to this method is using optical flow... %LAUGE
 %
 \subsubsection{Day \& Night classifier}\label{sec:daynightclassifier}
 %
-Our Day \& Night classifier is mostly a proof-of-concept. The time of creation is stored as part of the video file's metadata when it is recorded. As previously explained, this information is stripped away when the video is uploaded to Youtube, but should be available to us in a real scenario. However, Day \& Night classification can actually be done with high accuracy even without this informaton. In [REF] the authors describe how to classify still images through a hierachy of Support Vector Machines, including day/night classification. We have however come up with a much simpler approach, with a very high success rate.\\
-Based around the fact that night footage has a significantly less amount of blue compared to footage recorded during the day, we compare the Blue Channel metadata (described in section \ref{sec:blue_channel}) with the Brightness metadata (described in section \ref{sec:brightnessdata}) in order to determine how they correlate. Let $i$ be the frame number in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $C_{i}$ is defined as:\\
+Night footage is not only darker than footage recorded during the day. It also contains significantly less blue color, which is the reason it often has a brownish or red tint. Our \textit{day/night} classifier analyses both the \textit{blue channel} metadata (described in section \ref{sec:blue_channel}) and the \textit{brightness} metadata (described in section \ref{sec:brightnessdata}).\\
+First, we look at the correlation between the blue color channel and the overall brightness. Let $i$ be the frame position in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $c_{i}$ is defined as:\\
 %
 \begin{equation}
-C_{i} = \frac{L_{i}}{R_{i}} - 1
+c_{i} = \frac{L_{i}}{R_{i}} - 1
 \end{equation}
 %
-A value above zero shows that blue is a dominant color in the frame. The mean of $C$ thus indicates whether the footage is recorded during day- or night- time. Simply using this as a determinant yields a success-ratio of ~88\%, across 301 video clips of various length.
+A value above zero shows that blue is a dominant color in the frame. $c$ is therefor an indication of what type of footage we are dealing with.\\
+Next, we look at the general distribution of brightness intensities throughout the video. We start by creating a histogram of the brightness distribution across the entire video. The histograms have a range of [0:255] and contain 10 bins of equal size. For each frame in the video, the mean brightness value is inserted into the histogram. Figure [FIG:REF] shows an example of this mapping.
 %
-% Noter fra Kim: Er det jeres komplette datasæt eller kun træningssættet? Pas på overfitting! metode
-% Noter fra Lauge: Flyt disse resultater ned i Results afsnit.  
+[FIGURE]
 %
-However we can futher look at the general distribution of color intensity we are able to improve this rate further.\\
-We start by creating a histogram of the brightness distribution across the entire video. The histograms have a range of [0:255] and contain 10 bins of equal size. For each frame in the video, the mean brightness value is inserted in the histogram. Now we compare the lower
-%
-% Noter fra Kim: Lower? (beskriv bedre + figur)
-%
-end of the brightness spectrum
-%
-% Noter fra Kim: What? Histogram?
-%
-with the number of frames in the higher end like this:
+Now we look at this histrogram and compare the mass of the partitions representing the darker frames with the mass of those representing the brighter ones. Let $H$ be the histogram for a video, and let $m\in [1..10]$ be some delimeter value. An indication of daytime is then defined as:
 %
 \begin{equation}
-\sum_{i=0}^{m}H_{i} < \sum_{j=m+1}^{10}H_{j}
+D = \sum_{i=1}^{m}H_{i} < \sum_{j=m+1}^{10}H_{j}
 \end{equation}
 %
-%
-% Noter fra Kim: Forklar bedre. Evt. 'Compare the mass in the partitions' + evt. figur
-%
-Here $H$ is the histogram and $m$ is some value in the range $m\in [1..10]$ (we found $3$ to work quite well). If this statement is true or if the mean of $C$ is above zero we classify the video as day. Otherwise we classify it as night. With this modification we are able to increase the success-rate to ~97\%. And even then, some of the few false classification that does occur would be difficult to classify manually since they occur in videos recorded in the evening or the late afternoon.
+Finally, let $C$ be the mean of all $c$ in a video. Our \textit{day/night} classifier is then defined as:
+\begin{equation}
+S =
+\begin{cases}
+\text{day} & \text{, if } C > 0 \vee D \\
+\text{night} &  \text{, otherwise}
+\end{cases}
+\end{equation}
 %
 \section{Dataset}
 %
 Here we should have a brief explanation of what videos are in our dataset.
 %
-\section{Parameter tuning}
+\section{Parameter tuning and performance}
 %
-This section describes the parameter tuning of the classifiers. In general all tuning is done through emperical testing, often based on intuition. These parameters should therefore only be seen as a starting point for more extensive research. 
+This section describes the parameter tuning of the classifiers. In general all tuning is done through emperical testing, often based on intuition. These parameters should therefore only be seen as a starting point for more extensive research. We also present some informal performance statistics.
 %
 \subsection{Police Blinker Lights classifier}
 \subsection{Person in Focus classifier}
@@ -316,16 +311,10 @@ The parameter tuning is done on on a small subset of the dataset (3-4 videos). F
 As with the \textit{overview} classifier, we smooth the metadata with a trinagle width of 120 frames.
 %
 \subsection{In-Crowd classifier}
+%
 \subsection{Day \& Night classifier}
 %
-\section{Performance of the classifiers}
+The \textit{day/night} classifier (described in section \ref{sec:daynightclassifier}) analyses the overall brightness in a video along with the blue channel.\\
+It only has a single parameter, $m\in [1..10]$, which determines where to make the differentiation between the dark and bright partitions in a histogram of overall brightness in a video. We tried all 10 values and fin that $m = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
 %
-% Lauge: Her skal skrives noget om at meget af nedenstående er baseret på uformelle tests
-%
-\subsection{Police Blinker Lights classifier}
-\subsection{Person in Focus classifier}
-\subsection{Overview classifier}
-\subsection{Vertical Oscillation classifier}
-\subsection{In-Crowd classifier}
-\subsection{Day \& Night classifier}
-%
+The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.

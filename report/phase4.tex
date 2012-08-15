@@ -49,8 +49,7 @@ Because these video summaries are based on footage where labels were detected, w
 %
 \subsubsection{Designer}
 %
-The \textit{designer} video summaries are based on our own recipe.
-We designed a recipe to be used on all three datasets. Ingredients outlined below:
+The \textit{designer} video summaries are based on our own recipe. The ingredients are outlined below:
 \begin{itemize}
 \item Overview shot, 3-5 seconds, no person in focus
 \item Overview shot, 3-6 seconds, no person in focus
@@ -61,28 +60,60 @@ We designed a recipe to be used on all three datasets. Ingredients outlined belo
 \item Overview shot, 3-5 seconds, no person in focus
 \end{itemize}
 %
-During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
-Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
+During recipe tuning we realized that the overview label and person in focus label often overlapped. Although the two labels are mutually exclusive in a single, a segment containing both can still be generated if its score is sufficiently big (see section [SEC:REF til Segment Score]). To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our classifiers).\\
+Likewise there are typically two types of crowd shots. One, which has someone in focus, and the other one, which has not. We wanted the latter type.
 %
 \subsubsection{Human edited}
 %
-We used human edited videoclips as a control sample. A select few videos was cut to fit the general length of other computer generated videoclips. We expect these to perform as well as the designer recipies or better.
+We used human edited video summaries as a control sample. These videos are taken from some of the orginal videos, which we found on Youtube and later split up. Therefore they contain the same footage as is available to the \textit{random-}, \textit{random label-}, and \textit{designer-} aggregators. This should ensure that they do not look too different. We expect these to perform as well as the designer recipies or better.
 %
 \subsubsection{Other aspects}
 %
-% datasets, alpha span
+On top of comparing the quality of the different types of videos described above, we also investigate the result of using different $\alpha$-span values to regulate the weighting between label- and timespan- fulfilment. Different values should affect both the length of the individual video clips, and the total length of the video summary.\\
+Finally, we also want to know if the actual events in the footage has any influence of our results.\\\\
 %
-\subsubsection{Table}
+In total there are 21 videos summaries in the test. Their distribution is shown in figure \ref{tab:videosintest}.
 %
-INSERT TABLE HERE!!!
+\begin{table}\centering
+    \begin{tabular}{|l|l|l|}
+        \hline
+        Method       & Event           & $\alpha$-span \\ \hline
+        random       & ACTA Aarhus     & ~           \\ 
+        random       & ACTA Copenhagen & ~           \\ 
+        random       & COP 15          & ~           \\ 
+        random label & ACTA Aarhus     & 0.25        \\ 
+        random label & ACTA Aarhus     & 0.50        \\ 
+        random label & ACTA Copenhagen & 0.25        \\ 
+        random label & ACTA Copenhagen & 0.50        \\ 
+        random label & COP 15          & 0.25        \\ 
+        random label & COP 15          & 0.50        \\ 
+        designer     & ACTA Aarhus     & 0.25        \\ 
+        designer     & ACTA Aarhus     & 0.50        \\ 
+        designer     & ACTA Copenhagen & 0.25        \\ 
+        designer     & ACTA Copenhagen & 0.50        \\ 
+        designer     & COP 15          & 0.25        \\ 
+        designer     & COP 15          & 0.50        \\ 
+        human edited & ACTA Copenhagen & ~           \\ 
+        human edited & ACTA Copenhagen & ~           \\ 
+        human edited & ACTA Copenhagen & ~           \\ 
+        human edited & ACTA Copenhagen & ~           \\ 
+        human edited & COP 15          & ~           \\ 
+        human edited & COP 15          & ~           \\
+        \hline
+    \end{tabular}
+\caption{Distribution of videos in the test}\label{tab:videosintest}
+\end{table}
 %
 \subsection{Results}
 %
-INTRO
+We start by looking at an overview of the data we gathered, and then go into detail with the specific results.
 %
-\subsubsection{Feedbackme}
+\subsubsection{Overview over the feedback}
 %
-% OVERVIEW OVER ANSWERS (TABLE) #ANSWERS, #SESSIONS, #ANSWERS/SESSION, ETC. 
+At the time of writing, our test has been online for around 4 weeks. In that time 160 videos have been observed and rated over XXXXXX sessions.\\
+The average number of answers per session is XXXXXX, with a median around XXXXXXX.\\
+On top of the answers required for each video, we also received XXXXX notes from the test users.\\
+XXXXXX (XX\%) are answers from the danish version of the test. XXXXXX (XX\%) is from the enlish version.
 %
 \subsubsection{Histograms}\label{sec:histograms}
 %
