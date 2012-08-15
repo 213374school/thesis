@@ -219,31 +219,40 @@ where $t$ is a threshold that defines how many areas are allowed to contain too 
 \subsubsection{Vertical Oscillation classifier}\label{sec:verticaloscillationclassifier}
 %
 The \textit{vertical oscillation} classifier attempts to detect footage with vertical movement of objects. Such movement can be caused by people jumping, by people gesticulating heavily whilst talking, or if people are raising signs into the air. In order to do this we look at the variance of the vertical direction of the optical flow vectors over some time.\\
-As with the \textit{overview} classifier we analyse the internal movement in different parts of the image, in order to detect local charactaristics. Let the vertical movement in a frame be defined as $f_{v} = [m_{1},m_{2} \dots m_{9}]$, where $m_{x}$ is the vertical movement, calculated as the mean of the vertical movement of the adjusted optical flow vectors, in an area.
-
-
-we have a set of thresholds, $s$, $t$, and $v$, which are used to regulate the classifier. We start by calculating the standard deviations of the vertical direction of the vectors, throughout the videos. Since the optical flow metadata consists of nine bins of data for each frame, each bin covering one uniuqe ninth of the frame, this is done sepeately for each bin. The parameter $v$ (in our case $v = 12$), determines over how many frames the standard deviation is calculated. Thus, $s$ can be used to determine the frequence of oscillation the classifier should detect. The resulting deviations in each bin are smoothed over 60 frames in order to remove noise, just like in the Overview classifier. We then iterate through all frames and for each of them look in each bin to see if the standard deviation in it is above our threshold, $s$. If this is the case for more than $t$ bins, we consider the frame to contain vertical oscillation.
+As with the \textit{overview} classifier we analyse the internal movement in different areas of the image, in order to detect local charactaristics. Let $m \in M$ be the vertical movement in an area of a frame, calculated as the mean of the vertical movement of the adjusted optical flow vectors, in that area. Let $M$ be the set of all $m$. The variance in vertical movement in an area of the image, at a point $x$, is then defined as:
 %
-% TODO: Little bit more here...
+\begin{equation}
+v(x) = std(\bigcup_{i=x-s}^{x} M_{i}),
+\end{equation}
 %
-% REMEMBER: Describe RISKS (zooming)
+where $s$ is the timespan over which we want to calculate the variance. For simplicity we omit the case where $x \leq s$. In that case we let $V_{x} = 0$.\\
+Let $V$ be the set of all nine $v$ throughout a video. The number of areas, in a frame $f$, in which vertical oscillation occurs is then defined as:
 %
+\begin{equation}
+A_{f} = \sum_{i=1}^{9}
+\begin{cases}
+0 & \text{, if } V_{i}(f) < s\\
+1 &  \text{, otherwise}
+\end{cases}
+\end{equation},
+%
+where $s$ is some threshold defining the minimum level of variance. The \textit{vertical oscillation} classification of a frame is then defined as:
+%
+\begin{equation}
+V(f) =
+\begin{cases}
+0 & \text{, if } A_{f} < t\\
+1 &  \text{, otherwise}
+\end{cases},
+\end{equation},
+%
+where $t$ is a threshold defining the minimum number of areas in which vertical oscillation must occur.
+%
+% RISKS: (zooming), maybe wrong method
 %
 \subsubsection{In-Crowd classifier}\label{sec:incrowd}
 %
-% We exploited an inherent limitation in facial detection; that faces far away in the image are rarely detected. Due to the nature of our datasets, and we do not try to cover up in any way that this particular label is highly overfitted for this exact purpose, waranted that when multiple faces,
-% %
-% % Noter fra Kim: Hvad vil i sige med dette? Pas på blah blah!
-% %
-% on average 2 or more faces, are detected we would almost certainly be in a crowd or overlooking a crowd from within.\\
-% Technically speaking we would compute the moving average over 12 frames (500 ms) of people detected (profile, frontal, or upper body) and if we had detected more than 1 person we would deem that particular frame to be in a crowd.
-% %
-% % Noter fra Kim: Hvorfor datid?
-% %
-% One must have in mind that there are 24 frames each second, and the facial detection will far from detect (the same) faces/people in each consequtive frame, even for a fairly still image. Hence we had to interpolate the data to get a good estimate.\\
-% This method could be made even more accurate if we instead of employing a moving average would interpolate each bounding box (bounding the detected object), but also a more complex method.
-% REWRITE
-%
+% Dette skal omskrives og rykkes rundt således at meget af det kommer ned i parameter tuning.
 We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be \textit{in crowd}. Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 24, equal to 1 second, and a truncation value of $0.9$. Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24 frames apart are interpolated into a single segment, and segments shorter than 60 frames, equal to $2.5$ seconds, are removed.\\
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 An alternative to this method is using optical flow... %LAUGE
@@ -288,16 +297,24 @@ Here we should have a brief explanation of what videos are in our dataset.
 %
 \section{Parameter tuning}
 %
+This section describes the parameter tuning of the classifiers. In general all tuning is done through emperical testing, often based on intuition. These parameters should therefore only be seen as a starting point for more extensive research. 
+%
 \subsection{Police Blinker Lights classifier}
 \subsection{Person in Focus classifier}
 \subsection{Overview classifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
 The classifier has three thresholds, $s$, $t$ and $u$. $s$ is the maximum internal movement allowed in an area. $t$ is the maximum number of areas, which are allowed to break this limit, and $u$ is the maximum allowed egomotion for the entire frame.\\
-All three thresholds are chosen through emperical (and intuitive) testing on a subset of the dataset. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
+The parameter tuning was done a small subset of the dataset, consisting of a handful of videos. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
 Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.
 %
 \subsection{Vertical Oscillation classifier}
+%
+The \textit{vertical oscillation} classifier (described in section \ref{sec:verticaloscillationclassifier}) analyses the internal movement in the frames.\\
+It has three thresholds. $v$ defines the area over which the standard deviation in vertical movement is calculated. $s$ defines the minimum level of variance accepted as vertical oscillation. $t$ defines the number of areas in the frame in which vertical oscillation must occur.\\
+The parameter tuning is done on on a small subset of the dataset (3-4 videos). For the variance coverage we set $v = 12 \text{ frames}$, representing half a second of footage, enough for someone to jump or make a gesticulation. The minimum amount of variance required is set to $s = 5 \text{ pixels}$, which, over 12 frames, will require significant vertical oscillation in order to be achieved. Because vertical oscillation only is required in a small part of the frame in order to be clearly visible, we set $t = 2 \text{ areas}$.\\
+As with the \textit{overview} classifier, we smooth the metadata with a trinagle width of 120 frames.
+%
 \subsection{In-Crowd classifier}
 \subsection{Day \& Night classifier}
 %
