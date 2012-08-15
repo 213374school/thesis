@@ -1,48 +1,48 @@
 %
-\section{Introduction}
+\chapter{Introduction}
 %
 News is big business, old news is not. We live in a world where we want the news as they happen, which mostly is not feasible. It takes a while for professional news crews to show up at a news-worthy event, but individuals present at the scene can sometimes become a decent substitute. The Internet contains literally millions of video clips from all around the world. This number is increasing rapidly, not just because more people have access to the Internet, but also because more and more people are equipped with video cameras, often in the form of smart-phones. It is therefore no surprise that often, when an event occurs, the first footage available consists of private recordings made by those present at the scene. With the increased access to high-resolution cameras and mobile Internet connections, we not only expect an increase in video uploads, but also in live-video streaming.\\
 Currently, the vast majority of existing videos are published at video-streaming services such as YouTube, which, at the time this is written, receives 72 hours of videos footage every minute\footnote{http://www.youtube.com/t/press\_statistics}. The current possibilities for mining this enormous dataset are limited. It is possible to search for most videos using tags and keywords, but very little work has been put into grouping videos together around the events they cover. Given the expected increase in video uploads we argue that it will become increasingly important to begin looking at ways to cluster videos together and merge them into aggregated video streams covering entire events. By considering each video a scene located at a point in space and time, we theorize that it should be possible to produce single videos covering specific events, by merging neighboring scenes.\\
 Extensive research already exists in the field of image processing and labeling and the Internet provides access to an abundant source of video footage. However, this footage is commonly of a rather low quality (at least compared to professional recordings). For example it can be too shaky or too dark.\\
 With the processing power of distributed computing and the advancement in the field of image processing and machine learning in mind, we propose a system, which given a collection of video footage recorded at an event is capable of composing a watchable and semantically valid summary of that event shortly after the data becomes available. A system like this could, if it was fully developed, remove some of the human interaction in news curation and, as a result, decrease the delay between when 'the news' happen and when they become available.
 %
-\subsection{Overview}
+\section{Overview}
 %
 In our work we focus on a selection of problems related to creating such a video aggregator. We have facilitated this process into a three-step pipeline described below.
 %
-\subsubsection{Image quality assessment}\label{sec:videoclipsegmentation}
+\subsection{Image quality assessment}\label{sec:videoclipsegmentation}
 %
 Image quality assessment refers to the process of quantifying image quality in the raw video footage, %Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. 
 which can be used later on when creating final video summaries, or as a way to remove unsuitable material to speed up computionally heavy operations in later phases. %Even if one does not want to remove any material this early on, it could be used as a metric for prioritising later operations. 
 %This could be relevant in a live system where one might want to prioritise later analyses based on what footage is most likely to be most useful.  - FUTURE WORK
 Frame quality assessment is based on lighting conditions in individual video-frames as well as the overall camera movement throughout the video.
 %
-\subsubsection{Labeling}
+\subsection{Labeling}
 %
 Labeling is a contextual analysis of video footage. This context can be expressed in many forms; Brightenss and color intensity tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and proximity, of people in the footage. More advanced image processesing such as optical flow can tell us something about what specific actions are occuring in the video, ex. a waving banner or people dancing. We focus on a broad set of different methods, each focusing on one aspect of the contextual analysis. These classifiers yield a set of labels for each individual frame.
 %We actually find that this phase of grouping and labeling the footage, in our case, proved the initial frame quality assessment to be less important than we first expected. In general, at least for our selection of methods, classification only happens in footage that is of decent image quality.
 %
-\subsubsection{Video Summary}
+\subsection{Video Summary}
 %
 Labelling provides the abstraction level we need in order to create video summaries. We constructed a \textit{recipe language} which uses the different labels as a palette from which the recipe is created. 
 %
-\subsubsection{Test}
+\subsection{Test}
 %
 The generated video summaries are assessed by a panel of human oberservers. The summaries range from \textit{randomly generated summaries} are to \textit{recipe based summaries} and control samples of human edited summaries. 
 %
-\subsection{Limitations}
+\section{Limitations}
 %
 % Lauge: Man kan argumentere for at vi måske bør samle alle limitations i vores afsluttende RISK afsnit. HELLE FOR AFRIKA!!!
 % skal uddybes og evt. flyttes andet sted hen. hvor?
 %
-\subsubsection{Data source}
+\subsection{Data source}
 %
 %
-\subsubsection{Type of events}
+\subsection{Type of events}
 %
 The perfect system would be able to handle all kinds of different events. However, in order to limit the scope our work we have restricted ourselves to focusing on one kind of scenario: urban protests and demonstrations. Although this subject still yields diverse footage of everything from public speeches to police arrests it is only natural that some of the results we archive and the conclusions we make will not necessarily generalise to other kinds of scenarios.
 %
-\section{Data set}\label{sec:dataset}
+\section{Dataset}\label{sec:dataset}
 %
 % MINDRE NÆVNELSE AF DETTE FULL BLOWN SYSTEM
 Our vision of a full blown system is one that continuously receives raw video footage of from different events directly from the mobile devices recording it. This footage would then be processed by the system and used in a near-live coverage of that specific event. Since such a system currently does not exist, our goal is to build a data set which as closely as possible mimics this scenario. We do this by identifying a small collection of recent events, namely ACTA Copenhagen, ACTA Aarhus, and COP15, and collect video-clips of these from Youtube.
@@ -105,6 +105,10 @@ The video available online are recorded on different devices and stored in diffe
 % Anders: det nævner som sådan ikke nogen begrænsninger, blot en række nice-to-have features hvis vi havde haft en streaming service (som er forholdsvis irrelevant)
 %
 %A lot of the limitations in our research should be obvious at this point. We chose to only focus on a very small subset of all the possible scenarios a fully automatic system should be able to handle. Furthermore, we screen the data manually in order to make sure it is usable. However, much of the necessity for this is based on the fact that we do not have access to the raw footage as well as all the meta-data originally attached to a video-clip. Our main goal was to create a data set, which mostly contains original raw footage or, in the cases where it makes sense, video-clips, which we can pretend is raw footage. The task of determining whether a video-clip belongs to this category is, in many ways, much easier if you know exactly when and where it was recorded. Furthermore raw footage also often contain information about the source device it was recorded on, which again would tell us that the video data is unaltered. Had we had our own video hosting service we would have access to such information.
+%
+%
+% \section{Dataset}\label{sec:framequalityassessmentdataset}
+%
 %
 \subsubsection{Distribution of videos in the dataset}
 %
