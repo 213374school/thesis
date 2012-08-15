@@ -3,26 +3,47 @@
 %
 \section{Method}
 %
-
+In the previous chapter we computed a number of labels that helps us identify the contextuality of a video. In this chapter we will attempt to create a video based on a recipe where each ingredient expresses a desire of how each scene should be described.
 %
-\subsection{Segment Database}
+\subsection{Recipe}
 %
-The segment database contains all computed segments where each segment is a start and end frame, and which label it contains and the respective video.
+% recipies - simple approach. no immediate feedback. kinda skipped lit. study on this one. universal recipe. 2 permutations on each dataset (different alpha_span value), and added some required labels 
+% recipe structure: list of ingredients (labels, min/max span, interval, span alpha, required/forbidden labels)
+A recipe is one or more ingredients in a specific order, much like a cooking recipe. Each ingredient is described by
 %
-\subsection{Candidate Factory}
+\begin{itemize}
+\item labels - labels present in a segment has a positive impact on the segment score
+\item min. span - segments should be no shorter than this
+\item max. span - segments should be no longer than this
+\item interval - [LAUGE]
+\item span alpha - weighing of labels vs. segment length
+\item required labels - labels not present in a segment has a negative impact on the segment score
+\item forbidden labels - labels present in a segment has a negative impact on the segment score
+\end{itemize}
 %
-The candidate factory generates all permutations of segments for which a select set, $L$, of labels is present. The results is called a candidate list. Based on the segment database it filters out
-the segments for which a label $l$ in $L$ is not present. It then follows by computing the overlapping segments. Two segment are overlapping if they both originate from the same source video, do not share the same label, and $\text{max}(a, c) < \text{min}(b, d),$ where $a$ and $b$ are the start and end frame in the first segment, and $c$ and $d$ are the start and end frame in the second segment. If the segments overlap a new segment, $c$ is created where labels in $c$ is the union of labels in the two segments $x,y = \text{max}(a, c), \text{min}(b, d),$ where $x$ is the start frame in segment $c$ and $y$ is the end frame in segment $c$. if $y-x < 6$ segment $c$ is discarded, ie. the overlap is miniscule.\\
-The candidate list is then sorted by number of labels in each candidate (the most relevant candidate is usually the ones where multiple labels overlap). We then get the first twenty different videos and feed these to a segment score algorithm described in section \ref{sec:segment_score}.
+Each ingredient corresponds to a segment of real video footage, ie. given a specific ingredient we must find the segment that matches it the best.
+%
+\subsection{Choosing a Segment}
+%
+A segment is a start and end frame, the label it contains, and the respective video the segment appears in. Each segment is assigned a score and is picked with probability $P$ defined by: 
+%
+\[
+P = \frac{s^2}{S},
+\]
+%
+where $s$ is the score of a given candidate, and the score sum, $S$, is defined as:
+%
+\[
+S = \sum_{i=0}^{n} s_{i}^2,
+\]
+%
+where $n$ is the number of candidates, and $s_i$ is the score of candidate $i$.
 %
 \subsection{Segment Score}\label{sec:segment_score}
 %
 % Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.
 %
 The most fitting sub-parts of the video are found and scored based on how well they fulfill the label requirements we have constructed for the segment in question as well as how well they match the time span we are looking to fill. Each aspect is encapsulated in each their seperate fulfilment ratio, which are then later combined into a final score.
-%
-% Noter fra Kim: Alt for lang sætning
-%
 %
 \subsubsection{Label fulfilment}
 %
@@ -47,7 +68,7 @@ Y(f) =
 \begin{equation}
 Z(f) =
 \begin{cases}
-0 & \text{, if} f_{l} \cap L_{z} \neq Ø\\
+0 & \text{, if} f_{l} \cap L_{z} \neq \emptyset\\
 1 &  \text{, otherwise}
 \end{cases}
 \end{equation} 
@@ -74,7 +95,7 @@ The other aspect used to determine the score of a sub-part of a video is how wel
 %
 A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have a ratio of one. 
 %
-\subsubsection{The score}
+\subsubsection{Segment Score}
 %
 The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $R$ be a set of the label fulfilment ratios for each frame in the video, define in [FORMULA:REF]. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then defined as:\\
 %
@@ -86,86 +107,23 @@ S(v,w) =(1-\alpha) \cdot \sum_{i=v}^{w} \frac{R(i)}{l} + \alpha \cdot \tau(l)
 %
 % Noter fra Kim: Argumenter for formlen. Hvorfor virker den?
 %
-%
-\\
-%
 The score is thus determined by the average label fulfilment rate in the sub-part, weighted against the time span it covers.
 %
-\subsection{Choosing a Segment}
+\subsection{Candidates}
 %
-The segment score algorithm described in section \ref{sec:segment_score} returns a number of candidate segments, each with an assigned score. A score sum, $S$ is computed:
+To avoid computing a score for all segments in all videos, we find the most promising ones and call these candidates. The candidates are defined as all permutations of segments for which a select set, $L$, of labels is present.
+Overlapping segments is added to the candidates, where overlapping segments are defined as such if they both originate from the same source video, do not share the same label, and 
+%
 \[
-S = \sum{\text{score}(s)^2 \text{ for } s \text{ in candidates if } s > 0}.
+\text{max}(a, c) < \text{min}(b, d),
 \]
 %
-% Noter fra Kim: Sum over hvad?
+where $a$ and $b$ are the start and end frame in the first segment, and $c$ and $d$ are the start and end frame in the second segment. If the segments overlap a new segment, $c$, has the union of labels in the two segments, and
 %
-A multiplier, $m$ is computed as
 \[
-m = \text{min}(10^5, \text{max}(10^5, X)), X = \frac{s}{S}^{-1},
-\] % multiplier = min(1e5, max(1e5, 1 / (min_score / score_sum)))
+x,y = \text{max}(a, c), \text{min}(b, d),
+\]
 %
-% Noter fra Kim: Argument for dette (formlen?)
+where $x$ is the start frame in segment $c$ and $y$ is the end frame in segment $c$. if $y-x < \tau$, for some treshold $\tau$, segment $c$ is discarded, ie. the overlap is too small for $c$ to be considered a real segment.\\
+The candidates are sorted by number of labels in each candidate (the most relevant candidate is usually the one where multiple labels overlap). The topmost candidates are the most promising, and a score for each is computed as described in section \ref{sec:segment_score}.
 %
-where $s$ is the smalles score of all candidates. This ensures that the probability score explained below is atleast 1.\\
-A probability score, $P$, is then computed for each candidate 
-\[
-P = m \frac{s^2}{S} \text{ for } s \text{ in candidates if } s > 0.
-\] % probability_score = multiplier * candidate.get('score')**2 / score_sum
-%
-The final candidate is then picked with probability $P$.
-%Each candidate is then replicated $P$ times, ie. if candidate $a$ has a probability score of 4 and candidate $b$ has a probability score of 2 then the list of candidates is expanded to $C = [a,a,a,a,b,b]$. A final candidate, $c$, is selected at random in $C$.\\
-%
-% Noter fra Kim: Hvorfor ikke bare skrive at i sampler med sandsynlighed P? (for implementationsnært)
-%
-% This method has a minor rounding error which is roughly the decimal fraction of $P$ divided by the magnitude of $P$, which is in the order of $100\frac{1}{10^5} = 0.001\%$. IS IT NOW?????
-%
-% Noter fra Kim: ???
-%
-%
-\subsection{Recipe}
-%
-% recipies - simple approach. no immediate feedback. kinda skipped lit. study on this one. universal recipe. 2 permutations on each dataset (different alpha_span value), and added some required labels 
-% recipe structure: list of ingredients (labels, min/max span, interval, span alpha, required/forbidden labels)
-A recipe is a list of ingredients in a specific order, much like a cooking recipe. Each ingredient is described by
-\begin{itemize}
-\item labels - labels present in a segment has a positive impact on the segment score
-\item min. span - segments should be no shorter than this
-\item max. span - segments should be no longer than this
-\item interval - [LAUGE]
-\item span alpha - weighing of labels vs. segment length
-\item required labels - labels not present in a segment has a negative impact on the segment score
-\item forbidden labels - labels present in a segment has a negative impact on the segment score
-\end{itemize}
-Unless otherwise noted we did 2 permutations on each dataset, each with a varying span alpha, $0.5$ and $0.25$.
-%
-% Noter fra Lauge: Lad os rykke de specifikke test valg til Test afsnittet.
-%
-%
-\subsubsection{Random Labels}
-% 
-Our baseline recipe in its purest form selects random labels to feed the candidate factory, but in order to avoid idiosyncrasies we have made some minor tweaks to this selection. We will for instance not choose to have both the night and the day label in the same segment as they are by definition mutually exclusive. 
-% SPAN ALPHA?
-%
-% \subsubsection{Designer}
-% designer algo
-% We designed a recipe to be used on all three datasets. Ingredients outlined below:
-% \begin{itemize}
-% \item Overview shot, 3-5 seconds, no person in focus
-% \item Overview shot, 3-6 seconds, no person in focus
-% \item Crowd shot, 3-6 seconds, no person in focus
-% \item Crowd shot, 3-6 seconds, no person in focus
-% \item Person in focus shot, 4-8 seconds, not in a crowd
-% \item Person in focus shot, 4-8 seconds, not in a crowd
-% \item Overview shot, 3-5 seconds, no person in focus
-% \end{itemize}
-% %
-% During recipe tweaking we realized that the overview label and person in focus label often overlapped. To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our labeller).\\
-% Likewise there are typically two types of crowd shots. One has someone in focus, and the other one has not. We wanted the last type.
-% Ingredient(labels=['is_overview'], min_span=72, max_span=120, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
-% Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
-% Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
-% Ingredient(labels=['is_in_crowd'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha),
-% Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
-% Ingredient(labels=['has_person_in_focus'], min_span=96, max_span=184, required_labels=['has_person_in_focus'], forbidden_labels=['is_in_crowd'], span_alpha=span_alpha),
-% Ingredient(labels=['is_overview'], min_span=72, max_span=144, forbidden_labels=['has_person_in_focus'], span_alpha=span_alpha)
