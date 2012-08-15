@@ -187,19 +187,10 @@ It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}
 % \]
 % The parameter values are cubed (and the result normalised to the [0,1] range) in order further increase their sensitivity toward bad values. Informal experimentation shows that the power of sensitivity does not effect the outcome result in any significant way, so it has been left out as a parameter.
 %
-\section{Findings}
-%
-Due to a limited size dataset we perform a k-fold cross validation, described in section \ref{sec:kfoldxval}. The metric of success is whether a method correctly estimates the quality of a frame, in respect to the \text{gold standard}, and the parameters used in the specific configuration of that method. We investigate both the performance of various methods, and also their robustness as a measure of how sensitive they are to parameter change.\\
-For each algorithm we determine the optimal configuration of parameter(s) using k-fold cross validation, where the optimal configuration is the one that has the lowest distance score, described in section \ref{sec:ph1tweaking}. We also record some of the side-effects of each configuration such as the average length of a...\\
-Obviously, we want the resulting distance-score to be as small as possible as this signifies a good performance, but we also try to capture some of the side-effects of the specific configuration. One of the things we are interrested in knowing is how many frames long the average good video-clip is. This in itself does not tell us much, since even a very good classifier could end up with very short video-clips if the footage it was classifying is very bad. However, if several algorithms perform equally well this could work as a tie-breaker, as we in general prefer long good-quality clips since they give us more room for manoeuvre later on when we have to actually segment the footage. The variance of this length along with the median lenght is also calculated.
-%Our tests attempts to estimate several different algorithms overall ability to correctly estimate the qualities of the frames in a video and classify them as either good or bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
-%The dataset is trained using 5-fold cross validation (described in detail in the following). 
-%
-\subsection{Dataset}
+\section{Dataset}
 %
 % Most of the videos in this dataset was found on YouTube and collected as described in section \ref{sec:dataset}.\\
-HVORFOR NÆVNER VI DATASET IGEN HER?
-We can categorize the videos from YouTube as unedited video and pre-edited video where the non-edited video is the most desireable as this is presumeably raw footage.
+This section mentions details that about our dataset that is only relevant for image quality assesment. We can categorize the videos from YouTube as unedited video and pre-edited video where the non-edited video is the most desireable as this is presumeably raw footage.
 %What we generally want is raw video, but since this is by far the lesser portion of the two we use the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\
 %
 \paragraph{Unedited YouTube Videos}
@@ -229,6 +220,14 @@ We also accept some \textit{noise} in each end of the segment to complement ex. 
 \paragraph{Own recordings}
 %
 The dataset also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for parameter tuning. They are however not used in later phases.
+%
+\section{Findings}
+%
+Due to a limited size dataset we perform a k-fold cross validation, described in section \ref{sec:kfoldxval}. The metric of success is whether a method correctly estimates the quality of a frame, in respect to the \text{gold standard}, and the parameters used in the specific configuration of that method. We investigate both the performance of various methods, and also their robustness as a measure of how sensitive they are to parameter change.\\
+For each algorithm we determine the optimal configuration of parameter(s) using k-fold cross validation, where the optimal configuration is the one that has the lowest distance score, described in section \ref{sec:ph1tweaking}. We also record some of the side-effects of each configuration such as the average length of a...\\
+Obviously, we want the resulting distance-score to be as small as possible as this signifies a good performance, but we also try to capture some of the side-effects of the specific configuration. One of the things we are interrested in knowing is how many frames long the average good video-clip is. This in itself does not tell us much, since even a very good classifier could end up with very short video-clips if the footage it was classifying is very bad. However, if several algorithms perform equally well this could work as a tie-breaker, as we in general prefer long good-quality clips since they give us more room for manoeuvre later on when we have to actually segment the footage. The variance of this length along with the median lenght is also calculated.
+%Our tests attempts to estimate several different algorithms overall ability to correctly estimate the qualities of the frames in a video and classify them as either good or bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
+%The dataset is trained using 5-fold cross validation (described in detail in the following). 
 %
 \subsection{K-fold Cross Validation}\label{sec:kfoldxval}
 %
@@ -336,10 +335,11 @@ Finally, for both algorithms, we also investigate the effect of smoothing the cl
 \subsection{Results}
 % ANDERS
 Table \ref{tab:algoconfigs} shows the different algorithm configurations. \textit{Label} is the specific algorithm configurations name. \textit{Algorithm} is the specific algorithm. \textit{Smoothness Degree} is a measure of how much the algorithm result is smoothed as described in \ref{sec:classsmooth}. \textit{Comparison Method} indicates if the algorithm result is compared using Frame-by-Frame Classification as described in section \ref{sec:fbfclass}, or using a Temporal Classification, as described in \ref{sec:tempclass}, using the stated \textit{Tolerance}. \textit{Parameter} is the parameter configuration for a given algorithm.\\
-A final configuration of an algorithm is hence a smoothness degree for smoothing the resulting frame states and a set of parameters, and which method was used to compare this configuration to the gold standard.% the methods described in section \ref{sec:fbfclass} and \ref{sec:tempclass}.
+A final configuration of an algorithm is hence a smoothness degree for smoothing the resulting frame states and a set of parameters, and which method was used to tune this configuration in respect to the gold standard.\\
+Algorithm configuration and configuration is used interchangeably in the following.
 %The parameter is the average over the 5-fold cross validation. Smoothness degree describes how much the result is smoothed using triangular smoothing. The comparison method is either frame-by-frame (FFC) or temporal (TC), both described in section \ref{sec:testcases}.\\
 %
-\begin{table}
+\begin{table}[h]
   \begin{tabular}{| l | l | p{2cm} | p{2cm} | c | c | }\hline
     Label & Algorithm & Smoothness degree & Comparison method & Tolerance & Parameter(s)\\\hline
     ICSM1 & ICSM & 0 & FFC & N/A & (0.052, 0.720) \\\hline
@@ -385,9 +385,10 @@ A final configuration of an algorithm is hence a smoothness degree for smoothing
   \end{tabular}
 \caption{Algorithm configurations}
 \label{tab:algoconfigs}
-\end{table}
+\end{table}\\
 %
-In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is described in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) is described in section \ref{sec:robustness}.\\
+Table \ref{tab:algoperf} shows performance of each algorithm configuration. As the parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalizability, and a high relative standard deviation indicates a low generalizability. \textit{DS} is the distance score, describe in detail in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provided results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence again a measure of how the configuration generalize to other data. MÅSKE NOGET OM HVORFOR AT DETTE ER TILFÆLDET? \textit{AUC} is the Area Under the Curve, as described in \ref{sec:}, is only indirectly related to the specific configuration, as it is the result of all parameters tested during the tuning process. It gives an indication of how robust the algorithm performs.
+%In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is described in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) is described in section \ref{sec:robustness}.\\
 %
 \begin{table}
   %\begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
@@ -439,9 +440,10 @@ In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a me
   \end{tabular}
 \caption{Algorithm performance}
 \label{tab:algoperf}
-\end{table}
+\end{table}\\
 %
-In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecutive good frames, and a Bad Sequence Length (BSL) is the number of consecutive bad frames. Both measures is an average (over each test-set) and the relative standard deviation along with the longest GSL and BSL is also supplied in Table \ref{tab:algoseq}.
+Table \ref{tab:algoseq} shows some of the side effects of each configuration. \textit{GSL} is the Good Sequence Length which is a count of how many sequences of frame states that were classified as $1$, whereas \textit{BSL} is a count of how many sequences of frame states that were classified as $0$. A sequence is thus defined as a number of subsequent frames that share the same classification. The relative standard deviation of both GSL and BSL are computed, along with the longest GSL and BSL.
+%In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecutive good frames, and a Bad Sequence Length (BSL) is the number of consecutive bad frames. Both measures is an average (over each test-set) and the relative standard deviation along with the longest GSL and BSL is also supplied in Table \ref{tab:algoseq}.
 %
 \begin{table}
   \begin{tabular}{| l | c | c | c | c | c | c |}\hline
@@ -451,43 +453,43 @@ In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecu
     CCSM1 & 214 & 214\% & 5121 & 40 & 160\% & 607 \\\hline
     CO1 & 290 & 28\% & 11079 & 73 & 196\% & 1690 \\\hline
     SO1 & 198 & 221\% & 5105 & 40 & 157\% & 743 \\\hline
-    $\text{CSM}^{3}1$ & 264 & 326\% & 11078 & 69 & 204\% & 1691 \\\hline\hline
+    % $\text{CSM}^{3}1$ & 264 & 326\% & 11078 & 69 & 204\% & 1691 \\\hline\hline
 %
     ICSM2 & 248 & 199\% & 5115 & 47 & 152\% & 608 \\\hline
     CCSM2 &245 & 200\% & 5118 & 47 & 164\% & 739 \\\hline
     CO2 & 328 & 317\% & 11079 & 84 & 185\% & 1718 \\\hline
     SO2 & 231 & 206\% & 5115 & 47 & 170\% & 1087 \\\hline
-    $\text{CSM}^{3}2$ & 309 & 301\% & 11078 & 80 & 190\% & 1692 \\\hline\hline
+    % $\text{CSM}^{3}2$ & 309 & 301\% & 11078 & 80 & 190\% & 1692 \\\hline\hline
 %
     ICSM3 & 221 & 210\% & 5105 & 39 & 156\% & 509 \\\hline
     CCSM3 & 222 & 210\% & 5121 & 39 & 162\% & 607 \\\hline
     CO3 & 340 & 308\% & 11079 & 69 & 215\% & 1690 \\\hline
     SO3 & 209 & 214\% & 5105 & 38 & 147\% & 491 \\\hline
-    $\text{CSM}^{3}3$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline\hline
+    % $\text{CSM}^{3}3$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline\hline
 %
     ICSM4 & 229 & 209\% & 5122 & 39 & 149\% & 509 \\\hline
     CCSM4 & 225 & 213\% & 5123 & 38 & 154\% & 537 \\\hline
     CO4 & 378 & 316\% & 12080 & 71 & 217\% & 1690 \\\hline
     SO4 & 216 & 209\% & 5122 & 37 & 147\% & 482 \\\hline
-    $\text{CSM}^{3}4$ & 388 & 280\% & 12082 & 59 & 225\% & 1687 \\\hline\hline
+    % $\text{CSM}^{3}4$ & 388 & 280\% & 12082 & 59 & 225\% & 1687 \\\hline\hline
 %
     ICSM5 & 257 & 186\% & 5115 & 47 & 149\% & 608 \\\hline
     CCSM5 & 248 & 198\% & 5118 & 46 & 156\% & 739 \\\hline
     CO5 & 411 & 290\% & 11079 & 80 & 202\% & 1690 \\\hline
     SO5 & 246 & 200\% & 5115 & 45 & 143\% & 608 \\\hline
-    $\text{CSM}^{3}5$ & 364 & 280\% & 11078 & 75 & 211\% & 1692 \\\hline\hline
+    % $\text{CSM}^{3}5$ & 364 & 280\% & 11078 & 75 & 211\% & 1692 \\\hline\hline
 %
     ICSM6 & 266 & 198\% & 5122 & 45 & 144\% & 534 \\\hline
     CCSM6 & 260 & 200\% & 5129 & 45 & 142\% & 537 \\\hline
     CO6 & 431 & 298\% & 12080 & 82 & 201\% & 1690 \\\hline
     SO6 & 259 & 195\% & 5122 & 45 & 139\% & 482 \\\hline
-    $\text{CSM}^{3}6$ & 397 & 284\% & 12082 & 74 & 215\% & 1687 \\\hline\hline
+    % $\text{CSM}^{3}6$ & 397 & 284\% & 12082 & 74 & 215\% & 1687 \\\hline\hline
 %
     ICSM7 & 212 & 213\% & 5105 & 39 & 153\% & 510 \\\hline
     CCSM7 & 220 & 212\% & 5121 & 39 & 162\% & 607 \\\hline
     CO7 & 340 & 308\% & 11079 & 69 & 215\% & 1690 \\\hline
     SO7 & 208 & 214\% & 5105 & 39 & 149\% & 491 \\\hline
-    $\text{CSM}^{3}7$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline
+    % $\text{CSM}^{3}7$ & 319 & 298\% & 11078 & 66 & 223\% & 1691 \\\hline
   \end{tabular}
 \caption{Sequence data}
 \label{tab:algoseq}
@@ -495,32 +497,46 @@ In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecu
 %
 \subsection{Analysis}
 %
-Table \ref{tab:algoperf} summarizes the primary results of our test. We cannot directly compare different configurations of the various algorithms as we expect a higher tolerance for error in some configurations, either by applying a gaussian filter (as described in Section [REFERENCE]) in the comparison method or triangular smoothing (as described in Section [REFERENCE]) of the result, or both.\\
-We therefore try to identify the configuration with the best performance mainly by comparing distance scores (low is better). Secondly the generalizability of a configuration is taken into account to break ties by looking at the relative standard deviation of the parameter(s).\\
-AUC is also mentioned in the table, but as it describes how sensitive an algorithm is to parameter-change...\\
-We did not expect the CO\textit{X} and $\text{CSM}^{3}\textit{X}$ algorithms to perform very well as the first does not take camera-movement into account, and the second ???????????????????????\\
-The 7th configuration does not apply triangular smoothing, and also uses a fairly low tolerance of 12 frames, roughly translated to a margin of error of half a second in each end of a sequence, yet it still achives a distance score of $0.36$ in 3 out of 5 algorithms and a relative standard deviation around $30\%$. We use the parameter relative standard deviation to break the tie where CCSM7 comes out on top. It also has the highest AUC, and we should therefore expect it to perform well even for other choices of parameters.\\
-The performance can generally be explained by the nature of our dataset, as there simply is very few frames where contrast is an issue. The higher relative standard deviation of SO7 could be explained by it trying to overcompensate in the few cases where a frame is classified as bad because of a low contrast.
+Table \ref{tab:algoperf} summarizes the primary results of our test, where the Distance Score is the primary attribute when rating the performance of a configuration. Note that each configuration uses either the Frame-by-Frame method, or the Temporal Classification method, when comparing against the golden standard. Configurations using different comparison methods are not directly compareable as the Frame-by-Frame method generally punishes errors harder than the Temporal Classification method. Configuration labels with a postfix of 1 or 2 uses the Frame-by-Frame comparison method, and labels with a postfix of 3 to 7 uses the Temporal Classification method.\\
+The Distance Score standard deviation are all in the area of $25-35\%$ except some configurations of the Contrast Only algorithm. Both of these configurations uses the Temporal Classification method with a tolerance of 48 (the highest tested), and both has the worst score compared to other algorithms with compareable configurations.\\
+We have marked the configuration with the best performance in Table \ref{tab:algoperf} with \textbf{bold}, namely CCSM7. It has a relatively low Distance Score by $0.36$ which is better than or equal to 15 out of 28 configurations. CCSM7 uses the Temporal Classification method with a the lowest tested tolerance, 12, and a smoothness degree of 0, ie. no smoothing, which means it will be punished greatly for any errors compared to most other configurations. CCSM7 also has a relatively large AUC which indicates that the algorithm itself is fairly robust. All other configurations of this algorithm also has a large AUC, supporting this assumption.\\
+A close runners up is ICSM7 which had the same Distance Score as CCSM7. It is however not nearly as robust as CCSM7 which is due to some parameter configurations of the contrast ratio treshold produces very poor results.\\
+The SO algorithms performs almost as well as the CCSM and ICSM algorithms, which leads us to believe that the camera movement is the defining attribute when estimating image quality. We do however only have a fairly limited amount of night-shots, and we expect that this is the edge that these two algorithms has over SO.\\
+%
+WHEN SHOULD WE MENTION POSSIBLE ERRORS IN GOLD STANDARD???
+% \\
+%
+% In general we have learned from these results that an algorithm that considers atleast camera movement in a video provides a significantly better assesment of the image quality than those that do not. 
+%
+%Table \ref{tab:algoperf} summarizes the primary results of our test. We cannot directly compare different configurations of the various algorithms as we expect a higher tolerance for error in some configurations, either by applying a gaussian filter (as described in Section [REFERENCE]) in the comparison method or triangular smoothing (as described in Section [REFERENCE]) of the result, or both.\\
+%We therefore try to identify the configuration with the best performance mainly by comparing distance scores (low is better). Secondly the generalizability of a configuration is taken into account to break ties by looking at the relative standard deviation of the parameter(s).\\
+% AUC is also mentioned in the table, but as it describes how sensitive an algorithm is to parameter-change...\\
+% We did not expect the CO\textit{X} and $\text{CSM}^{3}\textit{X}$ algorithms to perform very well as the first does not take camera-movement into account, and the second ???????????????????????\\
+% The 7th configuration does not apply triangular smoothing, and also uses a fairly low tolerance of 12 frames, roughly translated to a margin of error of half a second in each end of a sequence, yet it still achives a distance score of $0.36$ in 3 out of 5 algorithms and a relative standard deviation around $30\%$. We use the parameter relative standard deviation to break the tie where CCSM7 comes out on top. It also has the highest AUC, and we should therefore expect it to perform well even for other choices of parameters.\\
+% The performance can generally be explained by the nature of our dataset, as there simply is very few frames where contrast is an issue. The higher relative standard deviation of SO7 could be explained by it trying to overcompensate in the few cases where a frame is classified as bad because of a low contrast.
 %
 \subsection{Risks and Limitations}
 % LAUGE
 In order to limit the scope of the testing and analysis phase we make some decisions which should be noted as a lot of areas related to determining the best algorithm and the optimal algorithm-parameter combination are left to be explored:\\
 \\
-All our algorithms square the \textit{contrast} and \textit{shift vector magnitude} values they come up with for each frame. The reason for this is that we want to increase their sensitivity toward bad values as compared to good ones. However, we have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation. Another important thing to remember is that we actually compute \textit{contrast} differently than Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general.\\
+All our algorithms square the \textit{contrast} and \textit{shift vector magnitude} values they come up with for each frame. The reason for this is that we want to increase their sensitivity toward bad values as compared to good ones. However, we have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation. Another important thing to remember is that we actually compute \textit{contrast} differently than Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general.\\
 \\
 When generating the cost and benefit scores we calculate the harmonic mean between the positive precision and the negative recall, as well as the positive recall and the negative precision, respectively. In our experimentation we have simply weighted the two values in each pair evenly, but it is possible that a skewed weighting in one or both of means would perform differently. It is even possible that this pair combination is not the right one for the task, although we argue that it intuitively makes sense.\\
 \\
-In our experiment with smoothing the classification suggestions generated by the algorithm, in order to remove outliers, we restrict ourselves to only testing two different degrees of smoothing. More could be learned by experimenting with this value as an additional parameter of the algorithms.\\
+JEG MENER IKKE AT DET ER EN RISIKO/BEGRÆNSNING. MAN KAN ALTID TESTE FOR FLERE PARAMETRE (DER ER I TEORIEN UENDELIGT MANGE KOMBINATION). ANALYSEN ER LAVET PÅ BAGGRUND AF DE KONFIGURATIONER VI HAR TESTET. DET ER IKKE ET SPØRGSMÅL OM AT FINDE DEN BEDSTE OVERALL, MEN DEN BEDSTE AF DEM VI TESTER UDFRA NOGLE NOGENLUNDE FORNUFTIGE PARAMETRE.\\
+In our experiment with smoothing the classification suggestions generated by the algorithm, in order to remove outliers, we restrict ourselves to only testing two different degrees of smoothing. More could be learned by experimenting with this value as an additional parameter of the algorithms. Informal testing did show little impact of a much higher degree of smoothing than the ones tested. \\
 \\
-The same can be said about the tolerance-value in the Temporal Classification test case (page ~\pageref{sec:tctestcase}). Exactly what degree of tolerance is the most reasonable is up for debate and any changes could, and probably would, change the outcome of our results.\\
+The same can be said about the tolerance-value in the Temporal Classification. Exactly what degree of tolerance is the most reasonable is up for debate and any changes could, and probably would, change the outcome of our results.\\
 \\
+MAYBE THE 0 COST/MAX BENEFIT AND VICE VERSA. IS ONLY THEORETICALLY ACHIVEABLE, IE. THERE EXISTS NO PARAMETER CONFIGURATION THAT WILL ACHIVE THIS???\\
 Also mentioned ealier, when calculating the AUC's for each algorithm we insert the points (0,0) (1,1) along with the points generated by the cost/benefit calculations in order to make sure each algorithm's curve cover the entire span of the x-axis. This has the effect of normalising the AUC around 0.5, which is useful for AUCs based on a curve that is only defined partly along the x-axis. It is however possible, that the very fact that a curve is not defined all along the x-axis is a sign of low robustness especially if the curve only is present near x = 1, that is, if the cost value is generally very high. If this is the case we risk ending up with invalid assumptions of robustness.\\
 \\
-In the \textit{ICSM} algorithm we chose to simplify our tweaking process by decreasing the precision on the second parameter, \textit{contrast}. The rationale for this is described in section~ \ref{sec:ph1multiparameter} on page ~\pageref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
+In the \textit{ICSM} algorithm we chose to simplify our tweaking process by decreasing the precision on the second parameter, \textit{contrast}. The rationale for this is described in section~ \ref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
 \\
-Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation} on page ~\pageref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section~ \ref{sec:framequalityassessmentdataset} on page ~\pageref{sec:framequalityassessmentdataset}), requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case (page ~\pageref{sec:tctestcase}), which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
+Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section~ \ref{sec:framequalityassessmentdataset}, requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
 %
 \section{Summary}
 %
-We have explored different methods for estimating the image quality in video footage. Our approach focuses on the overall level of contrast in the individual frames as well as the movement of the camera. We have constructed, and testet, a set of algoritms, which uses these two variables to compute an unsuitability score for each frame in the videos. This score is then cast into the binary range using configurable threshold values. We compare the different algorithms 
+We have explored different methods for estimating the image quality in video footage. Our approach focuses on the overall level of contrast in the individual frames as well as the movement of the camera. As our dataset includes relatively few night-shots we have not been able to confidently measure the importance of the contrast variable in the proposed methods. We do however have an indication of methods that considers contrast along with camera movement have an edge compared to methods that only looks on either of the two, where a method that considers only contrast performs poorly.
+ %We have constructed, and testet, a set of algoritms, which uses these two variables to compute an unsuitability score for each frame in the videos. This score is then cast into the binary range using configurable threshold values. We compare the different algorithms 
 %
