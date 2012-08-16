@@ -29,6 +29,21 @@ The labeling happens in two phases. First we extract different kinds of metadata
 \\
 The actual labeling is subsequently done by analysing the metadata in a collection of classifiers. Section \ref{sec:police_detection} describes a \textit{police blinker} classifier, which searches for oscillation in the blue channel from the individual frames. Section \ref{sec:overviewclassifier} describes an \textit{overview} classifier, which attempts to detect footage containing litle egomotion (camera movement). In section \ref{sec:verticaloscillationclassifier} we attempt to identify vertical oscillating movement in the optical flow, using it as an indicator for people jumping or signs being lifted into the air. Section \ref{sec:incrowd} describes an \textit{in-crowd} classifier, which uses facial- and person- detection to detect footage with several people in it. In section \label{sec:infocus} we further explore the area of people detection, by looking for footage, which focuses on a specific (assumably interesting) person for a duration of time. Finally, in section \ref{sec:daynightclassifier} we look at differentiating between day- and night- time footage by working with the different brightness and color intensity metadata we have extracted.
 %
+\subsection{Haar Cascade Classifier}\label{sec:hcc}
+%
+The Haar Cascade Classifiers (HCC)\cite{viola01,lienhart01,schmidt01,schmidt02} is an efficient tool for facial detection. It uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola\cite{viola01} achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
+%
+An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img} where $\square ABCD$ can be computed as $C-(D+B)+A$, ie. the sum of any subpart of the integral image can be quickly determined. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions/substractions.
+%
+\begin{figure}[h]
+     \centering
+     \includegraphics[width=0.75\textwidth]{img/integral_image.png}
+     \caption{Integral image}\label{fig:integral_img}
+\end{figure}\\
+%
+AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning algorithms where subsequent classifiers built are tweaked in favor of those instances misclassified by previous classifiers. The derivative algorithm is a modification of AdaBoost that constrains each returned (weak) classifier to be dependent only on a single feature, which in turn is deemed a critical feature.\\
+A method of using less complex processing to detect promising regions, and then apply the more complex processing on these regions.
+%
 \subsection{Metadata}
 %
 This section describes the different type of metadata we extract.
@@ -51,42 +66,16 @@ This particular type of metadata is extracted from the original videos (before g
 %
 \subsubsection{The presence of people}\label{sec:peopledata}
 %
-%
-%
-%
-% Lauge: Her skal ryddes op og skrives om. Haar cascade classifier tekst fra andre steder er samlet her under sin egen paragraf.
-%
-%
-%
-\paragraph{Haar cascade classifier}
-%
-With the introduction of Haar Cascade Classifiers (HCC) % Anders: Hvad er dette?
-by Viola and Jones\cite{viola01}, later improved upon by Lienhart and Maydt\cite{lienhart01} and by Schmidt and Kasinski\cite{schmidt01}\cite{schmidt02}, there exists a very efficient tool for facial detection. The HCC uses a data-structure called an integral image, an algorithm based on AdaBoost % Lauge: Reference
-that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
-\\
-We use Haar cascade classifiers \cite{viola01}\cite{lienhart01}\cite{schmidt01}\cite{schmidt02} to detect people and faces in individual frames.
-%
-%
-%
-\paragraph{Originalt inhold}
 Detecting the presence of people will help us determine if footage was recorded from within a crowd, described in detail in section \ref{sec:incrowd}, or if the footage has focus on a specific person, described in detail in section \ref{sec:infocus}, which indicates that this person is of special interest, ex. a speaker.\\
-An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img}. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions and substractions.
 %
-\begin{figure}[h]
-     \centering
-     \includegraphics[width=0.75\textwidth]{img/integral_image.png}
-     \caption{Integral image}\label{fig:integral_img}
-\end{figure}\\
-%
-AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning algorithms where subsequent classifiers built are tweaked in favor of those instances misclassified by previous classifiers. The derivative algorithm is a modification of AdaBoost that constrains each returned (weak) classifier to be dependent only on a single feature, which in turn is deemed a critical feature.\\
-A method of using less complex processing to detect promising regions, and then apply the more complex processing on these regions.\\\\
-%
-OpenCV provides a python-implementation of an already trained Haar cascade classifier, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
-By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate, and we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set).BELONGS IN RESULTS\\
-We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second). BELONGS IN RESULTS\\
+OpenCV provides a python-implementation of an already trained Haar Cascade Classifier, as described in section \ref{sec:hcc}, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
+By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate.\\
 For the sake of simplicity we have not implemented the optimization of only analayzing select frames (ex. every third frame) which we do not believe will have a significant impact on the detection rate as we interpolate the detected objects between frames already.\\
 We suggest that further optimizations involve exploiting the ready-at-hand metadata such as the general frame quality which severely impacts facial detection rates in a negative fashion.\\
 Further optimization can be achived by exploiting the temporal data. Ie. instead of analyzing the entire frame by expanding the search window incrementally, we utilize knowledge of where people were present in the previous frame. This would require a customized HCC which is a major increase in complexity compared to the other mentioned optimizations.
+%
+MOVE TO RESULTS:\\
+we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set). We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second).\\
 %
 \subsubsection{Optical Flow}\label{sec:opticalflowdata}
 %
@@ -286,11 +275,11 @@ S =
 \end{cases}
 \end{equation}
 %
-\section{Dataset}
+% \section{Dataset}
+% %
+% Here we should have a brief explanation of what videos are in our dataset.
 %
-Here we should have a brief explanation of what videos are in our dataset.
-%
-\section{Parameter tuning and performance}
+\section{Findings}
 %
 This section describes the parameter tuning of the classifiers. In general all tuning is done through emperical testing, often based on intuition. These parameters should therefore only be seen as a starting point for more extensive research. We also present some informal performance statistics.
 %
@@ -318,3 +307,7 @@ The \textit{day/night} classifier (described in section \ref{sec:daynightclassif
 It only has a single parameter, $m\in [1..10]$, which determines where to make the differentiation between the dark and bright partitions in a histogram of overall brightness in a video. We tried all 10 values and fin that $m = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
 %
 The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.
+%
+\section{Summary}
+%
+%
