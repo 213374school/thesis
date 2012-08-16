@@ -1,9 +1,11 @@
 %
 \chapter{Creating video-summaries}
 %
+In the previous chapter we computed a number of labels that allows us to group video footage into different types. In this chapter we will attempt to create video summaries based on the contextual understanding we have achieved.
+%
 \section{Method}
 %
-In the previous chapter we computed a number of labels that helps us identify the contextuality of a video. In this chapter we will attempt to create a video based on a recipe where each ingredient expresses a desire of how each scene should be described.
+In order to utilise the labeling of the different footage we need be able to define a query, which describes the struture of the video summary we would like to create.
 %
 \subsection{Recipe}
 %
@@ -12,11 +14,10 @@ In the previous chapter we computed a number of labels that helps us identify th
 A recipe is one or more ingredients in a specific order, much like a cooking recipe. Each ingredient is described by
 %
 \begin{itemize}
-\item labels - labels present in a segment has a positive impact on the segment score
+\item requested labels - labels present in a segment has a positive impact on the segment score
 \item min. span - segments should be no shorter than this
 \item max. span - segments should be no longer than this
-\item interval - [LAUGE]
-\item span alpha - weighing of labels vs. segment length
+\item $\alpha$ span - weighing of labels vs. segment length
 \item required labels - labels not present in a segment has a negative impact on the segment score
 \item forbidden labels - labels present in a segment has a negative impact on the segment score
 \end{itemize}
