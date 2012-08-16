@@ -117,17 +117,13 @@ class Data:
 		def f(x):
 			return x
 		if len(filename.split('.')) == 1:
-			# raise Exception('filename "%s" must include extension' % filename)
 			def f(x):
 				return [z.split('.')[0] for z in x]
 
 		for dataset in ['cop15', 'acta_aarhus', 'acta_cph']:
 			if filename in f(Data.__get_dataset_filenames(dataset)):
 				return dataset
-		# missing some filenames it seems...
 		raise Exception('no matching dataset found for %s' % filename)
-		# print 'no matching dataset found for %s' % filename
-		# return 'N/A'
 
 	def get_video_with_filename(self, filename):
 
@@ -148,35 +144,37 @@ class Data:
 					filenames.append(filename)
 					break
 		if 'cop15' in datasets:
-			filenames += Data.__get_dataset_filenames('cop15') #['2f7a25e921.m4v', '77baa022f1.m4v', 'dd7d1998f8.avi']
+			filenames += Data.__get_dataset_filenames('cop15')
 		if 'acta_aarhus' in datasets:
-			filenames += Data.__get_dataset_filenames('acta_aarhus') #['2806c14722.avi']
+			filenames += Data.__get_dataset_filenames('acta_aarhus')
 		if 'acta_cph' in datasets:
-			filenames += Data.__get_dataset_filenames('acta_cph') #['48b62f11dc.avi', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+			filenames += Data.__get_dataset_filenames('acta_cph')
 		return filenames
 
-	# get: total random, label random, edited, recipe
-
 	def __get_filenames_with_total_random_recipe(self):
-		return ['dd7d1998f8.avi', '2806c14722.avi', '48b62f11dc.avi']
+		# return ['dd7d1998f8.avi', '2806c14722.avi', '48b62f11dc.avi']
+		return ['dd7d1998f8', '2806c14722', '48b62f11dc']
 
 	def get_ytid_with_total_random_recipe(self):
 		return self.__filenames_to_ytids(self.__get_filenames_with_total_random_recipe())
 
 	def __get_filenames_with_random_label_recipe(self):
-		return ['3b95a67d38.avi', '7babfd31c4.avi', '80a451d4c2.avi', '90fe6adcd2.avi', '143a413f62.avi', 'd370ccc56c.avi']
+		# return ['3b95a67d38.avi', '7babfd31c4.avi', '80a451d4c2.avi', '90fe6adcd2.avi', '143a413f62.avi', 'd370ccc56c.avi']
+		return ['3b95a67d38', '7babfd31c4', '80a451d4c2', '90fe6adcd2', '143a413f62', 'd370ccc56c']
 
 	def get_ytid_with_random_label_recipe(self):
 		return self.__filenames_to_ytids(self.__get_filenames_with_random_label_recipe())
 
 	def __get_filenames_human_edited(self):
-		return ['2f7a25e921.m4v', '77baa022f1.m4v', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+		# return ['2f7a25e921.m4v', '77baa022f1.m4v', '57d23634ac.m4v', '3f79a5f7f1.m4v', 'c23777fd98.m4v', '14e177dd42.m4v']
+		return ['2f7a25e921', '77baa022f1', '57d23634ac', '3f79a5f7f1', 'c23777fd98', '14e177dd42']
 
 	def get_ytid_human_edited(self):
 		return self.__filenames_to_ytids(self.__get_filenames_human_edited())
 
 	def __get_filenames_with_designer_recipe(self):
-		return ['98b1d02056.avi', '913eef2ed2.avi', '625838c2b1.avi', '9891596ecf.avi', 'a8d1de1e81.avi', 'bf7dc9f5ca.avi']
+		# return ['98b1d02056.avi', '913eef2ed2.avi', '625838c2b1.avi', '9891596ecf.avi', 'a8d1de1e81.avi', 'bf7dc9f5ca.avi']
+		return ['98b1d02056', '913eef2ed2', '625838c2b1', '9891596ecf', 'a8d1de1e81', 'bf7dc9f5ca']
 
 	def get_ytid_with_designer_recipe(self):
 		return self.__filenames_to_ytids(self.__get_filenames_with_designer_recipe())
@@ -200,9 +198,10 @@ class Data:
 
 	def _get_recipe_type(self, filename):
 
-		for t, m in [('total random', self.__is_total_random__recipe), ('random label', self.__is_random_label_recipe), ('designer', self.__is_designer__recipe), ('human edited', self.__is_human_edited)]:
+		for t, m in [('Random', self.__is_total_random__recipe), ('Random Label', self.__is_random_label_recipe), ('Designer', self.__is_designer__recipe), ('Human Edited', self.__is_human_edited)]:
 			if m(filename):
 				return t
+		raise Exception('no recipe found for %s' % filename)
 
 	def __get_filenames_with_span_alpha(self, span_alpha):
 
@@ -287,7 +286,14 @@ class Data:
 				# note = note.encode('utf-8')
 				ytid = video.get('ytid')
 				filename = self.__ytid_to_filename(ytid)
+				# print ytid, '->', filename
 				dataset = Data.__get_dataset_from_filename(filename)
+				if dataset == 'acta_aarhus':
+					dataset = 'ACTA Aarhus'
+				elif dataset == 'acta_cph':
+					dataset = 'ACTA Cph.'
+				elif dataset == 'cop15':
+					dataset = 'COP15'
 				recipe_type = self._get_recipe_type(filename)
 				out.append(dict(
 					ytid = ytid,
@@ -296,6 +302,27 @@ class Data:
 					note = note,
 					))
 		return out
+
+	def get_notes(self):
+		# get notes as a latex matrix
+
+		notes = self._get_notes()
+		# used by matrix2latex
+		# header row
+		hr = ['dataset', 'recipe', 'note']
+		# format column
+		fc = ['%s', '%s', '%s']
+		alignment = 'l l p{7.5cm}'
+
+		m = []
+		for note in notes:
+			txt = note.get('note')
+			txt = unicode(txt).encode('utf-8').replace('æ', '\\ae ').replace('å','\\aa ').replace('ø','\\o ')
+			m.append([note.get('dataset'), note.get('recipe_type'), txt])
+		caption = 'Comments to videos in questionnaire'
+		label = 'tab:notes'
+		t = matrix2latex(m, 'notes', headerRow=hr, caption=caption, label=label, formatColumn=fc, alignment=alignment)			
+		return t
 
 def friedman(ys):
 
@@ -539,8 +566,9 @@ def main():
 	# note #
 	#################
 
-	notes = data._get_notes()
-	print json.dumps(notes, sort_keys=True, indent=4)
+	notes = data.get_notes()
+	print notes
+	# print json.dumps(notes, sort_keys=True, indent=4)
 
 if __name__ == '__main__':
 	main()

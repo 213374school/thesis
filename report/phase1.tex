@@ -26,7 +26,7 @@ We have adopted this method and details are as follows. Each frame is initially 
 %The authors suggests a shift of each subsequent frame in four directions of 32 pixels, halving the number of pixels in each iteration to 1 pixel. 
 For each shift the Root-Mean-Square (\textit{RMS}) of the difference between the frame and the previous unchanged frame is calculated, and the shift with the lowest \textit{RMS} is the basis for the following iteration. %Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
 %The algorithm below illustrates how the shift vector for two subsequent frames is computed.
-PASSER DENNE FORKLARING MED NEDENSTÅENDE ALGORITME???
+\\PASSER DENNE FORKLARING MED NEDENSTÅENDE ALGORITME??? HVIS JA SKROTTER VI ALGORITMEN OG LADER TEKSTEN STÅ.
 %
 \begin{verbatim}
      f  <- read frame
@@ -46,7 +46,7 @@ PASSER DENNE FORKLARING MED NEDENSTÅENDE ALGORITME???
 \end{verbatim}
 %
 EVT DROP NEDENSTÅENDE? DET VIRKER LIDT LIGEGYLDIGT\\
-A $640\times360$ pixels frame and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is here highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction.\\
+A $640\times360$ pixels frame and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is here highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction.\\\\
 %
 The \textit{shift vector magnitude ratio}, $S$, is defined as: %as the \textit{shift vector magnitude} normalised into the [0,1] range:
 \[
@@ -99,11 +99,11 @@ s =
 0 & \text{ otherwise }
 \end{cases},
 \]
-unless otherwise noted. Where $s=1$ is a positive classification, ie. the frame is FUCKING PRETTY!!
+unless otherwise noted. Where $s=1$ is a positive classification, and $s=0$ is a negative classification.
 % where $0$ is a less desireable frame state, and a frame state of $1$ is desireable.
-\subsection{Algorithms????}
+\subsection{Algorithms - RENAME?}
 %
-\subsubsection{Contrast Only RENAME}
+\subsubsection{Contrast Only RENAME?}
 %
 %This method ignores shift magnitude ratio, $S$, 
 The frame state, $v$, is defined as $v=\frac{C}{\tau}$, %, and the frame state, $s$, is classified as follows:
@@ -117,7 +117,7 @@ The frame state, $v$, is defined as $v=\frac{C}{\tau}$, %, and the frame state, 
 %
 where $\tau$ is some treshold.
 %
-\subsubsection{Shift Magnitude Only RENAME}
+\subsubsection{Shift Magnitude Only RENAME?}
 %
 The frame state, $v$, is defined as $v=\frac{S}{\tau}$, %, and the frame state, $s$, is classified as follows:
 %This method ignores the contrast ratio, $C$, and marks the frame state, $s$, as follows
@@ -132,7 +132,7 @@ The frame state, $v$, is defined as $v=\frac{S}{\tau}$, %, and the frame state, 
 where $\tau$ is some treshold.
 %This algorithm only considers how much a frame was shifted in order to attempt to match it to the frame before it. That is, it only looks at how much the images are moving or shaking. Just like with the CO algorithm we simply measure if the \textit{shift vector magnitude} is beyond the configured limit, and mark the frame good or bad accordingly.
 %
-\subsubsection{Independent Contrast and Shift Magnitude RENAME}
+\subsubsection{Independent Contrast and Shift Magnitude RENAME?}
 %
 %This algorithm takes both parameters into consideration and looks at if any of the two exceeds a given threshold. 
 This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is simmilar to the approach taken by Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415}. The frame state, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$,%, and the frame state, $s$, is classified as follows:
@@ -147,10 +147,10 @@ This methods ignores the cumulative effect of the contrast and shift vector magn
 % \]
 where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, $\tau_1$ and $\tau_2$ are some tresholds.
 %where \text{c} and \textit{s} are the \textit{contrast-} and \textit{shift vector magnitude}-ratios respectively and $c_{lim}$ and $s_{lim}$ are the limits defined by our configuration. 
-The function effectively normalises the effect of the tresholds??????????????.% so that the two values can be compared by the \textit{MAX} statement. 
+The function effectively normalises the effect of the tresholds LAUGE UDDYBER.% so that the two values can be compared by the \textit{MAX} statement. 
 %If $S(c,s) > 1$, one of the two parameters is beyond its limit and the frame is marked as bad.\\\\
 %
-\subsubsection{Cummulative Contrast and Shift Magnitude RENAME}
+\subsubsection{Cummulative Contrast and Shift Magnitude RENAME?}
 % ANDERS
 This method investigates the cumulative effect of both ratios, but we still wish that either one of them can mark a state on its own, as explained below. The frame state is marked as follows:\\
 % With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.
@@ -176,6 +176,7 @@ ie. if $S$ is greater than the treshold $\tau_{1}$ then $\alpha S + \beta C$ mus
 \]
 %
 It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}{\tau_{2}}$.
+\\NOGEN DER FATTER DETTE? ER VORES VINDERALGORITE....
 %
 %Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
 %
@@ -372,7 +373,7 @@ Algorithm configuration and configuration is used interchangeably in the followi
     SO4 & SO & 0 & TC & 48 & 0.060 \\\hline
     SO5 & SO & 12 & TC & 24 & 0.056 \\\hline
     SO6 & SO & 12 & TC & 48 & 0.060 \\\hline
-    SO7 & SO & 0 & TC & 12 & 0.054 \\\hline\hline
+    SO7 & SO & 0 & TC & 12 & 0.054 \\\hline%\hline
 %
     % $\text{CSM}^{3}1$ & $\text{CSM}^{3}$  & 0 & FFC & N/A & 0.366 \\\hline
     % $\text{CSM}^{3}2$ &$\text{CSM}^{3}$ & 12 & FFC & N/A & 0.366 \\\hline
