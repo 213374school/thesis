@@ -14,10 +14,10 @@ There are many ways to extract context from images, sound and video. Some focus 
 Hanjalic, A. \cite{citeulike:405480} describes a way to identify regions of high levels of excitement in sports videos based on a manually selected set of features. These features can be both visual (e.g. movement in an image or change of camera position) or audial (based on the energy contained in the audio track).\\
 Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow analyses changes in the intensity pattern in images. In many cases this indirectly indicate changes in the 3D scene caused by moving objects or a change of view-point. [REFS] describes ways to identify certain types of actions occuring within videos, such as violent behaviour and [REF] looks at general crowd movement in public places.\\
 % Lauge: Der skal skrives lidt mere til disse artikler.
-Reisman et. al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds of pedestrians from a moving vehicle by detecting inward moving optical flow. I.e. flow which is highly likely to be caused by moving objects and not a change of view-point.\\
+Reisman et al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds of pedestrians from a moving vehicle by detecting inward moving optical flow. I.e. flow which is highly likely to be caused by moving objects and not a change of view-point.\\
 Arandjelović \cite{Arandjelovic08crowddetection} attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure, namely that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will contain repetative structures.\\
 % Lauge: Flere crowd detection artikler?
-Zhong et. al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream. The entire stream is divided into overlapping 4 second segments from which an overall movement pattern is established. Individual segments that differ too much from this patter are considered unusual.\\
+Zhong et al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream. The entire stream is divided into overlapping 4 second segments from which an overall movement pattern is established. Individual segments that differ too much from this patter are considered unusual.\\
 % Lauge: Day/Night article her skal uddybes og omskrives:
 In [REF] the authors describe how to classify still images through a hierachy of Support Vector Machines, including day/night classification.\\
 % Lauge: Jeg har rykket Haar Cascade classifier ned i sit eget afsnit under Method, men måske skal vi lige have en enkelt linje om det her
@@ -85,7 +85,7 @@ For in-frame event extraction we use optical flow \cite{Bouguet2000}.
 %
 % Lauge: Her skal skrives noget om hvordan optical flow (Lucas Kanade, artiklen ovenfor) fungerer
 %
-Unfortunately, most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. Although Reisman et. al. \cite{CrowdDetectionInVideoSequences} \textit{do} work with images from a camera fixed on a moving vehicle, their appraoch is still not applicable to our scenario, since our videos are recorded mostly by handheld devices, whose movement are a lot less predictable.\\
+Unfortunately, most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. Although Reisman et al. \cite{CrowdDetectionInVideoSequences} \textit{do} work with images from a camera fixed on a moving vehicle, their appraoch is still not applicable to our scenario, since our videos are recorded mostly by handheld devices, whose movement are a lot less predictable.\\
 %
 \paragraph{Optical Flow - Hvad gør vi?}
 %
@@ -281,25 +281,59 @@ S =
 %
 \section{Findings}
 %
-This section describes the parameter tuning of the classifiers. In general all tuning is done through emperical testing, often based on intuition. These parameters should therefore only be seen as a starting point for more extensive research. We also present some informal performance statistics.
+This section describes the parameter tuning of the classifiers along with some informal performance statistics. In general all tuning is done through emperical testing. These parameters should therefore only be seen as a starting point for more extensive research. Unless otherwise noted, tuning is done on a small subset of the dataset. The entire dataset consists of 131617 frames ($\sim$ 90 minutes) of footage. For all, but the \textit{day/night} classifier, performance is meassured only in true positives/false positives. We derive the results from manual observation of the classified segments, where each classification is determined to be either correct or wrong.
 %
-\subsection{Police Blinker Lights classifier}
+\subsection{Police Blinker classifier}
+%
+...\\
+\\
+We meassure performance based on how many of the classified segments contain police blinkers or actually has police personal present in the footage. We include the latter scenario because the light from police blinkers off-screen may be detectable in the blue color channel, even if it is not visible to the human eye.\\
+Out of the total $\sim$ 90 minutes of footage 699 frames $\sim$ 30 seconds are classified positive. Of this $\sim$ 65\% are what we consider \textit{true positives}. % Lidt her om false positives. Hvad er grunden til dem?
+%
 \subsection{Person in Focus classifier}
+%
+..\\
+\\
+We meassure performance based on how many of the classified segments has a specific person in focus. Segments with several people or crowds are considered incorrectly classified.\\
+Almost 21 minutes of the entire dataset is classified as containing a person in focus. Hereof we consider $\sim$ 90\% to be \textit{true positives}.
+%
 \subsection{Overview classifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
 The classifier has three thresholds, $s$, $t$ and $u$. $s$ is the maximum internal movement allowed in an area. $t$ is the maximum number of areas, which are allowed to break this limit, and $u$ is the maximum allowed egomotion for the entire frame.\\
 The parameter tuning was done a small subset of the dataset, consisting of a handful of videos. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
-Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.
+Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.\\
+\\
+It is difficult to exactly define what an \textit{overview} clip is. These are the charactaristics we look after when determining performance:
+%
+\begin{itemize}
+	\item \textbf{Detachment from events}: The camera is not affected by the events being filmed. The camera is not affecting the events.
+	\item \textbf{Scene depiction}: The footage shows the scene itself, not specific events in the scene. For this reason we do not accept footage of persons in focus.
+	\item \textbf{Quality of footage}: The footage actually shows something. Footage depicting the sky or a close up shot of someones back, is not accepted.
+\end{itemize}
+%
+As a rule of thumb, we consider segments fulfulling these requirements \textit{true positives}. In total $\sim$ 22 minutes are classified as being . Of these $\sim$ 43\% are considered correct. When reviewing the segments we clearly see that a lot of the \textit{false positives} are caused by clips with a \textit{person in focus}. This is a clear indication that our attempt to mutually exclude the two labels is failing.
 %
 \subsection{Vertical Oscillation classifier}
 %
 The \textit{vertical oscillation} classifier (described in section \ref{sec:verticaloscillationclassifier}) analyses the internal movement in the frames.\\
 It has three thresholds. $v$ defines the area over which the standard deviation in vertical movement is calculated. $s$ defines the minimum level of variance accepted as vertical oscillation. $t$ defines the number of areas in the frame in which vertical oscillation must occur.\\
 The parameter tuning is done on on a small subset of the dataset (3-4 videos). For the variance coverage we set $v = 12 \text{ frames}$, representing half a second of footage, enough for someone to jump or make a gesticulation. The minimum amount of variance required is set to $s = 5 \text{ pixels}$, which, over 12 frames, will require significant vertical oscillation in order to be achieved. Because vertical oscillation only is required in a small part of the frame in order to be clearly visible, we set $t = 2 \text{ areas}$.\\
-As with the \textit{overview} classifier, we smooth the metadata with a trinagle width of 120 frames.
+As with the \textit{overview} classifier, we smooth the metadata with a trinagle width of 120 frames.\\
+\\
+When analysing the performance of the \textit{vertical oscillation} classifier, segments depicting objects being moved up and down are considered \textit{true positives}. In total $\sim$ 14\% of the 8 minutes of the positively classified footage fulfills this requirement. A review show that the vast majority of \textit{false positives} are caused by unsteady camera motion, which we fail to compensate for. Groups of people walking also trigger a lot of \textit{false positives}, which suggest an over-sensitivity to vertical movement.
+%
+% Til analyse: A pre-limmenary image quality assesment might help in lowering the amount of \textit{false positives}.
 %
 \subsection{In-Crowd classifier}
+%
+...\\
+\\
+We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly 14\% of the $\sim$ 31 minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus.
+%
+% Til analyse: In hindsight we should have expected the \textit{person in focus}-issue to be a problem.
+%
+% Til phase 4: Due to the \textit{person in focus}-issue with in-crowd shot we attempt to do correction by forbidding the former label in the latter shots :P
 %
 \subsection{Day \& Night classifier}
 %
@@ -308,6 +342,9 @@ It only has a single parameter, $m\in [1..10]$, which determines where to make t
 %
 The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.
 %
-\section{Summary}
+\subsection{Analysis}
 %
+\subsection{Risks and Limitations}
+%
+\section{Summary}
 %

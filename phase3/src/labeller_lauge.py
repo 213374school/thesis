@@ -118,6 +118,7 @@ def isDayLabeller(ytid):
 
 	# Make sure both have same length
 	length = min(len(brightness), len(blueness))
+	#print length
 	brightness = brightness[0:length]
 	blueness = blueness[0:length]
 
@@ -127,14 +128,14 @@ def isDayLabeller(ytid):
 	brightnessHist = [float(h) / sum(brightnessHist) for h in brightnessHist]
 	bluenessHist = [float(h) / sum(bluenessHist) for h in bluenessHist]
 
-	print max(brightness)
+	#print max(brightness)
 	if min(brightness) > 0:
 		corrolation = (np.array(np.float32(blueness))/np.array(brightness)) - 1
 	else:
 		corrolation = (np.array(np.float32(blueness) + 1)/(np.array(brightness) + 1)) - 1
 
-	print np.mean(corrolation)
-	print brightnessHist
+	#print np.mean(corrolation)
+	#print brightnessHist
 
 	if np.mean(corrolation) > 0 or sum(brightnessHist[0:3]) < sum(brightnessHist[3:]):
 		return [(0,len(brightness))]
