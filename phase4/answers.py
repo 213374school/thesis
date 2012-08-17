@@ -72,6 +72,37 @@ def showNotesForAnswers(video_answers):
 			print 'f: %s, s: %s :: %s' % (filename, session, note)
 
 
+def showUserStatsForAnswers(video_answers):
+
+	number_of_answers = len(video_answers)
+	sessions = [va.get('session_key') for va in video_answers]
+	notes = [va.get('note') for va in video_answers]
+	locales = [va.get('locale') for va in video_answers]
+	ytids = [va.get('ytid') for va in video_answers]
+
+	print '\nNumber of answers: %d' % number_of_answers
+	print 'Number of sessions: %d' % len(set(sessions))
+
+	answers_in_sessions = [sessions.count(key) for key in set(sessions)]
+	print 'Avr. # answers per session: %.2f' % np.mean(answers_in_sessions)
+	print 'Median # answers per session: %.2f' % np.median(answers_in_sessions)
+	print 'Max # answers per session: %.2f' % max(answers_in_sessions)
+	print 'Min # answers per session: %.2f' % min(answers_in_sessions)
+
+	answers_for_videos = [ytids.count(key) for key in set(ytids)]
+	print 'Avr. # answers per video: %.2f' % np.mean(answers_for_videos)
+	print 'Median # answers per video: %.2f' % np.median(answers_for_videos)
+	print 'Max # answers per video: %.2f' % max(answers_for_videos)
+	print 'Min # answers per video: %.2f' % min(answers_for_videos)
+
+
+
+	print 'Number of notes: %d (%.2f%%)' % (len(set(notes)), float(len(set(notes))) / number_of_answers * 100)
+	print 'Answers in danish: %d (%.2f%%)' % (locales.count('da'), locales.count('da')/ float(number_of_answers) * 100)
+	print 'Answers in english: %d (%.2f%%)' % (locales.count('en'), locales.count('en')/ float(number_of_answers) * 100)
+
+
+
 
 def trimAnswersToLocale(video_answers, locale):
 
@@ -120,7 +151,8 @@ def main(argv=None):
 	print 'NUMBER OF VIDEO-WATCHES: %d' % len(video_answers)
 
 	#showNotesForAnswers(video_answers)
-	showScoresForAnswers(video_answers)
+	#showScoresForAnswers(video_answers)
+	showUserStatsForAnswers(video_answers)
 
 if __name__ == '__main__': 
 	main()
