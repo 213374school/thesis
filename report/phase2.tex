@@ -112,11 +112,15 @@ Some of the resulting vectors are considered invalid if we are unable to track t
 v' = v - E
 \end{equation}
 Let $V'$ describe the set of all isolated movement vectors $v'$. $V'$ then describes the movement of objects within the frames.\\
-Each vector $v' \in V'$ describes the movement of one particular point in the original grid. By looking at the different directions of flow we may be able to say something about what is going on in the video. We simplify the data dividing the image up into nine segments as shown in figure [FIGURE REF]. We calculate the mean of the movement vectors in each group, seperately, and use these nine new vectors to describe the overall flow in different parts of the frame.
+Each vector $v' \in V'$ describes the movement of one particular point in the original grid. By looking at the different directions of flow we may be able to say something about what is going on in the video. To simplify the data we divide the optical flow vectors up into nine segments as shown in figure \ref{fig:opticalflow}. We calculate the mean of the movement vectors in each group, seperately, and use these nine new vectors to describe the overall flow in different parts of the frame.
 %
 % Lauge: RISK - This model may be too simple, for good results
 %
-[FIGURE OF BOXES AND GRID]
+\begin{figure}
+     \centering
+     \includegraphics[width=0.75\textwidth]{img/optical_flow.png}
+     \caption{Example of optical flow vectors in a frame. The red arrows shows the overall flow within a segment of the frame}\label{fig:opticalflow}
+\end{figure}
 %
 The \textit{optical flow} metadata consist of sets of these nine vectors, calculated for each frame in the video. It is used in the \textit{vertical oscillation} classifier described in secion \ref{sec:verticaloscillationclassifier}.
 %
