@@ -7,9 +7,9 @@ Due to the subjective nature of estimating the overall quality of our video summ
 %
 Our test environment is a website showing a collection of generated videos, hosted on YouTube. Visitors are shown one video at a time, and are presented with a questionnaraire after the video is done playing.
 %
-\subsubsection{Questionnaire}
+\subsubsection{Questionnaire}\label{sec:questionnaire}
 %
-% reverse engineer questions (find lit. on how to write a questionnaire)
+% TODO: reverse engineer questions (find lit. on how to write a questionnaire) - may shoot ourselves in the foot :D
 %
 The questionnaire for each video consists of four statements to which the user can \textit{disagree}, \textit{somewhat disagree}, \textit{somewhat agree}, \textit{agree} or declare that she \textit{does not know}. In an attempt to discourage the user from selecting the latter option it is shown last. Based on feedback from an initial, single-user test run we also added and introduction page that explains the purpose of the test and shows the available statements and options. The description is also present throughout the test. Part of the website is shown in Figure \ref{fig:questdump}.\\
 %
@@ -38,10 +38,13 @@ To increase the availability of our test environment everything is localised int
 The test is designed so that the test user can see as few or as many videos as she wants. A circular queue of videos is shared between all users, meaning that a new user will start at the video following the one that was last rated. Answers are stored after each succesful rating.\\
 The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\\\
 %
-The test website can be found at\\
-http://thesis.fmitcar.appspot.com/thesis/start/\\
-% KIM: + figurer som viser screendump af website
-
+The test-site can be found at: http://thesis.fmitcar.appspot.com/thesis/start/ and a screendump of this is shown in Figure \ref{fig:website}
+%
+\begin{figure}
+     \centering
+     \includegraphics[width=1.0\textwidth]{img/website.png}
+     \caption{Example of test-site}\label{fig:website}
+\end{figure}
 %
 \subsection{Test videos}
 %
@@ -71,8 +74,9 @@ The \textit{designer} video summaries are based on our own recipe. The ingredien
 \item Overview shot, 3-5 seconds, no person in focus
 \end{enumerate}
 %
-During recipe tuning we realized that the overview label and person in focus label often overlapped. Although the two labels are mutually exclusive in a single
+During recipe tuning we realized that the overview label and person in focus label often overlapped. Although the two labels are mutually exclusive in a single 
 % KIM: frame? segment?
+% ANDERS: jeg fatter heller ikke en hvede af det her? hvad prøver vi at sige?
 , a segment containing both can still be generated if its score is sufficiently big (see section [SEC:REF til Segment Score]). To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our classifiers).\\
 Likewise there are typically two types of crowd shots. One, which has someone in focus, and the other one, which has not. We wanted the latter type.
 %
@@ -80,7 +84,7 @@ Likewise there are typically two types of crowd shots. One, which has someone in
 %
 We used human edited video summaries as a control sample. These videos are taken from some of the orginal videos, which we found on Youtube and later split up. Therefore they contain the same footage as is available to the \textit{random-}, \textit{random label-}, and \textit{designer-} aggregators. This should ensure that they do not look too different. We expect these to perform as well as the designer recipies or better.
 %
-\subsubsection{Other aspects}
+\subsubsection{Other aspects}\label{sec:otheraspects}
 %
 % KIM: hvorfor kun teste a=0.25 og a=0.50? og hvad svarer værdien til? argumenter for valget.
 On top of comparing the quality of the different types of videos described above, we also investigate the result of using different $\alpha$-span values to regulate the weighting between label- and timespan- fulfilment. Different values should affect both the length of the individual video clips, and the total length of the video summary.\\
@@ -125,17 +129,14 @@ We start by looking at an overview of the data we gathered, and then go into det
 %
 \subsubsection{Overview over the feedback}
 %
-% KIM: fin ide!
-At the time of writing, our test has been online for around 4 weeks. In that time 160 videos have been observed and rated over 25 sessions.\\
+At the time of writing, our test has been online for around 4 weeks. In that time 160 videos have been observed and rated over 25 sessions. HVAD ER EN SESSION?\\
 The average number of answers per session is 6.4, with a median of 5.0. The shortest session contains 1 answer and the longest contain 25\\
-On top of the answers required for each video, we also received 11 notes from the test users.\\
+In addition to the answers required for each video, we also received 11 notes from the test users. REFERENCE TIL HVOR DE KAN SES (HAR LAVET TABEL)\\
 108 (67.5\%) are answers from the danish version of the test. 52 (32.5\%) is from the enlish version. Each videos in the test is rated 7 or 8 times.
 %
 \subsubsection{Histograms}\label{sec:histograms}
 %
-% ANDERS
-Histograms shows the distribution of data, and is a visual tool to aid in determining if data follows a specific probability distribution. There are 5 bins in the histograms, where each bin corresponds to a specific answer to our questionnaire. Each bin is thus, from left to right, Totally Disagree (TD), Somewhat Disagree (SD), Don't Know (DK), Somewhat Agree (SA), Totally Agree (TA). The answers are divided into groups based on how they where created, as describe din section \ref{test videos}.
-% \newpage
+Histograms shows the distribution of data, and is a visual tool to aid in determining if data follows a specific probability distribution. There are 5 bins in the histograms, where each bin corresponds to a specific answer to our questionnaire. Each bin is thus, from left to right, Totally Disagree (TD), Somewhat Disagree (SD), Don't Know (DK), Somewhat Agree (SA), Totally Agree (TA). The answers are divided into groups based on how they where created, as described in section \ref{sec:otheraspects}.
 %
 \begin{figure}[!ht]
      \centering
@@ -148,7 +149,6 @@ Histograms shows the distribution of data, and is a visual tool to aid in determ
      \includegraphics[width=0.7\textwidth]{img/labelrandom_barplot.png}
      \caption{Histogram of answers to videos created using the random label recipe}\label{fig:hist_labelrandom}
 \end{figure}
-% \newpage
 %
 \begin{figure}[!ht]
      \centering
@@ -162,14 +162,20 @@ Histograms shows the distribution of data, and is a visual tool to aid in determ
      \caption{Histogram of answers to videos that are edited by a human}\label{fig:hist_human}
 \end{figure}
 %
-\subsubsection{Friedman Test}
+\subsubsection{Friedman Test}\label{sec:friedman}
 %
 The Friedman rank sum test
 % KIM: reference
- is a non-parametric statistical test, and is used to detect differences in methods in multiple tests. In our case we have multiple methods as described in section \ref{sec:}, and each test participant can be viewed as a seperate test. We test against the null-hypothesis which in a general form is that there is no significant measureable difference in the methods applied to generate a video.\\
- % KIM: skriv specific null-hypotese (til hver tabel)
+ is a non-parametric statistical test, and is used to detect differences in methods in multiple tests. In our case we have multiple methods, datasets, and parameters, and each test participant can be viewed as a seperate test.\\
+ We test against the null-hypotheses stated as follows: 
+ %which in a general form is that there is no significant measureable difference in the methods applied to generate a video. We test for differences in recipies, datasets and $\alpha-$span values, where each null-hypothesis is as follows:
+ \begin{itemize}
+ \item There is no significant measureable difference in the methods used to generate a video
+ \item There is no significant measureable difference in the dataset used to generate a video
+ \item There is no significant measureable difference in the $\alpha-$span parameter used to generate a video
+ \end{itemize}
 %
-The histograms in section \ref{sec:histograms} shows us that the data does not follow any specific distribution, which forces us to deploy a non-parametric statistical test. The disadvantage of employing a non-parametric test is that it requires are larger sample size to draw conclusions with the same degree of confidence as a parametric test.\\
+The histograms in section \ref{sec:histograms} shows us that the data does not follow any specific distribution, which forces us to deploy a non-parametric statistical test. The disadvantage of employing a non-parametric test is that it requires a larger sample size to draw conclusions with the same degree of confidence as a parametric test.\\
 %
 The values related to each answer are also not compareable (there is no clear numerical interpretation), ie. \textit{Totally Disagree} $(-2)$ is not twice as bad as \textit{Somewhat Disagree} $(-1)$, but \textit{Totally disagree} is ranked lower than \textit{Somewhat disagree}. The Friedman test ranks all answers, where answers with equal values receive the same rank, and then sums occurences of each rank.\\
 %
@@ -180,7 +186,7 @@ Results of our Friedman test can be found in Tables \ref{tab:fried_alpha}, \ref{
 \input{matrix2latex/alpha-span}
 %
 \\ %newline after input table
-Table \ref{tab:fried_recip} shows the result from videos generated by the each method, Table \ref{tab:fried_dataset} shows the results from videos partitioned by which dataset a given video is generated from, and Table \ref{tab:fried_alpha} shows the effect of different $\alpha$-span values (described in section \ref{sec:})
+Table \ref{tab:fried_recip} shows the result from videos generated by the each method, Table \ref{tab:fried_dataset} shows the results from videos partitioned by which dataset a given video is generated from, and Table \ref{tab:fried_alpha} shows the effect of different $\alpha$-span values (described in section \ref{sec:recipe})
 %
 \subsubsection{Comments}\label{sec:comments}
 %
@@ -190,14 +196,12 @@ Table \ref{tab:notes} show some of the comments we recieved on each video. We ha
 %
 \subsection{Analysis}
 %
-% KIM: husk læseren på hvilke metoder hører til hvilke figurer
-Figure \ref{fig:hist_random} and \ref{fig:hist_human} shows that answers are unevenly distributed with a skew to the right, ie. test participants generally agrees with the statements. Figure \ref{fig:hist_labelrandom} shows that answers are somewhat evenly distributed, not counting the Don't Know answer. Figure \ref{fig:hist_design} shows that answers are unevenly distributed with a skew to the right with the exception of the "content" statement.\\
-% The only statistical significance in the Friedman test is \textit{content} in Table \ref{tab:fried_dataset}. As everything else is statistically insignificant we do not pursue further statistical analysis.\\
+Figure \ref{fig:hist_random} (Random) and \ref{fig:hist_human} (Human edited) shows that answers are unevenly distributed with a skew to the right, ie. test participants generally agrees with the statements. Figure \ref{fig:hist_labelrandom} (Random label) shows that answers are somewhat evenly distributed, not counting the Don't Know answer. Figure \ref{fig:hist_design} (Designer) shows that answers are unevenly distributed with a skew to the right with the exception of the "content" statement.\\
 We are unable to reject the null hypothesis in almost all regards and conclude that the questionaires reveal no significant effect on the various methods of generating a video. This also means that there is no significant measureable difference between a human edited video and one that is generated at random.\\
 %
 There is also no significant measureable effect of choosing different $\alpha$-values when generating videos. This means that we are unable to discern if longer or shorter scenes in a video is desired.\\
 %
-There was also no significant measureable difference between the three datasets, except in content, which is no surprise as the datasets differ primarily on content as described in section \ref{section that describes datasets}.\\
+There was also no significant measureable difference between the three datasets, except in content, which is no surprise as the datasets differ primarily on content as described in section \ref{sec:dataset}.\\
 %
 We have omitted analysis of the comments in Table \ref{tab:notes} and instead included them in the discussion section of this chapter.\\
 %
@@ -224,23 +228,15 @@ Lots more here...
 The histograms showed us that test participants are generally in agreement with the statements proposed to them. We believe that this could be a result of the participants being friends and family of the authors, as they may be inclined to believe that giving a positive answer will help us more than being perfectly honest. If we adjusted for this effect the histograms would likely have been much more evenly distributed.\\
 %
 The test revealed no significant measureable effect in any regard, and we believe that one of the causes is high quality raw material. We suspect that there would have been a noticeable difference if our dataset had contained a larger amount of video footage of questionable quality; both visual and contextual. This does however primarily account for the questionnaire statement regarding content. The other three statements are more related to other aspects of video generation.\\
-The lack of significant measureable effect can also simply be a result of the questionnaire.
-% KIM: + number of answers + number of videos in each category
-\\
+The lack of significant measureable effect can also be a result of the questionnaire, ie. the wording of each statement (and answer to) may not give us the information we are looking for, as described in section \ref{sec:questionnaire}. A non-parametric statistical test requires a larger sample size to draw conclusions with the same degree of confidence as a parametric test as mentioned in section \ref{sec:friedman}, and we did only get between 7 and 8 answers for each video. In that regard we also had to limit ourselves in how many videos we could produce for each category, as seen on Table \ref{tab:videosintest}.\\
 Based on feedback from users (both through the test and in person) we have come to understand that several things could have been done better. Several users complained over the lack of context in which they were watching the video. They claimed, rightfully, that it is almost impossible to determine whether clips were interresting or whether the length of a video is fitting, when they did not know what they were watching. The lack of sound only makes this more difficult. One suggestion for improvement, we received, was to preceed each statement with a written context describing what was being shown.\\
-DISCUSSION ON COMMENTS
-% KIM: hvilken effekt har de tidligere skridt i pipelinen?
+TODO:\\
+DISCUSSION ON COMMENTS\\
+DISCUSSION ON STEPS IN PIPELINE, IE. HOW DID STEP 0 AFFECT STEP 1, AND STEP 1 AFFECT STEP 2, ETC. - BELONGS IN DISCUSSION FOR ENTIRE REPORT!
 %
 \section{Summary}
 %
-% LAUGE
 We have described a way to automatically generate video summaries based on a defined \textit{recipe}. We have shown how, given a collection of labelled footage, we can estimate an overall fulfilment ratio for each segment of said footage, and use this an indicator of what to include in the final video.\\
 We have compared this method with various control groups, both consisting of randomly generated-, but also of humanly edited- videos. This was done through an online survey were a group of test users watched the different videos and rated them on various aspects.\\
-The results from this survey are inconclusive. The test users ability to differentiate between the various types of videos is not statistical significant. We have speculated on the various possible reasons for these findings.
+The results from this survey are inconclusive. The test users ability to differentiate between the various types of videos is not statistical significant. We have speculated on the various possible reasons for these findings.\\
 % KIM: og kommet frem til?
-\\
-%
-% ANDERS
-
-%
-% KIM: der mangler en diskussion af alle skridt i jeres system. 

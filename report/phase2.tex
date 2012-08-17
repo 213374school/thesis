@@ -25,9 +25,9 @@ Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically dete
 %
 \section{Method}
 %
-The labeling happens in two phases. First we extract different kinds of metadata from the individual videos. This is done frame-by-frame, for each type of metadata, so we end up with a collection of describing properties throughout each video. Some of the metadata is directly available from the earlier phases of the project. The level of \textit{contrast} and the \textit{shift vector magnitudes} described in section \ref{} and revisited below in sections \ref{sec:contrastdata} and \ref{sec:svmdata}, are examples of this. We use the frame mean pixel intentisity to estimate overall brightness (section \ref{sec:brightnessdata}) and seperate the blue color channel (section \ref{sec:blue_channel}). People detection (section \label{sec:peopledata}) is done using Haar cascade classifiers and Optical flow (section \ref{sec:opticalflowdata}) is used for extracting additional event information.\\
+The labeling happens in two phases. First we extract different kinds of metadata from the individual videos. This is done frame-by-frame, for each type of metadata, so we end up with a collection of describing properties throughout each video. Some of the metadata is directly available from the earlier phases of the project. The level of \textit{contrast} and the \textit{shift vector magnitudes} described in section \ref{} and revisited below in sections \ref{sec:contrastdata} and \ref{sec:svmdata}, are examples of this. We use the frame mean pixel intentisity to estimate overall brightness (section \ref{sec:brightnessdata}) and seperate the blue color channel (section \ref{sec:blue_channel}). People detection (section \ref{sec:peopledata}) is done using Haar cascade classifiers and Optical flow (section \ref{sec:opticalflowdata}) is used for extracting additional event information.\\
 \\
-The actual labeling is subsequently done by analysing the metadata in a collection of classifiers. Section \ref{sec:police_detection} describes a \textit{police blinker} classifier, which searches for oscillation in the blue channel from the individual frames. Section \ref{sec:overviewclassifier} describes an \textit{overview} classifier, which attempts to detect footage containing litle egomotion (camera movement). In section \ref{sec:verticaloscillationclassifier} we attempt to identify vertical oscillating movement in the optical flow, using it as an indicator for people jumping or signs being lifted into the air. Section \ref{sec:incrowd} describes an \textit{in-crowd} classifier, which uses facial- and person- detection to detect footage with several people in it. In section \label{sec:infocus} we further explore the area of people detection, by looking for footage, which focuses on a specific (assumably interesting) person for a duration of time. Finally, in section \ref{sec:daynightclassifier} we look at differentiating between day- and night- time footage by working with the different brightness and color intensity metadata we have extracted.
+The actual labeling is subsequently done by analysing the metadata in a collection of classifiers. Section \ref{sec:police_detection} describes a \textit{police blinker} classifier, which searches for oscillation in the blue channel from the individual frames. Section \ref{sec:overviewclassifier} describes an \textit{overview} classifier, which attempts to detect footage containing litle egomotion (camera movement). In section \ref{sec:verticaloscillationclassifier} we attempt to identify vertical oscillating movement in the optical flow, using it as an indicator for people jumping or signs being lifted into the air. Section \ref{sec:incrowd} describes an \textit{in-crowd} classifier, which uses facial- and person- detection to detect footage with several people in it. In section \ref{sec:infocus} we further explore the area of people detection, by looking for footage, which focuses on a specific (assumably interesting) person for a duration of time. Finally, in section \ref{sec:daynightclassifier} we look at differentiating between day- and night- time footage by working with the different brightness and color intensity metadata we have extracted.
 %
 \subsection{Haar Cascade Classifier}\label{sec:hcc}
 %
@@ -35,7 +35,7 @@ The Haar Cascade Classifiers (HCC)\cite{viola01,lienhart01,schmidt01,schmidt02} 
 %
 An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img} where $\square ABCD$ can be computed as $C-(D+B)+A$, ie. the sum of any subpart of the integral image can be quickly determined. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions/substractions.
 %
-\begin{figure}[h]
+\begin{figure}[!ht]
      \centering
      \includegraphics[width=0.50\textwidth]{img/integral_image.png}
      \caption{Integral image}\label{fig:integral_img}
@@ -146,7 +146,7 @@ By investigating the blue channel mean of each frame (section \ref{sec:blue_chan
 We analyze the blue channel mean as a function of time, and if these values are oscillating within certain parameters,% Specific frequency
 we have an indication of the precense police blinker lights.
 %
-\begin{figure}[h]
+\begin{figure}[!ht]
      \centering
      \includegraphics[width=1.05\textwidth]{img/triangles.jpg}
      \caption{}\label{fig:triangles}

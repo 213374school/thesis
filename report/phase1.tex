@@ -91,7 +91,7 @@ where $d$ is the degree of smoothing, $w$ is the weight, $x$ is the value in the
 %
 \subsection{Frame State Classification}
 %
-The methods described in section \ref{sec} are all functions of the shift vector magnitude ratio and contrast ratio, and one or more tresholds. Each method computes a suitability measure, $v$, of the frame, and the frame state is then classified as:
+The methods described in section \ref{sec:algorithms} are all functions of the shift vector magnitude ratio and contrast ratio, and one or more tresholds. Each method computes a suitability measure, $v$, of the frame, and the frame state is then classified as:
 \[
 s = 
 \begin{cases}
@@ -101,7 +101,7 @@ s =
 \]
 unless otherwise noted. Where $s=1$ is a positive classification, and $s=0$ is a negative classification.
 % where $0$ is a less desireable frame state, and a frame state of $1$ is desireable.
-\subsection{Algorithms - RENAME?}
+\subsection{Algorithms - RENAME?}\label{sec:algorithms}
 %
 \subsubsection{Contrast Only RENAME?}
 %
@@ -340,7 +340,7 @@ A final configuration of an algorithm is hence a smoothness degree for smoothing
 Algorithm configuration and configuration is used interchangeably in the following.
 %The parameter is the average over the 5-fold cross validation. Smoothness degree describes how much the result is smoothed using triangular smoothing. The comparison method is either frame-by-frame (FFC) or temporal (TC), both described in section \ref{sec:testcases}.\\
 %
-\begin{table}[h]
+\begin{table}[!ht]
   \begin{tabular}{| l | l | p{2cm} | p{2cm} | c | c | }\hline
     Label & Algorithm & Smoothness degree & Comparison method & Tolerance & Parameter(s)\\\hline
     ICSM1 & ICSM & 0 & FFC & N/A & (0.052, 0.720) \\\hline
@@ -388,7 +388,7 @@ Algorithm configuration and configuration is used interchangeably in the followi
 \label{tab:algoconfigs}
 \end{table}\\
 %
-Table \ref{tab:algoperf} shows performance of each algorithm configuration. As the parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalizability, and a high relative standard deviation indicates a low generalizability. \textit{DS} is the distance score, describe in detail in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provided results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence again a measure of how the configuration generalize to other data. MÅSKE NOGET OM HVORFOR AT DETTE ER TILFÆLDET? \textit{AUC} is the Area Under the Curve, as described in \ref{sec:}, is only indirectly related to the specific configuration, as it is the result of all parameters tested during the tuning process. It gives an indication of how robust the algorithm performs.
+Table \ref{tab:algoperf} shows performance of each algorithm configuration. As the parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalizability, and a high relative standard deviation indicates a low generalizability. \textit{DS} is the distance score, describe in detail in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provided results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence again a measure of how the configuration generalize to other data. MÅSKE NOGET OM HVORFOR AT DETTE ER TILFÆLDET? \textit{AUC} is the Area Under the Curve, as described in \ref{sec:robustness}, is only indirectly related to the specific configuration, as it is the result of all parameters tested during the tuning process. It gives an indication of how robust the algorithm performs.
 %In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is described in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) is described in section \ref{sec:robustness}.\\
 %
 \begin{table}
@@ -534,7 +534,7 @@ Also mentioned ealier, when calculating the AUC's for each algorithm we insert t
 \\
 In the \textit{ICSM} algorithm we chose to simplify our tweaking process by decreasing the precision on the second parameter, \textit{contrast}. The rationale for this is described in section~ \ref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
 \\
-Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section~ \ref{sec:framequalityassessmentdataset}, requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
+Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section LAUGE??? \ref{sec:framequalityassessmentdataset}, requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
 %
 \section{Summary}
 %
