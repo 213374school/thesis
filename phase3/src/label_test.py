@@ -43,24 +43,24 @@ def show_video(filename, start_frame, end_frame, label):
 	keyDown = False
 	first_frame = True
 	state = 'YES!'
+	num_frames = end_frame - start_frame
 	if cap.set(cv.CV_CAP_PROP_POS_FRAMES, start_frame):
 		length = end_frame - start_frame
 		for i in range(length):
 			ret, frame = cap.read()
 			if ret:
-				# draw_str(frame, (20, 40), label)
 				if first_frame:
-					# show first frame and let user decide if it is good or bad
 					draw_str(frame, (20, 20), '%s? %s' % (label, state))
 					cv2.imshow('', frame)
 					ch = cv2.waitKey(2000)
 				else:
-					ch = cv2.waitKey(int(1000/fps))		
+					ch = cv2.waitKey(int(1000/fps))
+				if ch == 113:
+					break
 				first_frame = False
 				state = 'NO!' if keyDown else 'YES!'
 				draw_str(frame, (20, 20), '%s? %s' % (label, state))
 				cv2.imshow('', frame)
-				# ch = cv2.waitKey(int(1000/fps))
 				if ch != -1: # key pressed
 					keyDown = True if not keyDown else False
 			else:
@@ -68,25 +68,32 @@ def show_video(filename, start_frame, end_frame, label):
 	else:
 		raise Exception('unable to set position to %d' % start_frame)
 	if state == 'NO!':
-		return 0
-	return 1
+		return 0, num_frames
+	return 1, num_frames
 
 def main():
 	segment_database = SegmentDatabase()
-	# print segment_database.db
-	label = 'has_police'
+	label = 'vertical_oscillation'
 	segments = segment_database.get_with_label(label)
+	print '#segments for label %s: %d' % (label, len(segments))
 	tp = 0
 	fp = 0
+	segment_count = 0
 	for segment in segments:
-		filename = segment.get('ytid')
-		start_frame, end_frame = segment.get('s')
-		print 'showing %s from %d to %d' % (filename, start_frame, end_frame)
-		result = show_video(filename, start_frame, end_frame, label)
-		if result:
-			tp += 1
-		else:
-			fp += 1
+		try:
+			segment_count += 1
+			filename = segment.get('ytid')
+			start_frame, end_frame = segment.get('s')
+			# print 'showing %s from %d to %d' % (filename, start_frame, end_frame)
+			print 'segment length: %d' % (end_frame-start_frame)
+			result, num_frames = show_video(filename, start_frame, end_frame, label)
+			if result:
+				tp += num_frames
+			else:
+				fp += num_frames
+			print '%2.2f%% done' % (100.0 * segment_count / float(len(segments)))
+		except Exception as e:
+			print e
 
 	print 'Label: %s' % label
 	print 'True positives: %d' % tp
