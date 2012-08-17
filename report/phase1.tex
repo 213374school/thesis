@@ -18,7 +18,7 @@ LAUGE SKRIVER MERE!
 % NOTE: vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
 % passer rigtig godt til "intro" afsnittet
 %
-\subsection{Frame Shift Estimation}
+\subsection{Frame Shift Estimation}\label{sec:frame_shift_estimation}
 %
 We wish to estimate the magnitude of a shift from frame to frame as a measure of how the camera moves. MOAR\\
 Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method that estimates the shift in two subsequent frames, where the direction of a vector is the direction of the shift, and the magnitude of that vector how many pixels was shifted. The advantage of this method is the simplicity in implementation, and low computational costs.\\
@@ -54,7 +54,7 @@ S = (\|v\|)^2 / M^2,
 \]
 where $v$ is the \textit{shift vector} (The shift vector magnitude is squared as we wish to increase sensitivity to less desireable values.), and $M$ is the largest possible magnitude of the shift vector. A shift in the same direction in each iteration of the shift vector computation will in our configuration at most shift $32+16+8+4+2+1=63$ pixels.\\
 %
-\subsection{Frame Contrast Estimation}
+\subsection{Frame Contrast Estimation}\label{sec:frame_contrast_estimation}
 %
 Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting dark images, it does not detect very bright or textureless images, in which features are harder to distinguish. Our method does not have this disadvantage as we compute a measure of contrast in a frame as the standard deviation of the pixel-intensity in the image.
 A small standard deviation indicates little contrast/diversity in pixel intensity, ie. a textureless or overly dark/bright image which is less desireable.
@@ -194,13 +194,13 @@ It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}
 This section mentions details that about our dataset that is only relevant for image quality assesment. We can categorize the videos from YouTube as unedited video and pre-edited video where the non-edited video is the most desireable as this is presumeably raw footage.
 %What we generally want is raw video, but since this is by far the lesser portion of the two we use the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\
 %
-\paragraph{Unedited YouTube Videos}
+\subsection{Unedited YouTube Videos}
 %
 The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage. \textbf{Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har}
 % Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har
 All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the dataset, we generate a \textit{gold standard} manually for each video, by watching the video and marking sections of high and low quality. %This is done by watching the video and recording every time the footage switches state from \textit{bad} to \textit{good} or vice versa.
 %
-\paragraph{Pre-edited Youtube videos}
+\subsection{Pre-edited Youtube videos}
 %
 %The dataset furthermore contains a alot pre-edited videos. This is because far the m
 Most videos available on Youtube have already been edited in some way. 
@@ -218,9 +218,12 @@ In order to use these clips we cut these pre-edited videos into multiple videos 
 %Keep in mind that some of these segments are discarded as they are out of context of the entirety of the video-clip, where they would (presumably) make sense to include, but not as standalone segments.\\
 We also accept some \textit{noise} in each end of the segment to complement ex. overly long crossfades. LAUGE %In the end we end up with a large selection of short segments of video-footage that we expect to be of good quality.
 %
-\paragraph{Own recordings}
+\subsection{Own recordings}
 %
 The dataset also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for parameter tuning. They are however not used in later phases.
+%
+%
+\subsection{Gold Standard}\label{sec:goldstandard}
 %
 \section{Findings}
 %
@@ -534,7 +537,7 @@ Also mentioned ealier, when calculating the AUC's for each algorithm we insert t
 \\
 In the \textit{ICSM} algorithm we chose to simplify our tweaking process by decreasing the precision on the second parameter, \textit{contrast}. The rationale for this is described in section~ \ref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
 \\
-Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section~ \ref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard (section LAUGE??? \ref{sec:framequalityassessmentdataset}, requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
+Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section \ref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard, as described in section LAUGE??? \ref{sec:goldstandard}, requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
 %
 \section{Summary}
 %
