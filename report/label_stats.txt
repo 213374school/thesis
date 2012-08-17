@@ -1,0 +1,10 @@
+Total number of frames: 131617
+
+				True		False		Ratio:
+Police			459			240			65.66%
+Overview		13760		17964		43.37%		Mange talere bliver classified som overview
+Person in Focus	27133		3060		89.86%
+In Crowd		6123		38166		13.82%		Mange talere bliver classified som in crowd
+Day				-			-			-
+Night			-			-			-
+Vertical Osc.	1609		9975		13.89%		Rystet kamera og folk der går forbi udløser falske positiver
