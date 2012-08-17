@@ -1,62 +1,68 @@
 %
-\chapter{Image Quality Assessment}*
+\chapter{Image Quality Assessment}
 %
 Image quality assessment is estimating the frame-by-frame image quality in a video. WRITE ABOUT SECTION LAYOUT AND BRIEFLY WHAT EACH CONTAINS.%This forms the basis for knowing which parts of the videos are suitable for human observation in a final video summary.
 %
 \section{Literature study}
 % kim: findes der ikke andre metoder? (til segmentering) - vi har faktisk kun 2 artikler omkring video kvalitet. resten er om semantisk indhold.
-Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method to measure how shaky a video is frame-by-frame by computing a shift-vector between subsequent frames. They also look into lighting conditions in individual frames by calculating the percentage of pixels within a specific boundary; an indication of reasonable exposure levels in the frame.\\
-The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415}, also described by Girgensohn et al. is a way to balance clip lengths. It treats the \textit{unsuitability} of the surrounding frames as an additional cost for including them in the clip. The purpose of this is to automatically fit segmented clips to match a desired total clip length.\\
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method to estimate the camera motion in a video by computing a shift-vector between subsequent frames. They also look into lighting conditions in individual frames by calculating the percentage of pixels within a specific boundary; an indication of reasonable exposure levels in the frame.\\
+The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415}, also described by Girgensohn et al., is a way to balance clip lengths. Each frame is given an \textit{unsuitability} score based on the image quality in the frame, and the camera motion in the area around the frame. It treats the \textit{unsuitability} of the surrounding frames as an additional cost for including them in the clip. The purpose of this is to automatically fit segmented clips to match a desired total clip length.\\
 %
 A more comprehensive approach described by Wu et al.\cite{10.1109/ICME.2005.1521399} is a multi-level classifier that labels each frame as belonging to one of the groups: \textit{blurred}, \textit{shaky}, \textit{inconsistent} and \textit{stable}. Their solution is based on Support Vector Machines (SVMs) and yield satisfactory results.\\ %Uddybes
-LAUGE SKRIVER MERE!
+%
 % Lauge: Har fundet to andre artikler om image quality assessment. Skal lige have skimmet dem og sat dem ind her.
 %
 \section{Method}
 %
 % kim: skal kunne implementere udfra beskrivelsen af metoden
-% NOTE: vi skal have en beskrivelse af hvad vi mener er unsuitable video footage. hvor rystet/mørkt/lyst etc. skal det være for at være unsuitable?
-% passer rigtig godt til "intro" afsnittet
+%
+We define suitable footage to mean video segments, which are not too shaky or fast panning to be considered watchable. As a rule of thumb, a human observer should be able to watch the videos without being annoyed by the movement of the camera. Further more, we want the content in the video to be clearly visible. Footage, which is too dark or bright, or depict textureless surfaces should be discarded.
 %
 \subsection{Frame Shift Estimation}\label{sec:frame_shift_estimation}
 %
-We wish to estimate the magnitude of a shift from frame to frame as a measure of how the camera moves. MOAR\\
-Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method that estimates the shift in two subsequent frames, where the direction of a vector is the direction of the shift, and the magnitude of that vector how many pixels was shifted. The advantage of this method is the simplicity in implementation, and low computational costs.\\
-We have adopted this method and details are as follows. Each frame is initially shifted 32 frames, as suggested by Girgensohn et al. in four directions (up, down, left, right), halving the number of pixels shifted in each iteration down to 1 pixel.
-%The authors suggests a shift of each subsequent frame in four directions of 32 pixels, halving the number of pixels in each iteration to 1 pixel. 
-For each shift the Root-Mean-Square (\textit{RMS}) of the difference between the frame and the previous unchanged frame is calculated, and the shift with the lowest \textit{RMS} is the basis for the following iteration. %Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
+We estimate the magnitude of the shift of content between neighbouring frames, and use it as an indication of the \textit{egomotion} (camera movement).\\
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} estimates the shift in two subsequent frames, where the direction of a vector is the direction of the shift of content, and the magnitude of that vector how many pixels it was shifted. The advantage of this method is the simplicity in implementation, and low computational costs.\\
+As suggested by the authors, for each pair of subsequent frames, the latter frame is shifted around, in all four directions (up, down, left, right), over 6 iterations. The initial shift distance is 32 pixels. In each iteration this distance is halved. For each direction, in each iteration the Root-Mean-Square (\textit{RMS}) of the difference between the shifted- and the previous- frame is calculated. The direction with the lowest \textit{RMS} is the basis for the following iteration.
+%
+%Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
 %The algorithm below illustrates how the shift vector for two subsequent frames is computed.
-\\PASSER DENNE FORKLARING MED NEDENSTÅENDE ALGORITME??? HVIS JA SKROTTER VI ALGORITMEN OG LADER TEKSTEN STÅ.
 %
-\begin{verbatim}
-     f  <- read frame
-     f’ <- read frame
-     for i in [32, 16, 8, 4, 2, 1]:
-          e’ <- infinity
-          for d in [left, right, up, down]:
-               s <- shift f’ i pixels in direction d
-               e <- compute RMS(f-s)
-               if e < e’:
-                    x,y <- i * (d[x],d[y])
-                    e’  <- e
-          x’,y’ <- x,y
-          f’ <- shift f’ x pixels right
-          f’ <- shift f’ y pixels up
-     yield x’,y’
-\end{verbatim}
+% \begin{verbatim}
+%      f  <- read frame
+%      f’ <- read frame
+%      for i in [32, 16, 8, 4, 2, 1]:
+%           e’ <- infinity
+%           for d in [left, right, up, down]:
+%                s <- shift f’ i pixels in direction d
+%                e <- compute RMS(f-s)
+%                if e < e’:
+%                     x,y <- i * (d[x],d[y])
+%                     e’  <- e
+%           x’,y’ <- x,y
+%           f’ <- shift f’ x pixels right
+%           f’ <- shift f’ y pixels up
+%      yield x’,y’
+% \end{verbatim}
 %
-EVT DROP NEDENSTÅENDE? DET VIRKER LIDT LIGEGYLDIGT\\
-A $640\times360$ pixels frame and a frame rate of 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction, ie. even extremely shaky camera motion should be accurately detected (accuracy is here highly dependant on the blurriness of the frames). Thus, we are able to trace camera movement of more than two full frame widths per second in the horizontal direction and more than three frame heights in the vertical direction.\\\\
+If $v \in V$ is a vector representing a selected shift in an iteration, and $V$ is the set of all shifts performed over all iterations, the shift vector magnitude estimating the intensity of camera motion between two frames, is then simply defined as:
 %
-The \textit{shift vector magnitude ratio}, $S$, is defined as: %as the \textit{shift vector magnitude} normalised into the [0,1] range:
+\[
+s = \|\sum V\|
+\]
+%
+At 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction. I.e. for frames with a resolution of $\sim$ $640\times360$, even extremely fast camera motion should, in at least in theory, be detected (accuracy is here highly dependant on the blurriness of the frames).\\
+\\
+The \textit{shift vector magnitude ratio}, $S$, is defined as:
+%
 \[
 S = (\|v\|)^2 / M^2, 
 \]
-where $v$ is the \textit{shift vector} (The shift vector magnitude is squared as we wish to increase sensitivity to less desireable values.), and $M$ is the largest possible magnitude of the shift vector. A shift in the same direction in each iteration of the shift vector computation will in our configuration at most shift $32+16+8+4+2+1=63$ pixels.\\
+%
+where $v$ is the \textit{shift vector} and $M$ is the largest possible magnitude of the shift vector. A shift in the same direction in each iteration of the shift vector computation will in our configuration at most shift $M = 32+16+8+4+2+1=63$ pixels. We square $v$ and $M$ in order to increase the sensitivity toward bad, while still keeping $S$ in the [0,1] range.
 %
 \subsection{Frame Contrast Estimation}\label{sec:frame_contrast_estimation}
 %
-Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} also describes a method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting dark images, it does not detect very bright or textureless images, in which features are harder to distinguish. Our method does not have this disadvantage as we compute a measure of contrast in a frame as the standard deviation of the pixel-intensity in the image.
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} also describes a method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting dark images, it does not detect very bright ones, nor images dominated by textureless surfaces. Our method does not have this disadvantage as we compute a measure of contrast as $c = std(X)$, where $X$ is the set of intensities for all pixels in a frame.\\
 A small standard deviation indicates little contrast/diversity in pixel intensity, ie. a textureless or overly dark/bright image which is less desireable.
 A high standard deviation indicates a high contrast/much diversity in pixel intensity, ie. a textured image or an image with a high variation of pixel intensity which is deseriable.\\
 % Hence, a very dark image or very bright image would have a low contrast as would images with little or no texture. It will however not detect an image where half of it has a very low contrast, ex. an image of clear sky in the top three-quarters, nor would we necessarily want to discard frames like these.\\\\ % skal vi have et par billeder med deres std. dev. sådan at man kan se med egne øjne, eller er det ikke for simpelt?
@@ -67,7 +73,7 @@ The \textit{contrast} ratio, $C$, is defined as:
 \[
 C = 1 - (c^2 / N^2),
 \]
-where $c$ is the standard deviation of the pixel intensity in a frame ($c$ is squared as we wish to increase sensitivity to less desireable values), and $N$ is the largest possible value of $c$. The pixel intensity is in the range $[0,255]$ (grayscale image), hence $N$ is at most $127.5$ (an image-matrix exclusively containing values of 0 and 255 in an equal amount). $c \to N$ indicates a high quality image, but as we wish that $C$ is compareable to $S$ where a value of $S$ close to 0 is desireable $c/N$ is substracted from $1$.\\
+where $N$ is the largest possible value of $c$. Again, we square both $c$ and $N$ to increase sensitivity toward bad values. For our 8-bit grayscale footage $N = 127.5$, which would be the standard deviation for frame, whos image-matrix contain only values of 0 and 255, uniformly distributed.\\
 %
 \subsection{Triangular Smoothing}
 %
@@ -200,13 +206,13 @@ The dataset contains 25 raw videos. The length of the clips range from 10 second
 % Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har
 All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the dataset, we generate a \textit{gold standard} manually for each video, by watching the video and marking sections of high and low quality. %This is done by watching the video and recording every time the footage switches state from \textit{bad} to \textit{good} or vice versa.
 %
-\subsection{Pre-edited Youtube videos}
+\subsection{Pre-edited YouTube videos}
 %
 %The dataset furthermore contains a alot pre-edited videos. This is because far the m
-Most videos available on Youtube have already been edited in some way. 
+Most videos available on YouTube have already been edited in some way. 
 %Many of these videos consist of several different video-clips, which themselves was once raw footage. 
 In order to use these clips we cut these pre-edited videos into multiple videos at their scene boundaries. The editing is done manually without too much concern of loosing a few hundred milliseconds of footage the scene boundaries in order to speed up editing. Some of these scenes are undesireable, such as scenes with much on-screen text, credits, montages, ie. scenes that would not be considered raw footage. Also very short scenes are discarded. Because the resulting set of videos have already been screened and deemed watchable by a human (the producer of the video), we assume that all of this footage is a \textit{gold standard} in regards to later testing.
-%This is done manually in much the same way as the when generating the \textit{gold standard} for the raw Youtube videos; by watching the videos and marking the points of change of scene. 
+%This is done manually in much the same way as the when generating the \textit{gold standard} for the raw YouTube videos; by watching the videos and marking the points of change of scene. 
 %Since a lot of these edited videos contain (for our purpose) unsuitable footage, like photos or on-screen text, only the parts that actually depict the event is kept. Because the resulting set of video-clips have in fact already been screened and deemed watchable by a human (namely the producer of the edited video), we assume that all of this footage is of a decent quality. During review we discard some of the the segmented video-clips, namely:
 % ALLEREDE NÆVNT
 % \begin{itemize}
