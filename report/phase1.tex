@@ -75,7 +75,7 @@ C = 1 - (c^2 / N^2),
 \]
 where $N$ is the largest possible value of $c$. Again, we square both $c$ and $N$ to increase sensitivity toward bad values. For our 8-bit grayscale footage $N = 127.5$, which would be the standard deviation for a frame, whos image-matrix contain only values of 0 and 255, uniformly distributed.\\
 %
-\subsection{Triangular Smoothing}
+\subsection{Triangular Smoothing}\label{sec:triangularsmoothing}
 %
 Both $S$ and $C$ are meassures of how unsuitable a frame is. We perform \textit{trianglur smoothing} on the set of all $S$ and $C$ over all frames in a video, in order to remove outliers. Triangular smoothing is a weighted smoothing function where the degree of smoothing determines the distribution of weights. The biggest weight is given to the element we wanna smooth. The weight of the elements surrounding it are determined by their distance to the this element. The weights decrease in a linear fashion forming a triangular shape, thus the name. We define our triangle of weights as:
 %
@@ -90,9 +90,14 @@ Triangular smoothing can then be described by:
 S(x, w) = \sum_{i=x-w}^{x+w} \frac{D_{i} T(w)_{i-(x-w)}}{\sum T(w)},
 \]
 %
-where $x$ is the index of the element we want to smooth, $w$ is the weight we want to give it, $D$ is the set of all original values, and $T$ is the triangle of weights defined in \ref{eq:triangular}. For simplicity we have excluded the border cases at the beginning and the end of $D$, where $T$ covers values that are not defined. In those cases we simply calculate the $S$ and $T$ for the values, which \textit{are} defined. Figure [FIG:REF] shows the result of performing triangular smoothing on a collection of data, which various values of $w$. We set $w = 12$.
+where $x$ is the index of the element we want to smooth, $w$ is the weight we want to give it, $D$ is the set of all original values, and $T$ is the triangle of weights defined in \ref{eq:triangular}. For simplicity we have excluded the border cases at the beginning and the end of $D$, where $T$ covers values that are not defined. In those cases we simply calculate the $S$ and $T$ for the values, which \textit{are} defined. Figure \ref{fig:triangularsmoothing} shows the result of performing triangular smoothing on a collection of data, with various values of $w$. We set $w = 12$.
 %
-[FIGUR FOR TRIANGULAR SMOOTING FOR w = 6, 12, 24]
+\begin{figure}
+     \centering
+     \includegraphics[width=1\textwidth]{img/triangle_smooth.png}
+     \caption{An example of triangular smoothing being applied to some data for various values of $w$.}
+     \label{fig:triangularsmoothing}
+\end{figure}
 %
 \subsection{Frame State Classification}
 %
@@ -109,20 +114,20 @@ s =
 %
 We test 4 different classifiers, each one taking a different approach.
 %
-\subsubsection{Contrast Only classification}
+\subsubsection{Contrast Only classification (CO)}
 %
 This classifier only looks at the contrast ratios throughout a video. The frame state, $v$, is defined as $v=\frac{C}{\tau}$, where $\tau$ is some treshold and $C$ is the inverse contrast ratio for that frame.
 %
-\subsubsection{Shift Magnitude Only classification}
+\subsubsection{Shift Magnitude Only classification (SO}
 %
 This classifier only looks at the shift vector magnitude ratios for each frame. The frame state, $v$, is defined as $v=\frac{S}{\tau}$, where $\tau$ is some treshold and $S$ is the shift vector magnitude ratio for that frame.
 %
-\subsubsection{Independent Contrast and Shift Magnitude classification}
+\subsubsection{Independent Contrast and Shift Magnitude classification (ICSM)}
 %
 This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is simmilar to the approach taken by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. We look at the inverse contrast ratio and the shift vector magnitude ratios independantly and classifies frames as being \textit{bad} if either of the two pass their respective thresholds.\\
 The frame state, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$, where $C$ is the inverse contrast ratio, $S$ is the shift vector magnitude ratio, $\tau_1$ and $\tau_2$ are some tresholds.
 %
-\subsubsection{Cummulative Contrast and Shift Magnitude classification}
+\subsubsection{Cummulative Contrast and Shift Magnitude classification (CCSM)}
 % ANDERS
 This method investigates the cumulative effect of both ratios. If either of the two ratios, or if the combination of ratios, exceed a certain threshold, the frame is classified as \textit{bad}. The frame state is defined as follows:\\
 % With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.
@@ -194,85 +199,75 @@ For each classifier we determine the optimal configuration of parameter(s), over
 %
 \subsection{Parameter tuning}\label{sec:ph1tweaking}
 %
-Parameter tuning is often a matter of maximising positive precision and recall. Positive precision is the certainty at which we can say that a positive classification is correct, whereas positive recall is the ratio of true positives we find compared to how many actually exists. Relative Operating Characteristics (ROC) diagrams, as described by Fawcett\cite{Fawcett06a}, is a useful tool for quantifying the overall stability of an algorithm. The ROC diagrams plot different parameter configurations as the relation between the resulting \textit{true positive rates} (the benefit) and \textit{false positive rates} (the cost). Plotting this relation yields a curve, whos underlying area can be used as an estimate of the algorithms stability, where a large area indicates a stable algorithm, and a small area indicates an unstable algorithm.\\
-% Lauge: Vi skal sgu nok lige smide en lille figur ind her...
-However, due to the disproportion in frame states in our dataset (there is a relative high amount of high quality footage), this approach is not suitable in our case. We want to maximise the positive precision and negative recall. BEDRE FORKLARING HER: Effectively, this means that we reward methods, that are not only good at avoiding unsuitable frames, but also delivered mostly true-positive good frames. We are willing to do this at the cost of dismissing some of the suitable frames. However, in order to limit this \textit{waste} we still consider low positive recall and low negative precision a cost, which should be limited. Inspired by the structure of ROC diagrams we established our own meassuring tool. However, in our case the cost, \textit{C}, and benefit, \text{B}, are defined as:
-% \[
-% C = 1 - 2 \cdot \frac{positive_{recall} \cdot negative_{precision}}{positive_{recall} + negative_{precision}}
-% \]
+Parameter tuning is often a matter of maximising positive \textit{precision} and \textit{recall}. Positive precision is the certainty with which we can say that a positive classification is correct, whereas positive recall is the ratio of true positives found compared to how many actually exists.\\
+Our approach is a little different. Because our dataset contain mostly \textit{good} frames we want to make sure that we detect the few \textit{bad} frames that \textit{are} present so we can avoid them. We therfore attempt to maximise positive precision along with \textit{negative} recall.\\
+In order to quantify the quality of our choice of paramter(s) we look at the benefit we gain from it versus the cost that we pay. We define the cost, \textit{C}, and the benefit, \text{B}, as:
+%
 \[
-C = 1 - 2\frac{P_{r}N_{p}}{P_{r} + N_{p}},
+C = 1 - 2\frac{P_{r}N_{p}}{P_{r} + N_{p}}
 \]
+%
 and
-% \[
-% B = 2 \cdot \frac{negative_{recall} \cdot positive_{precision}}{negative_{recall} + positive_{precision}}
-% \]
+%
 \[
-B = 2\frac{N_{r} P_{p}}{N_{r} + P_{p}}
+B = 2\frac{N_{r} P_{p}}{N_{r} + P_{p}},
 \]
-where $P_r$ is positive recall, $N_p$ is negative precision, $P_r$ is positive recall, and $N_p$ is negative precision.\\
 %
-In both cases we combine the two influencing parameters by calculating their harmonic mean. We want \textit{C} to be as small as possible and \textit{B} to be as large as possible. In the final step we visualise this, by plotting the result of different parameter setting in a ROC-like diagram. The costs and benefits are plotted along the two axis, and as with a normal ROC diagram we want the points to lie as close to the top left corner as possible, as this signifies a large benefit with a small cost. From this diagram we are able to estimate the specific algorithms overall performance, across many different choices of parameter values, by calculating the area under the curve the plots form. However, we are also able to identify the single best parameter choice. We do this by calculate the distance from each point to the [0,1] coordinate (the optimal configuration) and use it as a final score. The smaler the score, the more optimal the configuration is.\\\\
-%
-NOTE: There actually is a problem with calculating the score this way. We have come up with another method which should be mathematically sound, but too late in the process to change anything.\\\\
-% Noter fra Kim: What? Hvorfor ikke areal? Forklar!
-% Lauge: Der er faktisk nogle ting vi lige skal have overvejet med det her. (Se notesbog!)
+where $P_r$ is positive recall, $N_p$ is negative precision, $P_r$ is positive recall, and $N_p$ is negative precision. In each case we combine the two factors we want to meassure by calculating their evenly distributed harmonic mean. We can then plot $C$ and $B$, for various parameter choices, in a diagram and use this a tool for comparing different configurations of a classifier. Figure \ref{fig:costbenefitdiagram} shows an example of such a diagram.
 %
 \begin{figure}
      \centering
      \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample2.jpg}
-     \caption{An example of a 2D cost/benefit diagram, the blue configuration is the one with the lowest distance score}
+     \caption{An example of a classifier cost/benefit diagram for various parameter selections, the blue point represents the best configuration}
+     \label{fig:costbenefitdiagram}
 \end{figure}
 %
-% \subsubsection{Testing RENAME}
-% ANDERS
+In order to determine the best configuration we calculate the distance from each point to the (1,0) coordinate in the diagram. Since this coordinate represents the best possible performance (maximum benefit, with no cost) we argue that the distance score is reasonable way to compare the performance of different configurations.\footnote{We have later realised that this method has some drawbacks. We have come up with a different way to meassure performance which is described in our Future work section \ref{sec:futurework}.}\\
 %
 \subsection{Robustness}\label{sec:robustness}
 %
-On top of the ordinary parameter tuning and testing we also attempt to measure the overall robustness of each of the algorithms with respect to the change of parameter. This is done by calculating the area under the curve (AUC) of the cost/benefit diagrams generated by each algorithm. For this we use the entire dataset, which is to say that it happens after the 5-fold cross validation. Any algorithm, whos benefit-value is generally larger than its corresponding cost-value, across all choices of parameter(s) will have an AUC larger than 0.5. The larger the AUC is the more robust the algorithm is toward changes to its parameter(s). Since the points produced by most of the algorithms are not evenly spread over the entire diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span of the diagram along the x-axis. It can be argued whether this is the most correct way to handle this, but it does produce comparable AUCs across all algorithms. Unlike the tweaking and testing described above this does not tell us anything useful about the best parameter to choose since we have no way of knowing how this would generalise. But it does tell us something about the nature of the algorithm itself. In general we would prefer our algorithm of choice to be as robust as possible as it signifies a sensible selection of parameters. 
+On top of the ordinary parameter tuning and testing, we also attempt to measure the overall robustness of each of the classifiers, with respect to changes of parameters.\\
+Relative Operating Characteristics (\textit{ROC}) diagrams, as described by Fawcett\cite{Fawcett06a}, are a useful tool for quantifying the overall stability of an algorithm. The ROC diagrams plot different parameter configurations as the relation between the resulting \textit{true positive rates} (the benefit) and \textit{false positive rates} (the cost). Plotting this relation yields a curve, whos underlying area can be used as an estimate of the algorithms stability, where a large area indicates a stable algorithm, and a small area indicates an unstable algorithm.\\
+\\
+Inspired by ROC diagrams we do something simmilar. We perform another parameter analysis for each classifier, this time using the entire dataset. We then plot the results in cost/benefit diagrams as described in section \ref{sec:ph1tweaking} and calcuate the area under the curve (\textit{AUC}) formed by the points. The larger the AUC is the more robust the classifier is toward changes to its parameter(s). Since the points produced by most of the classifiers are not evenly distributed over the x-axis of the diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span. It can be argued whether this is approach is the correct way to handle this. It has the effect of normalising undefined regions around $y=x$, which makes it easier to compare the AUCs across all classifiers.\\
+Unlike the k-fold crossvalidating parameter tuning described in section \ref{sec:ph1tweaking}, we learn nothing about how the performance of the individual configurations will generalise. Instead we gain an indication of the overall ability, for each algorithm, to the perform the classification.
 %
 \subsection{Multi-parameter algorithms}\label{sec:ph1multiparameter}
 %
-All our algorithms, except one, only have one parameter. This makes them easy to tweak and test and also very straightforward to generate cost/benefit diagrams for. The \textit{ICSM} algorithm, however, has two parameters and this causes some problems. First and foremost the additional parameter makes tweaking much more computational expensive. With the other algorithms we tweak the one parameter by one percentage point in each iteration, which limits the number of configuration to a hundred. To do so with the \textit{ICSM} algorithm would require 10.000 tweak iterations, which is much too expensive even when the results of intermediate calculations are cached on disk. In order to bring this number down we start we start out by attempting to learn something about the base characteristics of the algorithm by probing it using some uniformly selected configurations. In the case of the \textit{ICSM} algorithm we see that the \textit{contrast} parameter has a huge influence on how well the algorithm is defined in the cost/benefit spectrum. For very low values of \textit{contrast} almost all results are undefined because all frames are marked as good, which makes it impossible to calculate precision and recall correctly. On the other end of the spectrum, when \textit{contrast} is large, the effect of changing it is very small, signifying that it converges toward some optimal value. Based on this information we choose to decrease the precision with which we tweak \textit{contrast} to ten percentage points per iteration. This brings the total number of tweak iterations down to 1000. This still takes a long time, but it is manageable.\\
+All our algorithms, except one, have a single parameter. This makes the tasks of parameter tuning, and generation of cost/benefit diagrams, straightforward. The \textit{ICSM} algorithm has two parameters and this causes some problems. The additional parameter makes tweaking much more computationaly expensive. All parameters in our classifiers are expressed as ratios between 0 and 1. The single-parameter classifiers are tuned by changing their single parameters by one percentage point in each iteration. This limits the number of configuration to 101. Doing the same with the \textit{ICSM} classifier would require more than 10.000 iterations, which is much too expensive.\\
+In order to bring this number down we did a prelimenary probing using increments of 10 percentage point for each parameter. From the results we see that the \textit{contrast}-threshold parameter is directly corrolated with the span over which performance is defined. This is seen clearly in figure \ref{fig:3dcostbenefitdiagram}. Based on this observation, we choose to perform a full analysis where the effect of the shift vector magnitude ratio is tested down to a one percentage point precision, and the effect of the contrast ratio threshold is tested at a 10 percentage point precision.\\
+This brings the total number of iterations down to $101 \times 11 = 111$.\\
 \\
-The second problem is encountered when generating the cost/benefit diagrams and calculating the AUC. The effect of changing more than one variable is not illustrated very well in a two-dimensional cost/benefit diagram. The points, which really belong in a higher dimensional space, are flattened into the plane resulting in several curves without any clear connection to each other. This also causes problems when calculating the AUC for the algorithm, since curves generated by bad performing configurations can be hidden below curves generated by good performing ones, which in the end results in a over-optimistic robustness score.
-%
-% \begin{figure}
-%      \centering
-%      \includegraphics[width=0.75\textwidth]{img/2dcostbenefitexample.jpg}
-%      \caption{An example of a 2D cost/benefit diagram for an algorithm with two variables}
-% \end{figure}
-%
-%
-% Noter fra Kim: Y-axis = benefit? X-axis=cost? Ser mærkeligt ud, drop!
-%
-In order to overcome this problem we simulate having only one parameter by locking the second one (contrast) to a specific value and then performing our analysis as usual. We repeat this over and over again, locking the contrast parameter to a new value in each iteration until we have covered all configuration combinations. For the robustness analysis we then add an aditional axis, representing the locked parameter, to our cost/benefit diagram and draw our points in three dimensions. The plane created illustrates the robustness of the algorithm much better. Since the choice of contrast values across all iterations are uniformly distributed, we can easily determine the AUC for the algorithm by simply calculating the individual AUCs for each selection of contrast value and compute an average.
+Another problem is that the effect of tuning more than one parameter is not illustrated very well in a two-dimensional cost/benefit diagram. The points, which really belong in a higher dimensional space, are flattened into the plane resulting in several curves without any clear connection to each other. This also makes it impossible to calcualate a meaningful AUC.\\
+Instead we perform 11 analyses, one for each \textit{contrast} threshold. With one of the two parameters locked, we can perform the analysis as usual. For the parameter tuning we simply calculate the mean of the various values and parameters across all 11 analyses.\\
+For the robustness test all cost/benefit curves are plottet in a three dimensional diagram where the added dimension represents the chosen contrast threshold. The plane created illustrates the robustness of the algorithm much better (see figure \ref{fig:3dcostbenefitdiagram}). Since the contrast thresholds across all iterations are uniformly distributed, we can easily determine the AUC for the algorithm by simply calculating the individual AUCs for each selection of contrast value and computing their mean.
 %
 \begin{figure}
      \centering
      \includegraphics[width=0.75\textwidth]{img/3dcostbenefitexample.jpg}
      \caption{An example of a 3D cost/benefit diagram}
+     \label{fig:3dcostbenefitdiagram}
 \end{figure}
 %
-% \subsubsection{Test cases}\label{sec:testcases}
+\subsection{Test cases}\label{sec:testcases}
 %
-\subsection{Frame by frame classification (FFC)}\label{sec:fbfclass}
+We perform two different tests. The first (described in section \ref{sec:fbfclass}) treats all classifications equally, while the second (described in section \ref{sec:tempclass}) also looks at the at the gold standard of surrounding frames and use this information as a metric for determining how to rate misclassifications. Finally we also experiment with various degrees of smoothing of the classifier results. This is described in section \ref{sec:classsmooth}
 %
-The first test case only looks at each frame independently. For each frame we determine the level of contrast and the shift vector magnitude and use this information alone to perform a binary classification of the frame as \textit{good} or \textit{bad} using the algorithms described above. The results are compared with our \textit{gold standard} for the videos and the amount of true and false positives and negatives are used to calculate precision and recall for both classes.
+\subsubsection{Frame by frame classification (FFC)}\label{sec:fbfclass}
 %
-\subsection{Temporal classification (TC)}\label{sec:tempclass}
+For each frame we compare the classifier results with our gold standard. We treat classifications as being either \textit{true} or \textit{false} and use the amount of true and false positives/negatives to calculate their respective precision and recall.
 %
-In the second test case we change the way we punish misclassifications. We instead consider the videos as switching back and forth between two states, \textit{good} and \textit{bad}. Misclassifications, which happen close to these change-of-state's are punished less than those that happens elsewhere. The rationale behind this is that it is very difficult to objectively determine the exact point (frame) where a human observer will consider the quality of a video as changing from one state to the other. Likewise, we expect a human observer to ignore very short sub-parts of good or bad quality footage, if it is surrounded by a significant amount of footage of the opposite type. Overall, we want to be more tolerant of misclassifications, where it makes sense. For this we need a more advanced \textit{penalty function} than the simple binary check from the FFC test case.\\
+\subsubsection{Temporal classification (TC)}\label{sec:tempclass}
 %
-We start by identifying all the positions in the sequence of frames where the state changes from good to bad or vice versa. Let $S$ be the set of all these positions. Also let $x$ any position in the video and let $c$ be some level of tolerance for mistakes. A \emph{penalty function} for determining the ratio of punishment for a misclassification at position $x$ is then defined as:
+Instead of looking at frames as individual entities we now look at the video as a whole. We treat a video as consisting of a sequence of \textit{good} and \textit{bad} segments. As we iterate through the frames of the video we change back and fourth between these two states. Misclassifications, which happen close to these change-of-state's are punished less than those that happens elsewhere. The rationale behind this is that it is difficult to objectively determine the exact point (frame) where a human observer will consider the quality of a video as changing from one state to the other. Likewise, we do not expect a human observer to notice very short segments of good- or bad- quality footage, if they are surrounded by a significant amount of footage of the opposite type.\\
+For this we need a more advanced \textit{penalty function} than the binary check from describd in section \ref{sec:fbfclass}.\\
+For each video, we look at our gold standard and identify all positions in its sequence of frames where there is change of state. Let $S$ be the set of all these positions. Also let $x$ be any position in the video and let $c$ be some level of tolerance for mistakes. A \emph{penalty function} for determining the ratio of punishment for a misclassification at position $x$ is then defined as:
 %
 \begin{displaymath}
-P(x) =1 - MAX_{s\in S}(e^{-\frac{(x-s)^{2}}{2c^{2}}})
+P(x) =1 - max_{s\in S}(e^{-\frac{(x-s)^{2}}{2c^{2}}})
 \end{displaymath}
 %
-This function places a series of inverted gaussian bell curves at the point of every change of state. Figure \ref{fig:penaltycurve} shows an example of this. The value $c$ defines the width of the curve and thus determines how tolerant we are.
-%
-% Noter fra Kim: Valgt hvordan?
+This function places a series of inverted gaussian bell curves at the point of every change of state. Figure \ref{fig:penaltycurve} shows an example of this. The value $c$ defines the width of the curve and thus determines how tolerant we are toward misclassifications in general. We experiment with \textit{tolerance} values of 12, 24 and 48.
 %
 \begin{figure}
 \includegraphics[width=1\textwidth]{img/penaltyfunction.jpg}
@@ -280,18 +275,18 @@ This function places a series of inverted gaussian bell curves at the point of e
 \label{fig:penaltycurve}
 \end{figure}
 %
-\emph{P(x)} always returns a value between 0 and 1, that tells us how severe a misclassification at position $x$ is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the classification should be scored. There is one problem with this appraoch. It makes maintaining accurate true- and false- negative and positive values slightly less trivial. If a misclassification occurs at frame \textit{x} and \emph{P(x)} is very close to 0, how true (or false) is the classification)? The way we handle this is simply by adding \textit{P(x)} to the \textit{false} ratio for this type (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.
+\emph{P(x)} always returns a ratio between 0 and 1, which tells us how severe a misclassification at position $x$ is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the hard it should be punished. We add \textit{P(x)} to the \textit{false} ratio for this type of classification (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.
 %
-\subsection{Smoothing of the algorithm suggestions}\label{sec:classsmooth}
+\subsubsection{Smoothing of the algorithm suggestions}\label{sec:classsmooth}
 %
-Finally, for both algorithms, we also investigate the effect of smoothing the classification results. This is done to remove outliers in the final results and should not be confused with the smoothing of the \textit{contrast} and \textit{shift vector magnitudes} in the algorithms themselves.
+We also investigate the effect of performing triangular smoothing on the classification results. This is done to remove outliers in the final results and should not be confused with the smoothing of the \textit{inverse contrast}- and \textit{shift vector}- magnitude ratios in the classifiers themselves. Since the results are binary, we round them back into ones and zeros after the smoothing.\\
+As described in section \ref{sec:triangularsmoothing} the degree of smoothing is determined by a variable, $w$. We experiment with values $w=0$ and $w=12$.
 %
 \subsection{Results}
-% ANDERS
-Table \ref{tab:algoconfigs} shows the different algorithm configurations. \textit{Label} is the specific algorithm configurations name. \textit{Algorithm} is the specific algorithm. \textit{Smoothness Degree} is a measure of how much the algorithm result is smoothed as described in \ref{sec:classsmooth}. \textit{Comparison Method} indicates if the algorithm result is compared using Frame-by-Frame Classification as described in section \ref{sec:fbfclass}, or using a Temporal Classification, as described in \ref{sec:tempclass}, using the stated \textit{Tolerance}. \textit{Parameter} is the parameter configuration for a given algorithm.\\
-A final configuration of an algorithm is hence a smoothness degree for smoothing the resulting frame states and a set of parameters, and which method was used to tune this configuration in respect to the gold standard.\\
-Algorithm configuration and configuration is used interchangeably in the following.
-%The parameter is the average over the 5-fold cross validation. Smoothness degree describes how much the result is smoothed using triangular smoothing. The comparison method is either frame-by-frame (FFC) or temporal (TC), both described in section \ref{sec:testcases}.\\
+%
+The performance results for all classifiers in each test case is presented in this section.\\
+Table \ref{tab:algoconfigs} shows the different classifier configurations. \textit{Label} is the specific classifier configurations name. \textit{Algorithm} is the specific classifier. \textit{Smoothness Degree} is a measure of how much the classifier result is smoothed as described in \ref{sec:classsmooth}. \textit{Comparison Method} indicates if the algorithm result is compared using Frame-by-Frame Classification as described in section \ref{sec:fbfclass}, or using a Temporal Classification, as described in \ref{sec:tempclass}, using the stated \textit{Tolerance}. \textit{Parameter} is the best performing parameter configuration for a given classifier.\\
+Classifier configuration and configuration is used interchangeably in the following.
 %
 \begin{table}[!ht]
   \begin{tabular}{| l | l | p{2cm} | p{2cm} | c | c | }\hline
@@ -341,7 +336,7 @@ Algorithm configuration and configuration is used interchangeably in the followi
 \label{tab:algoconfigs}
 \end{table}\\
 %
-Table \ref{tab:algoperf} shows performance of each algorithm configuration. As the parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalizability, and a high relative standard deviation indicates a low generalizability. \textit{DS} is the distance score, describe in detail in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provided results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence again a measure of how the configuration generalize to other data. MÅSKE NOGET OM HVORFOR AT DETTE ER TILFÆLDET? \textit{AUC} is the Area Under the Curve, as described in \ref{sec:robustness}, is only indirectly related to the specific configuration, as it is the result of all parameters tested during the tuning process. It gives an indication of how robust the algorithm performs.
+Table \ref{tab:algoperf} shows performance of each algorithm configuration. The parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalisability, and a high relative standard deviation indicates a low generalisability. \textit{DS} is the distance score, describe in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provides results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence a measure of how the performance of the configuration will generalise to other data. \textit{AUC} (Area Under the Curve), as described in \ref{sec:robustness}, is only indirectly related to the specific configuration, as it a result of all parameters configuratations we have tested. It gives an indication of how robust the algorithm performs.
 %In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is described in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) is described in section \ref{sec:robustness}.\\
 %
 \begin{table}
@@ -396,13 +391,13 @@ Table \ref{tab:algoperf} shows performance of each algorithm configuration. As t
 \label{tab:algoperf}
 \end{table}\\
 %
-Table \ref{tab:algoseq} shows some of the side effects of each configuration. \textit{GSL} is the Good Sequence Length which is a count of how many sequences of frame states that were classified as $1$, whereas \textit{BSL} is a count of how many sequences of frame states that were classified as $0$. A sequence is thus defined as a number of subsequent frames that share the same classification. The relative standard deviation of both GSL and BSL are computed, along with the longest GSL and BSL.
+Table \ref{tab:algoseq} shows some of the side effects of each configuration. \textit{GSL} stands for \textit{good sequence lenght} and \textit{BSL} means \textit{bad sequence length}. A sequence is defined as a number of subsequent frames that share the same classification. The relative standard deviation of both GSL and BSL are computed, along with the longest good- and bad- sequence.
 %In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecutive good frames, and a Bad Sequence Length (BSL) is the number of consecutive bad frames. Both measures is an average (over each test-set) and the relative standard deviation along with the longest GSL and BSL is also supplied in Table \ref{tab:algoseq}.
 %
 \begin{table}
   \begin{tabular}{| l | c | c | c | c | c | c |}\hline
   %\begin{tabular}{| !l | ^c | ^c | ^c | ^c | ^c | c |}\hline
-    Label & GSL & GSL std. dev. \% & longest GSL & BSL & BSL std. dev. \% & longest BSL  \\\hline
+    Label & mean GSL & GSL std. dev. \% & longest GSL & mean BSL & BSL std. dev. \% & longest BSL  \\\hline
     ICSM1 & 205 & 217\% & 5105 & 40 & 155\% & 536 \\\hline
     CCSM1 & 214 & 214\% & 5121 & 40 & 160\% & 607 \\\hline
     CO1 & 290 & 28\% & 11079 & 73 & 196\% & 1690 \\\hline
@@ -451,43 +446,29 @@ Table \ref{tab:algoseq} shows some of the side effects of each configuration. \t
 %
 \subsection{Analysis}
 %
-Table \ref{tab:algoperf} summarizes the primary results of our test, where the Distance Score is the primary attribute when rating the performance of a configuration. Note that each configuration uses either the Frame-by-Frame method, or the Temporal Classification method, when comparing against the golden standard. Configurations using different comparison methods are not directly compareable as the Frame-by-Frame method generally punishes errors harder than the Temporal Classification method. Configuration labels with a postfix of 1 or 2 uses the Frame-by-Frame comparison method, and labels with a postfix of 3 to 7 uses the Temporal Classification method.\\
-The Distance Score standard deviation are all in the area of $25-35\%$ except some configurations of the Contrast Only algorithm. Both of these configurations uses the Temporal Classification method with a tolerance of 48 (the highest tested), and both has the worst score compared to other algorithms with compareable configurations.\\
-We have marked the configuration with the best performance in Table \ref{tab:algoperf} with \textbf{bold}, namely CCSM7. It has a relatively low Distance Score by $0.36$ which is better than or equal to 15 out of 28 configurations. CCSM7 uses the Temporal Classification method with a the lowest tested tolerance, 12, and a smoothness degree of 0, ie. no smoothing, which means it will be punished greatly for any errors compared to most other configurations. CCSM7 also has a relatively large AUC which indicates that the algorithm itself is fairly robust. All other configurations of this algorithm also has a large AUC, supporting this assumption.\\
-A close runners up is ICSM7 which had the same Distance Score as CCSM7. It is however not nearly as robust as CCSM7 which is due to some parameter configurations of the contrast ratio treshold produces very poor results.\\
-The SO algorithms performs almost as well as the CCSM and ICSM algorithms, which leads us to believe that the camera movement is the defining attribute when estimating image quality. We do however only have a fairly limited amount of night-shots, and we expect that this is the edge that these two algorithms has over SO.\\
-Table \ref{tab:algoseq} summarizes some of the side-effects of each configuration. Of note is that BSL is no more than 2 digits, they are all in the range $39-84$, for all configurations which tells us that sequences of poor footage are generally short. The longest BSL for CCSM7 is 607 frames (ca. 25 seconds) which tells us that there do exists longer sequences of bad footage, but this is certainly an extreme outlier (relative standard deviation is $167\%$).
-Table \ref{tab:algoseq} also shows that there is on average 5 times more good footage than bad if we consider the results provided by CCSM7. It also finds a sequence of 5121 frames, roughly 3.5 minutes, which only supports this claim.\\
+Table \ref{tab:algoperf} summarizes the primary results of our test, where the Distance Score is the most important attribute for rating the performance of a configuration. Note that configuration are meassured in both the the Frame-by-Frame, and the Temporal Classification test. Results derived from comparison methods are not directly compareable as the Frame-by-Frame method always punishes misclassifications harder than the Temporal Classification method. Configuration labels with a postfix of 1 or 2 uses the Frame-by-Frame comparison method, and labels with a postfix of 3 to 7 uses the Temporal Classification method.\\
+The Distance Score standard deviation are all in the area of $25-35\%$ except some configurations of the \textit{contrast only} classifier. Both of these configurations uses the Temporal Classification method with a tolerance of 48 (the highest tested), and both has the worst score compared to other algorithms with compareable configurations.\\
+We have marked the configuration with the best performance results in Table \ref{tab:algoperf} with \textbf{bold}, namely CCSM7. It has a relatively low \textit{distance score} of $0.36$ which is better than or equal to 15 out of 28 configurations. CCSM7 uses the Temporal Classification method with the the lowest tested \textit{tolerance}, 12, and a smoothness degree of 0, ie. no smoothing, which means it will be punished fully for any errors compared to most other configurations. CCSM7 also has a relatively large AUC which indicates that the algorithm itself is fairly robust. All other test results for this classifier also has large AUCs, further supporting its case.\\
+A close runners up is ICSM7 which had the same Distance Score as CCSM7. It is however not nearly as robust as CCSM7 which is due to some parameter configurations of the contrast ratio treshold producing very poor results.\\
+% Discussion?:
+The SO algorithms performs almost as well as the CCSM and ICSM algorithms, which leads us to believe that the camera movement is the defining attribute when estimating image quality. We do however only have a fairly limited amount of night-shots, which could be the reason for this.\\
+% ---
+Table \ref{tab:algoseq} summarizes some of the side-effects of each configuration. Of note is that the mean BSL is no more than 2 digits, they are all in the range $39-84$, for all configurations which tells us that the classifiers generally only classify short segments of footage as bad.\\
+Table \ref{tab:algoseq} also shows that, on average, 5 times more footage is classified as good, than bad. Both the mean- and longest- GSL, are much bigger than their BSL counterpart, in all configurations.\\
 %
-MEASURE HOW GOOD THE CCSM7 CONFIGURATION ACTUALLY WAS. IE. HOW MANY FRAMES DID IT GUESS CORRECTLY, AND HOW MANY DID IT GUESS WRONG.
+% MEASURE HOW GOOD THE CCSM7 CONFIGURATION ACTUALLY WAS. IE. HOW MANY FRAMES DID IT GUESS CORRECTLY, AND HOW MANY DID IT GUESS WRONG.
 %
-% In general we have learned from these results that an algorithm that considers atleast camera movement in a video provides a significantly better assesment of the image quality than those that do not. 
-%Table \ref{tab:algoperf} summarizes the primary results of our test. We cannot directly compare different configurations of the various algorithms as we expect a higher tolerance for error in some configurations, either by applying a gaussian filter (as described in Section [REFERENCE]) in the comparison method or triangular smoothing (as described in Section [REFERENCE]) of the result, or both.\\
-%We therefore try to identify the configuration with the best performance mainly by comparing distance scores (low is better). Secondly the generalizability of a configuration is taken into account to break ties by looking at the relative standard deviation of the parameter(s).\\
-% AUC is also mentioned in the table, but as it describes how sensitive an algorithm is to parameter-change...\\
-% We did not expect the CO\textit{X} and $\text{CSM}^{3}\textit{X}$ algorithms to perform very well as the first does not take camera-movement into account, and the second ???????????????????????\\
-% The 7th configuration does not apply triangular smoothing, and also uses a fairly low tolerance of 12 frames, roughly translated to a margin of error of half a second in each end of a sequence, yet it still achives a distance score of $0.36$ in 3 out of 5 algorithms and a relative standard deviation around $30\%$. We use the parameter relative standard deviation to break the tie where CCSM7 comes out on top. It also has the highest AUC, and we should therefore expect it to perform well even for other choices of parameters.\\
-% The performance can generally be explained by the nature of our dataset, as there simply is very few frames where contrast is an issue. The higher relative standard deviation of SO7 could be explained by it trying to overcompensate in the few cases where a frame is classified as bad because of a low contrast.
-%
-\subsection{Risks and Limitations}
-% LAUGE
-In order to limit the scope of the testing and analysis phase we make some decisions which should be noted as a lot of areas related to determining the best algorithm and the optimal algorithm-parameter combination are left to be explored:\\
-\\
-All our algorithms square the \textit{contrast} and \textit{shift vector magnitude} values they come up with for each frame. The reason for this is that we want to increase their sensitivity toward bad values as compared to good ones. However, we have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation. Another important thing to remember is that we actually compute \textit{contrast} differently than Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general.\\
+\subsection{Discussion}
+% 
+During the computation of the \textit{contrast}- and \textit{shift vector magnitude}- ratios for a frame, we square inverse contrast and the shift vector values in order to increase the classifiers sensitivity toward bad frames. We have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation. Another important thing to note is that we actually compute \textit{contrast} differently than Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general.\\
 \\
 When generating the cost and benefit scores we calculate the harmonic mean between the positive precision and the negative recall, as well as the positive recall and the negative precision, respectively. In our experimentation we have simply weighted the two values in each pair evenly, but it is possible that a skewed weighting in one or both of means would perform differently. It is even possible that this pair combination is not the right one for the task, although we argue that it intuitively makes sense.\\
 \\
-JEG MENER IKKE AT DET ER EN RISIKO/BEGRÆNSNING. MAN KAN ALTID TESTE FOR FLERE PARAMETRE (DER ER I TEORIEN UENDELIGT MANGE KOMBINATION). ANALYSEN ER LAVET PÅ BAGGRUND AF DE KONFIGURATIONER VI HAR TESTET. DET ER IKKE ET SPØRGSMÅL OM AT FINDE DEN BEDSTE OVERALL, MEN DEN BEDSTE AF DEM VI TESTER UDFRA NOGLE NOGENLUNDE FORNUFTIGE PARAMETRE.\\
-In our experiment with smoothing the classification suggestions generated by the algorithm, in order to remove outliers, we restrict ourselves to only testing two different degrees of smoothing. More could be learned by experimenting with this value as an additional parameter of the algorithms. Informal testing did show little impact of a much higher degree of smoothing than the ones tested. \\
+Also mentioned ealier, when calculating the AUC's for each algorithm we insert the points (0,0) (1,1) along with the points generated by the cost/benefit calculations in order to make sure each algorithm's curve cover the entire span of the x-axis. This has the effect of normalising the AUC around $y = x$, which is useful when we compare the AUCs for the different classifiers. It is however possible, that the very fact that a curve is not defined all along the x-axis is a sign of low robustness especially if the curve only is present near x = 1, that is, if the cost value is generally very high. If this is the case we risk ending up with invalid assumptions of robustness.\\
 \\
-The same can be said about the tolerance-value in the Temporal Classification. Exactly what degree of tolerance is the most reasonable is up for debate and any changes could, and probably would, change the outcome of our results.\\
+In the \textit{ICSM} algorithm we chose to simplify our tuning process by decreasing the precision on the \textit{contrast} ratio threshold. The rationale for this is described in section~ \ref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
 \\
-MAYBE THE 0 COST/MAX BENEFIT AND VICE VERSA. IS ONLY THEORETICALLY ACHIVEABLE, IE. THERE EXISTS NO PARAMETER CONFIGURATION THAT WILL ACHIVE THIS???\\
-Also mentioned ealier, when calculating the AUC's for each algorithm we insert the points (0,0) (1,1) along with the points generated by the cost/benefit calculations in order to make sure each algorithm's curve cover the entire span of the x-axis. This has the effect of normalising the AUC around 0.5, which is useful for AUCs based on a curve that is only defined partly along the x-axis. It is however possible, that the very fact that a curve is not defined all along the x-axis is a sign of low robustness especially if the curve only is present near x = 1, that is, if the cost value is generally very high. If this is the case we risk ending up with invalid assumptions of robustness.\\
-\\
-In the \textit{ICSM} algorithm we chose to simplify our tweaking process by decreasing the precision on the second parameter, \textit{contrast}. The rationale for this is described in section~ \ref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
-\\
-Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. As described in section \ref{sec:videoclipsegmentation}, we are actually not interested in such a hard classification in the final system. Rather we want the quality of a region of video-footage to be expressed as a soft (un)suitability curve, from which we can make some general assumptions. However, the nature of our tests, especially the way in which we generate our gold standard, as described in section LAUGE??? \ref{sec:goldstandard}, requires us to simplify the problem into this binary form. Some of the aspects of the problem, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
+Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. Such a classificatio may be needlessly harsh. Instead the original \textit{unsuitability score} could be used as a weight in later processing phases. However, the nature of our tests, especially the way in which we generate our gold standard, as described in section \ref{sec:goldstandard}, requires us to simplify the problem into this binary form. Some of the information about the quality of the frames, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
 %
 \section{Summary}
 %
