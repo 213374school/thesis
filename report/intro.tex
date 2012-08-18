@@ -2,33 +2,41 @@
 \chapter{Introduction}
 %
 News is big business, old news is not. We live in a world where we want the news as they happen, which mostly is not feasible. It takes a while for professional news crews to show up at a news-worthy event, but individuals present at the scene can sometimes become a decent substitute. The Internet contains literally millions of video clips from all around the world. This number is increasing rapidly, not just because more people have access to the Internet, but also because more and more people are equipped with video cameras, often in the form of smart-phones. It is therefore no surprise that often, when an event occurs, the first footage available consists of private recordings made by those present at the scene. With the increased access to high-resolution cameras and mobile Internet connections, we not only expect an increase in video uploads, but also in live-video streaming.\\
-Currently, the vast majority of existing videos are published at video-streaming services such as YouTube, which, at the time this is written, receives 72 hours of videos footage every minute\footnote{http://www.youtube.com/t/press\_statistics}. The current possibilities for mining this enormous dataset are limited. It is possible to search for most videos using tags and keywords, but very little work has been put into grouping videos together around the events they cover. Given the expected increase in video uploads we argue that it will become increasingly important to begin looking at ways to cluster videos together and merge them into aggregated video streams covering entire events. By considering each video a scene located at a point in space and time, we theorize that it should be possible to produce single videos covering specific events, by merging neighboring scenes.\\
+Currently, the vast majority of existing videos are published at video-streaming services such as YouTube, which, at the time this is written, receives 72 hours of videos footage every minute\footnote{http://www.youtube.com/t/press\_statistics}. The current possibilities for mining this enormous dataset are limited. It is possible to search for most videos using tags, but very little work has been put into grouping videos together around the events they cover. Given the expected increase in video uploads we argue that it will become increasingly important to begin looking at ways to cluster videos together and merge them into aggregated video streams covering entire events. By considering each video a scene located at a point in space and time, we theorize that it should be possible to produce single videos covering specific events, by merging neighboring scenes.\\
 Extensive research already exists in the field of image processing and labeling and the Internet provides access to an abundant source of video footage. However, this footage is commonly of a rather low quality (at least compared to professional recordings). For example it can be too shaky or too dark.\\
 With the processing power of distributed computing and the advancement in the field of image processing and machine learning in mind, we propose a system, which given a collection of video footage recorded at an event is capable of composing a watchable and semantically valid summary of that event shortly after the data becomes available. A system like this could, if it was fully developed, remove some of the human interaction in news curation and, as a result, decrease the delay between when 'the news' happen and when they become available.
 %
 \section{Overview}
 %
-In our work we focus on a selection of problems related to creating such a video aggregator. We have facilitated this process into a three-step pipeline described below.
+In our work we focus on a selection of problems related to creating a video summarizer. We have facilitated this process into a three-step pipeline as described below.
 %
 \subsection{Image quality assessment}\label{sec:videoclipsegmentation}
 %
-Image quality assessment refers to the process of quantifying image quality in the raw video footage, %Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. 
-which can be used later on when creating final video summaries, or as a way to remove unsuitable material to speed up computionally heavy operations in later phases. %Even if one does not want to remove any material this early on, it could be used as a metric for prioritising later operations. 
+Image quality assessment refers to the process of quantifying image quality in raw video footage, %Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. 
+which can be used later on when final video summaries, or as a way to remove unsuitable material to speed up computionally heavy operations, such as facial detection, in later phases. %Even if one does not want to remove any material this early on, it could be used as a metric for prioritising later operations. 
 %This could be relevant in a live system where one might want to prioritise later analyses based on what footage is most likely to be most useful.  - FUTURE WORK
-Frame quality assessment is based on lighting conditions in individual video-frames as well as the overall camera movement throughout the video.
+% Frame quality assessment is based on lighting conditions in individual video-frames as well as the overall camera movement throughout the video.
+Frame quality assessment is based on lighting conditions and overall camera movement throughout the video.
 %
-\subsection{Labeling}
+\subsection{Grouping and Labeling}
 %
-Labeling is a contextual analysis of video footage. This context can be expressed in many forms; Brightenss and color intensity tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and proximity, of people in the footage. More advanced image processesing such as optical flow can tell us something about what specific actions are occuring in the video, ex. a waving banner or people dancing. We focus on a broad set of different methods, each focusing on one aspect of the contextual analysis. These classifiers yield a set of labels for each individual frame.
+Labeling is a contextual analysis of video footage. 
+%This context can be expressed in many forms; 
+Brightenss and color intensity tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and proximity, of people in the footage. 
+More advanced image processesing such as optical flow can tell us something about object movement in the video, ex. a waving banner. 
+%More advanced image processesing such as optical flow can tell us something about what specific actions are occuring in the video, ex. a waving banner or people dancing. 
+We focus on a broad set of different methods, each focusing on one aspect of the contextual analysis. These classifiers yield a set of labels for each individual frame.
 %We actually find that this phase of grouping and labeling the footage, in our case, proved the initial frame quality assessment to be less important than we first expected. In general, at least for our selection of methods, classification only happens in footage that is of decent image quality.
 %
 \subsection{Video Summary}
 %
-Labelling provides the abstraction level we need in order to create video summaries. We constructed a \textit{recipe language} which uses the different labels as a palette from which the recipe is created. 
+Labelling provides the abstraction level we need in order to create video summaries. Based on the accuracy of a label, we can identify a scene with a specific context. A summary is several scenes cut together, hence we can create a summary with a specific contextual flow.
+%We constructed a \textit{recipe language} which uses the different labels as a palette from which the recipe is created. 
 %
 \subsection{Test}
 %
-The generated video summaries are assessed by a panel of human oberservers. The summaries range from \textit{randomly generated summaries} are to \textit{recipe based summaries} and control samples of human edited summaries. 
+The video summaries are finally assesed by a panel of human observers. Each observer is presented to a questionnaire after they have watched a video summary, providing us valuable feedback.
+%The generated video summaries are assessed by a panel of human oberservers. The summaries range from \textit{randomly generated summaries} to \textit{recipe based summaries} and control samples of human edited summaries. 
 %
 \section{Limitations}
 %
@@ -38,14 +46,14 @@ The generated video summaries are assessed by a panel of human oberservers. The 
 % \subsection{Data source}
 %
 %
-\subsection{Type of events}
+% \subsection{Type of events}
 %
-The perfect system would be able to handle all kinds of different events. However, in order to limit the scope our work we have restricted ourselves to focusing on one kind of scenario: urban protests and demonstrations. Although this subject still yields diverse footage of everything from public speeches to police arrests it is only natural that some of the results we archive and the conclusions we make will not necessarily generalise to other kinds of scenarios.
+%The perfect system would be able to handle all kinds of different events. However, i
+In order to limit the scope our work we have restricted ourselves to focusing on one kind of scenario: urban protests and demonstrations. Although this subject still yields diverse footage of everything from public speeches to police arrests it is only natural that some of the results we archive and the conclusions we make will not necessarily generalise to other kinds of scenarios.
 %
 \section{Dataset}\label{sec:dataset}
 %
-% MINDRE BENÆVNELSE AF DETTE FULL BLOWN SYSTEM
-Our vision of a full blown system is one that continuously receives raw video footage of from different events directly from the mobile devices recording it. This footage would then be processed by the system and used in a near-live coverage of that specific event. Since such a system currently does not exist, our goal is to build a dataset which as closely as possible mimics this scenario. We do this by identifying a small collection of recent events, namely ACTA Copenhagen, ACTA Aarhus, and COP15, and collect video-clips of these from Youtube.
+Our vision of a full blown system is one that continuously receives raw video footage of from different events directly from the mobile devices recording it. This footage would then be processed by the system and used in a near-live coverage of that specific event. Since such a system currently does not exist, our goal is to build a dataset which as closely as possible mimics this scenario. We do this by identifying a small collection of recent events, namely ACTA Copenhagen, ACTA Aarhus, and COP15, and collect video-clips of these from YouTube.
 %
 \subsection{Building the dataset}
 %
@@ -54,45 +62,39 @@ The construction of our dataset is a somewhat manual process as described below.
 %
 \subsubsection{Getting the videos}
 %
-All the videos in our dataset have been found on Youtube. Due to limitations in the Youtube API and the way Youtube stores video, most of the video metadata is unavailable to us. This means that we do not have access to the original time of recording, as well as potential geo-location data, which might have been available otherwise. Instead we had to rely on Youtubes tag/keyword system. When users upload a video to YouTube they can choose to attach a set of tags/keywords and categories to it. We find that these keywords and categories, when chosen correctly, can be a efficient way to search for related video footage. For example, events like protests and demonstration can often be found by searching for a keyword describing the cause behind the event along with one describing the location (ex. a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location cannot be accurately identified through these attributes. For example, a video promoting a demonstration before it begins and explaining the reasons for it will often be tagged with the same keywords as the footage later recorded at the event. It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.\\\\
+All the videos in our dataset have been found on YouTube. Due to limitations in the YouTube API and the way YouTube stores video, most of the video metadata is unavailable to us. We do not have access to the original time of recording, as well as potential geo-location data. Instead we have to rely on YouTube tags. When users upload a video to YouTube they can choose to attach a set of tags and categories to it. We find that these tags and categories, when chosen correctly, can be an efficient way to search for related video footage. For example, events like protests and demonstration can often be found by searching for a tag describing the cause behind the event along with one describing the location (ex. name of a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location cannot be accurately identified through these attributes. For example, a video promoting a demonstration before it begins will often be tagged the same as the footage later recorded \emph{at} the event.\\\\ %It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.\\\\
 %
-% Lauge: Nedenstående er den tidligere tekst. Jeg har valgt at koge det meget ned, for ikke at komme for tæt på 'implementation level'
-%
-% Our initial idea was to build the dataset from Youtube videos recorded at events by selecting them based on location and time. However, the YouTube data API does not support searches based on specific time spans and even if it had, the timestamps accessible through it are based on the time of upload, not the time of recording. Since only very few videos are uploaded right after they are recorded, we found that the timestamps from videos from a specific event would be spread out over several days, sometimes even weeks. Location based search \textit{is} supported, but again we found the information accessible through the API unsatisfactory. Although videos can be tagged with location information, this data does not necessarily correspond to the GPS location of the device that recorded it, but is often generated based on an non specific place name, like a street, city or even country. And again, the information is created at the time of upload not the time of recording and thus based on the user's position at that time.\\
-% As a result of these observation we came up with another way to build our dataset. When users upload a video to YouTube they can choose to attach a set of tags/keywords and categories to it. We find that these keywords and categories, when chosen correctly, can be a very efficient way to search for related video footage. For example, events like protests and demonstration can often be found by simply searching for a keyword describing the cause behind the event along with one describing the location (often a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location can not be accurately identified through these attributes. For example, a video promoting a demonstration before it begins and explaining the reasons for it will often be tagged with the same keywords as the footage later recorded at the event. It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.
-%
-%\subsubsection{Getting the videos}
-Using the Youtube API we searched for videos related to three seperate events described below.%, each described below, that all happened in Denmark within recent time.
+Using the YouTube API we searched for videos related to the seperate events described below.
 %
 \paragraph{ACTA protest, Copenhagen, 2012}
 %
-This, more recent event, spans a handful of hours starting during the day and continuing into the late afternoon and early evening. The footage is spread out over a smaller area and shows people both in walking and standing protest at various locations, and also public speakers.
+This event spans a handful of hours starting during the day and continuing into the late afternoon and early evening. The footage is spread out over a smaller area in Copenhagen city, and shows people both in walking and standing protest at various locations, and also public speakers.
 %
 \paragraph{ACTA protest, Aarhus, 2012}
 %
-The ACTA Aarhus sub-set is recorded on the same day as the ACTA Copenhagen set. Although it contains fewer videos, they are generally longer and mostly show public speakers. The footage is recorded exclusively during the day.
+The ACTA Aarhus event, taking place in Aarhus city, is recorded on the same day as the ACTA Copenhagen event. Although it contains fewer videos, they are generally longer and mostly show public speakers. The footage is recorded exclusively during the day.
 %
 \paragraph{COP 15 Climate summit, Copenhagen, 2009}
 %
-This is the event with the most diverse footage. Since the event occured over several days, this sub-set of videos contain footage from a lot of different places recorded over a longer timespan. It is also the only of the sub-sets that contain night footage, has footage with significant police presence in them, and footage of people being arrested.
+This is the event with the most diverse footage. Since the event occured over several days, this sub-set of videos contain footage from a lot of different places recorded over a longer timespan. It is also the only of the events with night recordings, that have footage with significant police presence, and footage of people being arrested.
 %
 \subsubsection{Removal of unwanted material}
 %
-Since the purpose of our dataset is to mimic raw, unedited footage as much as possible we perform a significant amount of manual filtering during our Youtube searches. Videos matching the criteria below are not included in our dataset, although they appeared in our YouTube searches.
+Since the purpose of our dataset is to mimic raw, unedited footage as much as possible we perform some manual filtering during our YouTube searches. Videos matching the criteria below are not included in our dataset, although they appeared in YouTube searches.
 %
 \paragraph{Unrelated videos}
 %
-All videos that are unrelated as a result of ambiguous search queries are removed. An example of this is the police chase videos resulting from a search for protest videos from the COP15 Climate summit (we expect the reason being cop is slang for police).
+All videos that are unrelated as a result of ambiguous search queries are removed. An example of this is the police chase videos resulting from a search for protest videos from the COP15 Climate summit (we guess the reason being that \emph{cop} is slang for police).
 %
 \paragraph{Related, non-event videos}
 %
-These videos are related to the event we want, but they are not from the event. Again, this is the result of a ambiguous search query or maybe even an unfit tag being applied to the video. Examples include videos that promote an event or which had nothing to do with the protests around it.
+These videos are related to the event we want, but they are not \emph{from} the event. This is the result of a ambiguous search query or an errornous video tag. Examples include videos that promote an event or which had nothing to do with the protests around it.
 %
 \subsubsection{Partial use of material}
 %
 %In some cases part of a video-clip may be suitable for a specific test although the clip in its entirety does not live up to our requirements. An example of this would be a video of an event that was obviously produced from several other video-clips. Although using such a clip as if it was raw footage would severely hurt the credibility of our results, some of its sub-segments (or maybe even the entire video) can sometimes be used in specific tests, for example as a \textit{golden standard} of what good footage or a good video summary should look like.
 % REWRITE:
-Some video footage contains parts that are suitable to be included in our dataset. This could be human edited video where we wish to include some or all scenes. This footage is also suitable as a \textit{gold standard} for high quality video as it has already been viewed by a human and deemed worthy to include in a final cut video.
+Some video footage contains parts that are suitable to be included in our dataset. This could be human edited video where we wish to include some or all scenes. Another use of this footage is as a \textit{gold standard} for high quality video, as it has already been viewed by a human and deemed worthy to include in a final cut video.
 %
 \subsubsection{Pre-processing of the videos}
 %
@@ -113,4 +115,17 @@ The video available online are recorded on different devices and stored in diffe
 \subsubsection{Videos in the dataset}
 %
 % Lauge: Jeg forestiller mig at vi skal have nogle tabeller her hvor vi viser hvor mange videoer der er i de forskellige subset, hvor mange minutter der er i hver. Det samme skal måske vises i forhold til rå vs. pre-edited videoer.
-TABLE SHOWING SOME BASIC INFORMATION ABOUT EACH VIDEO IN THE DATASET
+\begin{table}[ht]
+	\begin{center}
+	\caption{Original dataset}
+	\label{tab:}
+		\begin{tabular}{lll}
+		\toprule
+			YouTube id & Dataset & Length \\
+			\midrule
+			0Hwpd-tuD7o & COP15 & 0:15\\
+		\bottomrule
+		\end{tabular}
+	\end{center}
+\end{table}
+%
