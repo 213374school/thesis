@@ -69,96 +69,62 @@ A high standard deviation indicates a high contrast/much diversity in pixel inte
 % 
 % where does this belong (somewhere in algorithms section)
 % Another way to compute $v$ is $v = \text{max}(\frac{W_{1}}{T_{1}}, \frac{W_{2}}{T_{2}})$ and $s = v >1$ where $T_{1}, T_{2}$ are the respective lower bounds.
-The \textit{contrast} ratio, $C$, is defined as:
+The inverse \textit{contrast} ratio, $C$, is defined as:
 \[
 C = 1 - (c^2 / N^2),
 \]
-where $N$ is the largest possible value of $c$. Again, we square both $c$ and $N$ to increase sensitivity toward bad values. For our 8-bit grayscale footage $N = 127.5$, which would be the standard deviation for frame, whos image-matrix contain only values of 0 and 255, uniformly distributed.\\
+where $N$ is the largest possible value of $c$. Again, we square both $c$ and $N$ to increase sensitivity toward bad values. For our 8-bit grayscale footage $N = 127.5$, which would be the standard deviation for a frame, whos image-matrix contain only values of 0 and 255, uniformly distributed.\\
 %
 \subsection{Triangular Smoothing}
 %
-%There are several approaches to computing the suitability for a given frame: A binary approach in which a frame is simply deemed suitable or unsuitable for watching, and an approach where a frame is rated on a scale. These are discussed in detail in section REFERENCE TO SECTION "The Algorithms".
+Both $S$ and $C$ are meassures of how unsuitable a frame is. We perform \textit{trianglur smoothing} on the set of all $S$ and $C$ over all frames in a video, in order to remove outliers. Triangular smoothing is a weighted smoothing function where the degree of smoothing determines the distribution of weights. The biggest weight is given to the element we wanna smooth. The weight of the elements surrounding it are determined by their distance to the this element. The weights decrease in a linear fashion forming a triangular shape, thus the name. We define our triangle of weights as:
 %
-%The values of these variables are quantified as how bad they are compared to how bad they can be.\\
+\begin{equation}
+T(w) = [1,2,\dots,w-1,w,w-1,\dots,2,1],
+\end{equation}\label{eq:triangular}
 %
-%
-%
-Finally $S$ and $C$ are smoothed using \textit{trianglur smoothing} with a degree of $12$ in order to remove outliers. Triangular smoothing is a weighted smoothing function where the degree of smoothing determines the distribution of weights. As the name suggests the weights are distributed in a triangular fashion where the highest weight is the middle one and the remainder of the weights diminish in a linear fashion as a function of distance from the middle. Triangular smoothing can then be described by:
+where $w$ is the weight of the element we want to smooth.
+Triangular smoothing can then be described by:
 %
 \[
-s_{j} = 
-\begin{cases}
-\frac{\sum_{i=0}^{2d} w_{i}x_{j+i-d}}{T} & j=\{1,\dots,n-1\}\\
-x_{j} & j=\{0,n\}
-\end{cases}
+S(x, w) = \sum_{i=x-w}^{x+w} \frac{D_{i} T(w)_{i-(x-w)}}{\sum T(w)},
 \]
 %
-where $d$ is the degree of smoothing, $w$ is the weight, $x$ is the value in the original data, $T = \sum_{i=0}^{2d}(w_{i})$ ie. the triangle sum, and $s$ is the smoothed value. HOW TO EXPLAIN BORDERCASE WHERE TRIANGLE IS OUTSIDE DATA-RANGE? %If the subscript of $x$ is negative the triangle is decreased accordingly in size. VI LADER DEN LIGE LIGGE\\
+where $x$ is the index of the element we want to smooth, $w$ is the weight we want to give it, $D$ is the set of all original values, and $T$ is the triangle of weights defined in \ref{eq:triangular}. For simplicity we have excluded the border cases at the beginning and the end of $D$, where $T$ covers values that are not defined. In those cases we simply calculate the $S$ and $T$ for the values, which \textit{are} defined. Figure [FIG:REF] shows the result of performing triangular smoothing on a collection of data, which various values of $w$. We set $w = 12$.
+%
+[FIGUR FOR TRIANGULAR SMOOTING FOR w = 6, 12, 24]
 %
 \subsection{Frame State Classification}
 %
-The methods described in section \ref{sec:algorithms} are all functions of the shift vector magnitude ratio and contrast ratio, and one or more tresholds. Each method computes a suitability measure, $v$, of the frame, and the frame state is then classified as:
+The classifiers described in section \ref{sec:algorithms} takes the the shift vector magnitude ratios and contrast ratios, for a video, and calculate a unsuitability measure, $v$, for each frame. This unsuitability meassure is then used to perform a binary classification of each frame as being either \textit{good} or \textit{bad}. Unless otherwise noted, this classification is performed like this:
 \[
 s = 
 \begin{cases}
-1 & \text{ if } v \leq 1\\
-0 & \text{ otherwise }
-\end{cases},
+\text{good} & \text{ if } v \leq 1\\
+\text{bad} & \text{ otherwise }
+\end{cases}
 \]
-unless otherwise noted. Where $s=1$ is a positive classification, and $s=0$ is a negative classification.
-% where $0$ is a less desireable frame state, and a frame state of $1$ is desireable.
-\subsection{Algorithms - RENAME?}\label{sec:algorithms}
 %
-\subsubsection{Contrast Only RENAME?}
+\subsection{Classifiers}\label{sec:algorithms}
 %
-%This method ignores shift magnitude ratio, $S$, 
-The frame state, $v$, is defined as $v=\frac{C}{\tau}$, %, and the frame state, $s$, is classified as follows:
-% \[
-% s = 
-% \begin{cases}
-% 1 & \text{ if } v \leq 1\\
-% 0 & \text{ otherwise }
-% \end{cases},
-% \]
+We test 4 different classifiers, each one taking a different approach.
 %
-where $\tau$ is some treshold.
+\subsubsection{Contrast Only classification}
 %
-\subsubsection{Shift Magnitude Only RENAME?}
+This classifier only looks at the contrast ratios throughout a video. The frame state, $v$, is defined as $v=\frac{C}{\tau}$, where $\tau$ is some treshold and $C$ is the inverse contrast ratio for that frame.
 %
-The frame state, $v$, is defined as $v=\frac{S}{\tau}$, %, and the frame state, $s$, is classified as follows:
-%This method ignores the contrast ratio, $C$, and marks the frame state, $s$, as follows
-% \[
-% s = 
-% \begin{cases}
-% 1 & \text{ if } v \leq 1\\
-% 0 & \text{ otherwise }
-% \end{cases},
-% \]
+\subsubsection{Shift Magnitude Only classification}
 %
-where $\tau$ is some treshold.
-%This algorithm only considers how much a frame was shifted in order to attempt to match it to the frame before it. That is, it only looks at how much the images are moving or shaking. Just like with the CO algorithm we simply measure if the \textit{shift vector magnitude} is beyond the configured limit, and mark the frame good or bad accordingly.
+This classifier only looks at the shift vector magnitude ratios for each frame. The frame state, $v$, is defined as $v=\frac{S}{\tau}$, where $\tau$ is some treshold and $S$ is the shift vector magnitude ratio for that frame.
 %
-\subsubsection{Independent Contrast and Shift Magnitude RENAME?}
+\subsubsection{Independent Contrast and Shift Magnitude classification}
 %
-%This algorithm takes both parameters into consideration and looks at if any of the two exceeds a given threshold. 
-This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is simmilar to the approach taken by Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415}. The frame state, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$,%, and the frame state, $s$, is classified as follows:
-%This mean that we ignore the cumulative effect of the two as a determinant for whether the video segment is unsuitable. This is simmilar to the approach taken by Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415}. The frame state is marked as follows:%classifier, \text{S(c,s)}, is defined as:
-% \[
-% % S(c,s)=MAX(c \cdot (1-c_{lim}), s \cdot (1-s_{lim}))
-% s=
-% \begin{cases}
-% 1 & \text{ if } v \leq 1\\
-% 0 & \text{ otherwise }
-% \end{cases},
-% \]
-where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, $\tau_1$ and $\tau_2$ are some tresholds.
-%where \text{c} and \textit{s} are the \textit{contrast-} and \textit{shift vector magnitude}-ratios respectively and $c_{lim}$ and $s_{lim}$ are the limits defined by our configuration. 
-The function effectively normalises the effect of the tresholds LAUGE UDDYBER.% so that the two values can be compared by the \textit{MAX} statement. 
-%If $S(c,s) > 1$, one of the two parameters is beyond its limit and the frame is marked as bad.\\\\
+This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is simmilar to the approach taken by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. We look at the inverse contrast ratio and the shift vector magnitude ratios independantly and classifies frames as being \textit{bad} if either of the two pass their respective thresholds.\\
+The frame state, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$, where $C$ is the inverse contrast ratio, $S$ is the shift vector magnitude ratio, $\tau_1$ and $\tau_2$ are some tresholds.
 %
-\subsubsection{Cummulative Contrast and Shift Magnitude RENAME?}
+\subsubsection{Cummulative Contrast and Shift Magnitude classification}
 % ANDERS
-This method investigates the cumulative effect of both ratios, but we still wish that either one of them can mark a state on its own, as explained below. The frame state is marked as follows:\\
+This method investigates the cumulative effect of both ratios. If either of the two ratios, or if the combination of ratios, exceed a certain threshold, the frame is classified as \textit{bad}. The frame state is defined as follows:\\
 % With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.
 \[
 s = v \ge \tau,
@@ -182,7 +148,7 @@ ie. if $S$ is greater than the treshold $\tau_{1}$ then $\alpha S + \beta C$ mus
 \]
 %
 It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}{\tau_{2}}$.
-\\NOGEN DER FATTER DETTE? ER VORES VINDERALGORITE....
+\\NOGEN DER FATTER DETTE? ER VORES VINDERALGORITME....
 %
 %Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
 %
@@ -196,57 +162,35 @@ It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}
 %
 \section{Dataset}
 %
-% Most of the videos in this dataset was found on YouTube and collected as described in section \ref{sec:dataset}.\\
-This section mentions details that about our dataset that is only relevant for image quality assesment. We can categorize the videos from YouTube as unedited video and pre-edited video where the non-edited video is the most desireable as this is presumeably raw footage.
-%What we generally want is raw video, but since this is by far the lesser portion of the two we use the pre-edited video as a sort of benchmark on the pretense that a large majority of the footage is both of high quality and also contextually interesting.\\
+This section describe details about our dataset that are only relevant for image quality assesment. We categorize the videos YouTube videos as being either unedited or pre-edited. The former is the most desireable as this is presumeably raw footage.
 %
 \subsection{Unedited YouTube Videos}
 %
-The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage. \textbf{Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har}
-% Lauge: Disse tal skal opdateres så vi er sikker på at de stemmer overens med det vi rent faktisk har
-All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the dataset, we generate a \textit{gold standard} manually for each video, by watching the video and marking sections of high and low quality. %This is done by watching the video and recording every time the footage switches state from \textit{bad} to \textit{good} or vice versa.
+The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage. All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the dataset, we generate a \textit{gold standard} manually for each video as descibed in section \ref{sec:goldstandard} below.
 %
 \subsection{Pre-edited YouTube videos}
 %
-%The dataset furthermore contains a alot pre-edited videos. This is because far the m
-Most videos available on YouTube have already been edited in some way. 
-%Many of these videos consist of several different video-clips, which themselves was once raw footage. 
-In order to use these clips we cut these pre-edited videos into multiple videos at their scene boundaries. The editing is done manually without too much concern of loosing a few hundred milliseconds of footage the scene boundaries in order to speed up editing. Some of these scenes are undesireable, such as scenes with much on-screen text, credits, montages, ie. scenes that would not be considered raw footage. Also very short scenes are discarded. Because the resulting set of videos have already been screened and deemed watchable by a human (the producer of the video), we assume that all of this footage is a \textit{gold standard} in regards to later testing.
-%This is done manually in much the same way as the when generating the \textit{gold standard} for the raw YouTube videos; by watching the videos and marking the points of change of scene. 
-%Since a lot of these edited videos contain (for our purpose) unsuitable footage, like photos or on-screen text, only the parts that actually depict the event is kept. Because the resulting set of video-clips have in fact already been screened and deemed watchable by a human (namely the producer of the edited video), we assume that all of this footage is of a decent quality. During review we discard some of the the segmented video-clips, namely:
-% ALLEREDE NÆVNT
-% \begin{itemize}
-% \item very short segments - usually a 1 second segment would be discarded
-% \item contextually invalid - ex. a montage of still-images or ending credits
-% \item lack of visual quality - in some extreme cases an entire segment can be extremely dark/bright or shaky. This is obviously not acceptable since we assume all these segments to be of a decent quality in our later tests.
-% \end{itemize}
-%
-%Keep in mind that some of these segments are discarded as they are out of context of the entirety of the video-clip, where they would (presumably) make sense to include, but not as standalone segments.\\
-We also accept some \textit{noise} in each end of the segment to complement ex. overly long crossfades. LAUGE %In the end we end up with a large selection of short segments of video-footage that we expect to be of good quality.
+Most videos available on YouTube have already been edited in some way. Our dataset contain 16 pre-edited vidoes ($\sim$ 30 minutes). In order to use this footage we cut each video into multiple clips, at the points of its scene boundaries. This editing is done manually. Because some of these scenes are undesireable we also perform a manual clean up. Examples of scenes which are removed are; scenes with much on-screen text, credits, montages, ie. scenes that would not be considered raw footage, as well as very short scenes. Footage, which has undergone editing such as \textit{frame stabilisation}, are slowed down, or sped up, are not removed.
 %
 \subsection{Own recordings}
 %
-The dataset also contains five videos, which we have recorded ourselves. These videos depict various specific scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for parameter tuning. They are however not used in later phases.
+The dataset also contains five videos, which we have recorded ourselves. These videos depict various scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for parameter tuning. Unlike much of the other footage, which is also used throughout the later phases, these videos are only used in our image quality assesement experiments.
 %
 %
 \subsection{Gold Standard}\label{sec:goldstandard}
 %
+In order to be able to test the performance of our classifiers we genererate a \textit{gold standard} for each video. For the unedited YouTube videos and our own recordings, this is done by manually marking all frames as being either \textit{good} or \textit{bad}.\\
+Since the pre-edited youtube videos have already undergone a manual screening and editing process, we assume all their frames to be \textit{good}.\\
+These gold standards are used as the absolute truth, when we meassure the performance of our classifiers.
+%
 \section{Findings}
 %
-Due to a limited size dataset we perform a k-fold cross validation, described in section \ref{sec:kfoldxval}. The metric of success is whether a method correctly estimates the quality of a frame, in respect to the \text{gold standard}, and the parameters used in the specific configuration of that method. We investigate both the performance of various methods, and also their robustness as a measure of how sensitive they are to parameter change.\\
-For each algorithm we determine the optimal configuration of parameter(s) using k-fold cross validation, where the optimal configuration is the one that has the lowest distance score, described in section \ref{sec:ph1tweaking}. We also record some of the side-effects of each configuration such as the average length of a...\\
-Obviously, we want the resulting distance-score to be as small as possible as this signifies a good performance, but we also try to capture some of the side-effects of the specific configuration. One of the things we are interrested in knowing is how many frames long the average good video-clip is. This in itself does not tell us much, since even a very good classifier could end up with very short video-clips if the footage it was classifying is very bad. However, if several algorithms perform equally well this could work as a tie-breaker, as we in general prefer long good-quality clips since they give us more room for manoeuvre later on when we have to actually segment the footage. The variance of this length along with the median lenght is also calculated.
-%Our tests attempts to estimate several different algorithms overall ability to correctly estimate the qualities of the frames in a video and classify them as either good or bad. Further more we want to estimate what parameter(s) yield the best performance for each algorithm.
-%The dataset is trained using 5-fold cross validation (described in detail in the following). 
+Due to the limited size of our data we perform a k-fold cross validation, as described in section \ref{sec:kfoldxval}, during our tests. The metric of success is whether a method correctly estimates the state of the frames, in respect to the \text{gold standard}. We investigate both the performance of the various classifiers, and also their robustness as a measure of how sensitive they are to parameter change.\\
+For each classifier we determine the optimal configuration of parameter(s), over $k$ iterations, and calculate a mean based on our findings. The robustness, which is estimated as a function of how well the classifier performs over all tested configurations, is calculated on the entire dataset. We also record some of the side-effects of each configuration such as the average length of a good and bad sequences.\\
 %
 \subsection{K-fold Cross Validation}\label{sec:kfoldxval}
 %
- In k-fold cross validation the dataset is randomly partitioned into $k$ subsets of which one is retained for testing the method and the remaining $k-1$ subsets are used for training. The cross validation is repeated $k$ times where each of the subsets are used only once for testing. The resulting score and parameter(s) from each fold is averaged. % VI SKAL LIIIIIGE KIGGE PÅ OM ALT DETTE ER KORREKT. MEN K-FOLD X-VAL. ER DOG BESKREVET I "DETALJER".
-%The cross-validation process is then repeated k times (the folds), with each of the k subsamples used exactly once as the validation data. The k results from the folds then can be averaged (or otherwise combined) to produce a single estimation. The advantage of this method over repeated random sub-sampling is that all observations are used for both training and validation, and each observation is used for validation exactly once. 10-fold cross-validation is commonly used[5], but in general k remains an unfixed parameter
-%Since our dataset is limited in size we perform 5-fold cross validation on it in order to increase the amount of videos in the training set. 
-%
-%The dataset is split into five buckets by sorting the video-clips by length and inserting them, one at a time, in a circular manner. The result is five sub-sets each containing more or less the same amount of frames between all the videos in each set. We then tweak each algorithm's parameter(s) on each of the training sets created by combining four out of the five sub-set and subsequently test the configuration on the remaining test set (the remaining fifth sub-set) and average the results into final scores. 
-%We also attempt to estimate how \textit{robust} each algorithm is against changes to its parameter(s). That is, we want to quantify how good the algorithm is overall. This analysis is based on the entire dataset and happens after the 5-fold cross validation.
+ In k-fold cross validation the dataset is randomly partitioned into $k$ subsets of which one is retained for testing the method and the remaining $k-1$ subsets are used for training. The cross validation is repeated $k$ times, each time using a different subsets for testing. The resulting score and parameter(s) from each fold is usually averaged.
 %
 \subsection{Parameter tuning}\label{sec:ph1tweaking}
 %
