@@ -26,21 +26,21 @@ An ingredient is described by:
 %
 \subsection{Candidates}\label{sec:candidates}
 %
-To avoid computing a score for all segments in all videos, we find the most promising ones and call these candidates. The candidates are defined as all permutations of segments for which a select set, $L$, of labels is present.
-Overlapping segments is added to the candidates, where overlapping segments are defined as such if they both originate from the same source video, do not share the same label, and 
+To avoid computing a score for all segments in all videos, we find the most promising segments and call these candidates. The candidates are defined as all permutations of segments for which a select set, $L$, of labels is present.
+Overlapping segments are added to the candidates, where overlapping segments originate from the same source video, do not share the same label, and 
 %
 \[
 \text{max}(a, c) < \text{min}(b, d),
 \]
 %
-where $a$ and $b$ are the start and end frame in the first segment, and $c$ and $d$ are the start and end frame in the second segment. If the segments overlap a new segment, $c$, has the union of labels in the two segments, and
+where $a$ and $b$ are the start and end frame in the first segment, and $c$ and $d$ are the start and end frame in the second segment. If the segments overlap a new segment, $c$, has labels that are the union of labels in the two segments FORMEL?, and
 %
 \[
 x,y = \text{max}(a, c), \text{min}(b, d),
 \]
 %
-where $x$ is the start frame in segment $c$ and $y$ is the end frame in segment $c$. if $y-x < \tau$, for some treshold $\tau$, segment $c$ is discarded, ie. the overlap is too small for $c$ to be considered a real segment.\\
-The candidates are sorted by number of labels in each candidate (the most relevant candidate is usually the one where multiple labels overlap). The top most candidates are the most promising, and a score for each is computed as described in section \ref{sec:segment_score}.
+where $x$ is the start frame in segment $c$ and $y$ is the end frame in segment $c$. if $y-x < \tau$, for some treshold $\tau$, segment $c$ is discarded, ie. the overlap is too small for $c$ to be of any significance.\\
+The candidates are sorted by number of labels in each (the most relevant candidate is usually the one where multiple labels overlap). The top most candidates are the most promising, and a score for each is computed as described in section \ref{sec:segment_score}.
 %
 %
 \subsection{Segment Score}\label{sec:segment_score}

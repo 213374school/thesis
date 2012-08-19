@@ -8,14 +8,14 @@ We want to be able to distinguish between different types of scenes so that we h
 %
 There are many ways to extract context from images, sound and video. Some focus on the depicted scene itself, while others look at the events happening in the scene. Location and time of day would be an example of the former while elements such as excitement, violence and other specific behaviour are examples of the later.\\
 Hanjalic\cite{citeulike:405480} describes a way to identify regions of high levels of excitement in sports videos based on a manually selected set of features. These features can be both visual (e.g. movement in an image or change of camera position) or audial (based on the energy contained in the audio track).\\
-Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow analyses changes in the intensity pattern in images. In many cases this indirectly indicate changes in the 3D scene caused by moving objects or a change of view-point. \cite{} describes ways to identify certain types of actions occuring within videos, such as violent behaviour and \cite{} looks at general crowd movement in public places.\\
+Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to detect events or objects in video. Optical Flow analyses changes in the intensity pattern in images. In many cases this indirectly indicate changes in the 3D scene caused by moving objects or a change of view-point. \cite{mangler} describes ways to identify certain types of actions occuring within videos, such as violent behaviour and \cite{mangler} looks at general crowd movement in public places.\\
 % Lauge: Der skal skrives lidt mere til disse artikler.
 Reisman et al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds of pedestrians from a moving vehicle by detecting inward moving optical flow. I.e. flow which is highly likely to be caused by moving objects and not due to a change of view-point.\\
 Arandjelović \cite{Arandjelovic08crowddetection} attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure, namely that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will contain repetative structures.\\
 % Lauge: Flere crowd detection artikler?
 Zhong et al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream. The entire stream is divided into overlapping 4 second segments from which an overall movement pattern is established. Individual segments that differ too much from this patter are considered unusual.\\
 % Lauge: Day/Night article her skal uddybes og omskrives:
-In \cite{} ? describes how to classify still images through a hierachy of Support Vector Machines, including day/night classification. UDDYB\\
+In \cite{mangler} ?HVEM? describes how to classify still images through a hierachy of Support Vector Machines, including day/night classification. UDDYB\\
 % Lauge: Jeg har rykket Haar Cascade classifier ned i sit eget afsnit under Method, men måske skal vi lige have en enkelt linje om det her
 Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically detecting the color of traffic lights. UDDYB % Lauge: Vi skal lige have læst/skrevet lidt mere om denne og evt. relation til police blinker detecion
 %
@@ -125,26 +125,18 @@ The \textit{optical flow} metadata consist of sets of these nine vectors, calcul
 %Each classifier performs a binary classifaction on a specific label. The classifier analyses all the available footage and returns a collection of indexes to all the segments where it believs the specific label it to be present. These indexes consist of a reference to the video in question, as well as a start and end index. 
 A label classifier performs a binary classification on each frame in a given video. For each video the classifier computes groups of consequtive frames with the same label. Such a group is called a segment. Depending on the classifier, the segments are post-processed using \textit{segment interpolation} and/or \textit{segment smoothing}. Some classifiers have this as a builtin feature.
 %
-\subsubsection{Segment Interpolation}\label{sec:labelmerge}
-%
-% Lauge: Denne sektion skal skrives om. Den giver ikke meget mening som den er. Desuden skal der skrives noget om 'truncation' som bliver refereret til flere steder senere
-%
-Segments in a video are easilly fragmented and two segments with the same label just a single frame apart will by all means and purposes be interpreted as such. %This is often a result of fragmented metadata, ex. several consequtive frames with people present that our people presence detection algorithm failed to detect. To patch this fault w
-We interpolate neighbouring segments by applying the label, $l$, to the frames between segment $a$ and segment $b$ if these are not too far apart and both segments share the same label, $l$. %We also filter out segments of diminutive length, which by default is 5 seconds.
-%
 \subsubsection{Segment Smoothing}\label{sec:labelsmooth}
 %
-If segments are fragmented %because the label-algorithm that produced them made no attempt to smooth the frames and their respective label (or absence of same)
-we apply triangle smoothing on the segments, as described in section \ref{sec:triangularsmoothing}.
-%, and subsequently truncate values below a certain treshold to 0. 
-Prior to smoothing each frame had either a 1 (label present) or a 0 (label not present), but post-smoothing they are a fraction between 0 and 1. These values are subsequently truncated to 0 if they are below a certain treshold.
-%, defaulting to $1/3$, ie. values below the treshold are truncated to $0$.
+If segments from the same video are fragmented we apply triangle smoothing on the segments, as described in section \ref{sec:triangularsmoothing}. Prior to smoothing each frame had either a 1 (label present) or a 0 (label not present), but post-smoothing they are a fraction between 0 and 1. These values are subsequently truncated to 0 if they are below a certain treshold.
 %
-\subsubsection{Police Blinker classifier}\label{sec:police_detection}
+\subsubsection{Segment Interpolation}\label{sec:labelmerge}
 %
-By investigating the blue channel mean of each frame (section \ref{sec:blue_channel}) we are able to detect if the police blinker lights are present in part of a video.% Resultat
-We analyze the blue channel mean as a function of time, and if these values are oscillating within certain parameters,% Specific frequency
-we have an indication of the precense police blinker lights.
+Segments in a video are easilly fragmented and two segments with the same label just a single frame apart will by all means and purposes be interpreted as such. We interpolate neighbouring segments by applying the label, $l$, to the frames between segment $a$ and segment $b$ if these are not too far apart and both segments share the same label, $l$.
+%
+\subsubsection{Police Blinker Classifier}\label{sec:police_detection}
+%
+By investigating the blue channel mean of each frame (section \ref{sec:blue_channel}) we are able to detect if police blinker lights are present in part of a video.
+We analyze the blue channel mean as a function of time, and if these values are oscillating with a steady frequency we have an indication of the presence of police blinker lights.
 %
 \begin{figure}[!ht]
      \centering
@@ -152,33 +144,22 @@ we have an indication of the precense police blinker lights.
      \caption{}\label{fig:triangles}
 \end{figure}\\
 % Lauge: Mangler title + Lav rigtig figur
-Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. As an alternative to computing the area of each triangle we investigate how the length of the vertices in each triangle deviate from each other
+Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other
 \[
-\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1,
+\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1, \text{std}([\|e\|,\|f\|]) < \tau_2,
 \]
 % a,b,c, og d skal defineres i tekst
-for some threshold $\tau_1$ where std is the standard deviation. Analogously for the horizontal vertices
-\[
-\text{std}([\|e\|,\|f\|]) < \tau_2,
-\]
-% e og f skal defineres i tekst
-for some threshold $\tau_2$.\\
-The blue channel mean is smoothed using triangle smoothing with a degree of 5% paramter tuning
-as this give softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 48 frames% paramter tuning
- apart are interpolated into a single segment, and segments shorter than 24 frames% paramter tuning
-  are removed.
+for thresholds $\tau_1$ and $\tau_"$ where std is the standard deviation. If the standard deviation of either group of vertices is below their given treshold it means that they do not form triangles that are part of an oscillation.\\
+The blue channel mean is smoothed using triangle smoothing as described in section \ref{sec:triangularsmoothing}, as this results in softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge}.
 %
 \subsubsection{Person in Focus classifier}\label{sec:infocus}
 %
-We compute a moving average (over 4 frames ~ 166ms)% paramter tuning
-of the people presence metadata but excluding objects detected (partially) outside a centered bounding box.
-% Lauge: Det er ikke klart hvad vi prøver at sige her:
-A moving average of only 4 frames requires a low frequency of false negatives between frames which in turn makes a greater demand on the quality of each frame (steady or no camera movement, a good shot angle, and little background clutter). The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 36,% paramter tuning
-equal to $1.5$ seconds, and a truncation value of $1/3$.% paramter tuning
- Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24% paramter tuning
-  frames apart are interpolated into a single segment, and segments shorter than 120% paramter tuning
-  frames, equal to 5 seconds, are removed.
+We compute a moving average of the people presence metadata, but excluding objects detected (partially) outside a centered bounding box. Then the frames and their respective label are smoothed as described in section \ref{sec:labelsmooth}, and nearby segments are merged as described in section \ref{sec:labelmerge}. 
+% segments shorter than 120 frames, equal to 5 seconds, are removed.
 %
+\subsubsection{In-Crowd classifier}\label{sec:incrowd}
+%
+We compute a moving average of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth}. Nearby segments are merged as described in section \ref{sec:labelmerge}.
 %
 \subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
@@ -240,12 +221,6 @@ where $t$ is a threshold defining the minimum number of areas in which vertical 
 %
 % RISKS: (zooming), maybe wrong method
 %
-\subsubsection{In-Crowd classifier}\label{sec:incrowd}
-%
-% Dette skal omskrives og rykkes rundt således at meget af det kommer ned i parameter tuning.
-We compute a moving average (over 12 frames/500ms) of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. If more than 1 person is present in the frame the frame is deemed to be \textit{in crowd}. Obviously 2 people does not make a crowd, but taking into account the high frequency of false negatives both in and between frames, this shows to provide a good estimate. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth} with a smoothness degree of 24, equal to 1 second, and a truncation value of $0.9$. Nearby segments are merged as described in section \ref{sec:labelmerge} where segments up to 24 frames apart are interpolated into a single segment, and segments shorter than 60 frames, equal to $2.5$ seconds, are removed.\\
-A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
-%
 \subsubsection{Day \& Night classifier}\label{sec:daynightclassifier}
 %
 Night footage is not only darker than footage recorded during the day. It also contains significantly less blue color, which is the reason it often has a brownish or red tint. Our \textit{day/night} classifier analyses both the \textit{blue channel} metadata (described in section \ref{sec:blue_channel}) and the \textit{brightness} metadata (described in section \ref{sec:brightnessdata}).\\
@@ -295,23 +270,37 @@ When smoothing the segments with triangular smoothing we found that a degree of 
 %
 \subsection{Police Blinker classifier}
 %
-...\\
-\\
+Before we investigate if the blue channel mean is oscillating, we smooth the values with a smoothing degree of 5 to get slightly smoother curves, but still retaining much of the original data.\\
+The segments are also interpolated, as described in section \ref{sec:labelmerge}, but we interpolate segments up to as much as 48 frames apart, instead of the standard 36.
+%
 We meassure performance based on how many of the classified segments contain police blinkers or actually has police personal present in the footage. We include the latter scenario because the light from police blinkers off-screen may be detectable in the blue color channel, even if it is not visible to the human eye.\\
 Out of the total $\sim$ 90 minutes of footage 699 frames $\sim$ 30 seconds are classified positive. Of this $\sim$ 65\% are what we consider \textit{true positives}. % Lidt her om false positives. Hvad er grunden til dem?
 %
 \subsection{Person in Focus classifier}
 %
-..\\
-\\
+When computing the moving average over people presence metadata, we do it over 4 frames. This means that the data needs to be fairly consistent already in order to get a consistent detection, ie. just a few frames with no person detected within the centered bounding box would diminish the moving average towards zero.\\
+%
 We meassure performance based on how many of the classified segments has a specific person in focus. Segments with several people or crowds are considered incorrectly classified.\\
 Almost 21 minutes of the entire dataset is classified as containing a person in focus. Hereof we consider $\sim$ 90\% to be \textit{true positives}.
+%
+%
+\subsection{In-Crowd classifier}
+%
+When computing the moving average over people presence metadata, we do it over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The labels are smoothed using a smoothness degree of 24 which SOMETHING WITH MOVING AVERAGE. The values are truncated at 0.9 as they are not normalized to the range 0 to 1 as our data often is.
+%
+A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
+\\
+We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly 14\% of the $\sim$ 31 minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus.
+%
+% Til analyse: In hindsight we should have expected the \textit{person in focus}-issue to be a problem.
+%
+% Til phase 4: Due to the \textit{person in focus}-issue with in-crowd shot we attempt to do correction by forbidding the former label in the latter shots :P
 %
 \subsection{Overview classifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
 The classifier has three thresholds, $s$, $t$ and $u$. $s$ is the maximum internal movement allowed in an area. $t$ is the maximum number of areas, which are allowed to break this limit, and $u$ is the maximum allowed egomotion for the entire frame.\\
-The parameter tuning was done a small subset of the dataset, consisting of a handful of videos. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
+The parameter tuning was done on a small subset of the dataset, consisting of a handful of videos. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
 Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.\\
 \\
 It is difficult to exactly define what an \textit{overview} clip is. These are the charactaristics we look after when determining performance:
@@ -335,20 +324,10 @@ When analysing the performance of the \textit{vertical oscillation} classifier, 
 %
 % Til analyse: A pre-limmenary image quality assesment might help in lowering the amount of \textit{false positives}.
 %
-\subsection{In-Crowd classifier}
-%
-...\\
-\\
-We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly 14\% of the $\sim$ 31 minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus.
-%
-% Til analyse: In hindsight we should have expected the \textit{person in focus}-issue to be a problem.
-%
-% Til phase 4: Due to the \textit{person in focus}-issue with in-crowd shot we attempt to do correction by forbidding the former label in the latter shots :P
-%
 \subsection{Day \& Night classifier}
 %
 The \textit{day/night} classifier (described in section \ref{sec:daynightclassifier}) analyses the overall brightness in a video along with the blue channel.\\
-It only has a single parameter, $m\in [1..10]$, which determines where to make the differentiation between the dark and bright partitions in a histogram of overall brightness in a video. We tried all 10 values and fin that $m = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
+It only has a single parameter, $m\in [1..10]$, which determines where to make the differentiation between the dark and bright partitions in a histogram of overall brightness in a video. We tried all 10 values and found that $m = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
 %
 The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.
 %
