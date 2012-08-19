@@ -1,72 +1,50 @@
 %
 \chapter{Creating video-summaries}
 %
-In the previous chapter we computed a number of labels, where each label represents a contextual representation of the video footage, that allows us to group video footage into different types. In this chapter we will attempt to create video summaries based on these. 
+In the previous chapter we computed sets of labels for each frame in the dataset. All consecutive frames, which share a label is considered a segment. Each label says something about the content in a segment. By grouping the footage by label we get an overview of the different type of content we have. We now look at using these groups and labels for creating the final video summaries of the events depicted in the footage. 
 %
 \section{Method}
 %
-In order to utilise the labeling of the different footage we need be able to define a query, which describes the struture of the video summary we would like to create.
+In order to utilise the labeling of the different footage we need be able to define a query (or \textit{recipe}), which describes the struture of the video summary we would like to create. Section \ref{sec:recipe} describes how we do this.\\
+Then, in section \ref{sec:candidates}, we describe how we perform a preliminary search for decent candidates for each element in the recipe. In section \ref{sec:segment_score} we describe how we search through the videos and find the best possible segment. We define a metric, a \textit{fulfilment} score, which is used to to rank the segment, and finally, in section \ref{sec:choosing_segment}, choose which ones to use.
 %
 \subsection{Recipe}\label{sec:recipe}
 %
-% recipies - simple approach. no immediate feedback. kinda skipped lit. study on this one. universal recipe. 2 permutations on each dataset (different alpha_span value), and added some required labels 
-% recipe structure: list of ingredients (labels, min/max span, interval, span alpha, required/forbidden labels)
-A recipe is one or more ingredients in a specific order, much like a cooking recipe. Each ingredient translates to a segment request, ie. an ingredient expresses desires on what a segment must contain. A segment is a subpart of a video with a label assigned to it. To find the best matching segment we compute a score, as described in sections \ref{sec:segment_score} and\ref{sec:candidates}, for each and each segment scores translates to the probability that this score will be selected as the best match, described in section \ref{sec:choosing_segment}.\\
-An ingredient is described by:
+The recipe for a video summary consist of one or more ingredients in a specific order, much like a cooking recipe. Each ingredient specifies a segment request, ie. an ingredient expresses desires on what labels a segment should contain. A segment is a sub-part of a video with a set of labels assigned to it. An ingredient is described by:
 %
 \begin{enumerate}
-% EVT UDDYB DISSE BESKRIVELSER
-\item requested labels - labels present in a segment has a positive impact on the segment score
-\item min. span - segments should be no shorter than this
-\item max. span - segments should be no longer than this
-\item $\alpha$ span - weighing of labels vs. segment length
-\item required labels - labels not present in a segment has a negative impact on the segment score
-\item forbidden labels - labels present in a segment has a negative impact on the segment score
+	\item requested labels - labels present in a segment has a positive impact on the segment score
+	\item required labels - all these labels should be present in the segment
+	\item forbidden labels - none of these label should be present in the segment
+	\item min. span - segments should be no shorter than this
+	\item max. span - segments should be no longer than this
+	\item $\alpha$  - a ratio defining how the label- and time span- requirements are weighted against each other
 \end{enumerate}
+%
+For each ingridient, we want to find a segment, which fits the ingredient definition as much as possible. The sequence of all such segments are used as the final video summary.
 %
 \subsection{Candidates}\label{sec:candidates}
 %
-To avoid computing a score for all segments in all videos, we find the most promising segments and call these candidates. The candidates are defined as all permutations of segments for which a select set, $L$, of labels is present.
-Given two segments, $s_1$ and $s_2$, where $s(l)$ is the label(s) in segment $s$, $s(v)$ is the video that segment $s$ originates from, then segments $s_1$ and $s_2$ overlap if:
-\[
-s_1(l) \neq s_2(l) \text{ and }
-s_1(v) = s_2(v),
-\]
-and
+In order to avoid having to analyse the entire dataset, we start by generating a smaller set of likely candidates. These candidates are found by looking for the overlap of requested labels, $l$ in a video, $v$. Let $O_i(v,l)$ define the number of areas in $v$ where $i$ labels overlap. We then define a candidate score for each video as:
 %
 \[
-\text{max}(a, c) < \text{min}(b, d),
+C(v, l) = \sum_{i=1}^{|l|} O_i(v,l)^{i},
 \]
 %
-where $a$ and $b$ are the start and end frame in the $s_1$, and $c$ and $d$ are the start and end frame in $s_2$. If the segments overlap, a new segment, $s_3$, is added to the candidates and defined by
-%
-\[
-s_3(v) = s_1(v) \text{ and }
-s_3(l) = s_1(l) \cup s_2(l),
-\]
-%
-and
-%
-\[
-x,y = \text{max}(a, c), \text{min}(b, d),
-\]
-%
-where $x$ is the start frame in $s_3$ and $y$ is the end frame in $s_3$. if $y-x < \tau$, for some treshold $\tau$, $s_3$ is disregarded, ie. the overlap is too small for $s_3$ to be of any significance.\\
-The candidates are sorted by number of labels in each (the most relevant candidate is usually the one where multiple labels overlap). The top most candidates are the most promising, and a score for each is computed as described in section \ref{sec:segment_score}.
-%
+Overlap of labels are rewarded exponentially as a function of the amount of labels in the overlap, in order to reward videos with footage that fit our request well.\\
+The list of videos are sorted by their candidate score and the most promising (the ones with the highest score) are passed on to the segment scoring phase (section \ref{sec:segment_score}), which performs a more thorough analysis.
 %
 \subsection{Segment Score}\label{sec:segment_score}
 %
-LAUGE: omformuler + husk: Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.\\
-The most fitting sub-parts (not a segment by our definition) of the video are found and scored based on how well they fulfill the label requirements we have constructed for the segment in question as well as how well they match the time span we are looking to fill. Each aspect is encapsulated in each their seperate fulfilment ratio, which are then later combined into a final score.
+We perform a frame-by-frame analysis on each candidate video in order to determine what sub-part of it best fit the requirements established by the ingredient. This analysis is performed on all parts of the video, which has not already been used for the video summary we are in the process of generating. The most fitting sub-part is passed along to the final segment chooser (described in section \ref{sec:choosing_segment}).\\
+The analysis analysis at two aspects of \textit{fulfilment}. First we look at how well a sub-part fulfills the label requirement established by the ingredient. Then we look at its time span requirement. These two levels of fulfilment (defined as ratios) are then finally weighed together.
 %
 \subsubsection{Label fulfilment}
 %
-For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of labels we would like to be present in the segment, $n$ be the number of labels in $L_{x}$, $L_{y}$ be the set of labels which we require to be present, and $L_{z}$ be the set of labels which are forbidden to be present. Also let $f_{l}$ and $f_{n}$ be the set of requested labels present in frame $f$, and the number of requested labels present in frame $f$, respectively, where $f$ is a frame in the video. The requirement fulfilment-ratio for each frame is defined like this:\\
-DER ER VIRKELIG MANGE VARIABLER I SPIL HER...
+For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of requested labels, $L_{y}$ be the set required labels, and $L_{z}$ be the set of forbidden labels. Also let $f_{l}$ and $f_{x}$ be the total set of labels, and the set of requested labels present in frame $f$, respectively. The label requirement fulfilment-ratio for each frame is then defined as:\\
 %
 \begin{equation}
-R(f) = \frac{f_{n}}{n} \cdot Y(f) \cdot Z(f),
+r(f) = \frac{|f_{x}|}{|L_{x}|} \cdot Y(f) \cdot Z(f),
 \end{equation} 
 %
 where
@@ -89,14 +67,13 @@ Z(f) =
 \end{cases}.
 \end{equation} 
 %
-Effectively this means that a frame will receive a fulfilment-ratio of 0 percent if it does not contain a required label or if it contains a forbidden one, and the ratio of the number of requested labels it contains, otherwise.\\
+Effectively this means that a frame will receive a fulfilment-ratio of 0 if it does not contain a required label or if it contains a forbidden one, and the ratio of the number of requested labels it contains, otherwise.\\
 %
 With this fulfillment ratio across the entire span of the video we now have a tool of measure to identify the parts of it, that best fit the label requirements.
 %
 \subsubsection{Time span fulfilment}
 %
-% KIM: hvad gør i med l < T_min og l > T_max?
-The other aspect used to determine the score of a sub-part of a video is how well it fits within the time span we are looking to fill. A minimum- and maximum- length defines the time span, that we want the final segment to cover. Let $T_{min}$ and $T_{max}$ be the the minimum- and maximum- length, respectively, and let $l$ be the length of the sub-part in frames. The time span fulfilment ratio is then defined as:\\
+The other aspect used to determine the score of a sub-part of a video is how well it fits within the time span we are looking to fill. A minimum- and maximum- length defines the time span, that we want the final segment to cover. Let $T_{min}$ and $T_{max}$ be the the minimum- and maximum- length, respectively, and let $l$ be the length of the sub-part in frames, where $T_min <= l <= T_max$. The time span fulfilment ratio is then defined as:\\
 %
 \begin{equation}
 \tau(l) =
@@ -105,39 +82,34 @@ The other aspect used to determine the score of a sub-part of a video is how wel
 \frac{l-T_{min}}{T_{max}-T_{min}} &  \text{, otherwise}
 \end{cases}
 \end{equation}\label{equ:fulfilment}
-% KIM: antager at T_min <= l <= T_max
 %
 A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have a ratio of one. 
 %
 \subsubsection{Segment Score}
 %
-The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $R$ be a set of the label fulfilment ratios for each frame in the video, defined in \ref{equ:fulfilment}. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then defined as:\\
+The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighed against each other. Let $R$ be a set of the label fulfilment ratios for all frames in the video, as defined in \ref{equ:fulfilment}. Also, for each possible sub-part (that does not break the minimum- and maximum- lengths defined in the time span requirement), let $v$ be the frame number where the sub-part begins, and $l$ be the length of it in frames. The score for a sub-part is then defined as:\\
 %
 \begin{equation}
-S(v,w) =(1-\alpha) \cdot \sum_{i=v}^{w} \frac{R(i)}{l} + \alpha \cdot \tau(l)
+S(v,l) =(1-\alpha) \cdot \sum_{i=v}^{v+l} \frac{R(i)}{l} + \alpha \cdot \tau(l)
 \end{equation}\label{equ:segment_score}
 %
-% Kim var forvirret over at L_{i} (nu omdøbt til R(i)) ikke hed det samme som i den tidligere formel. Check hele denne formel igen og hver sikker på at den giver mening.
-%
-% Noter fra Kim: Argumenter for formlen. Hvorfor virker den?
-%
-The score is thus determined by the average label fulfilment rate in the sub-part, weighted against the time span it covers.
+The score is thus determined by the average label fulfilment rate in the sub-part, weighed against the time span it covers.\\
+We calculate a segment score for all valid sub-parts and pass the one with the highest score on to the segment chooser (section \ref{sec:choosing_segment}). If two sub-parts have share same score their lengths is used as a tiebreaker (the longest one is selected). The value of $\alpha$ can be used to configure the algorithm to produce segments, which either fulfill the label- or the time span- requirement very well. In most cases one would probably aim for some reasonable trade-off.
 %
 %
 \subsection{Choosing a Segment}\label{sec:choosing_segment}
 %
-A segment is represented by a start and end frame, the label it contains, and the respective video the segment appears in. Each segment is assigned a score and is picked with probability $P$ defined by: 
+We now select one of the generated segments to be used in the final video summary. Let $\{v_1,v_2,\dots,v_n\}$ be the set of all segments generated from the candidate video, and let $w_i$ be the score of a segment $v_i$. For each segment, the probability of selection is defined as:
 %
 \[
-P = \frac{s^2}{S},
+P(v_i) = \frac{w_i^2}{W},
 \]
 %
-where $s$ is the score of a segment, $t$, and the score sum, $S$, is defined as:
+where the sum of all scores, $W$, is defined as:
 %
 \[
-S = \sum_{i=0}^{n} s_{i}^2,
+W = \sum_{i=0}^{|w|} w_i^2
 \]
 %
-where $n$ is the number of segments, and $s_i = S(v_i,w_i)$ (\ref{equ:segment_score}), where $v_i$ is the first frame in $t$ and $w_i$ is the last frame in $t$.\\
-To increase the probability that higher scoring segments are picked over lower scoring ones, we square all scores. Ex. if we did not square the scores, then given 3 segments, $x_1,x_2,x_3$ with scores $1.0, 0.5, 0.5, (S=1.0+0.5+0.5=2)$ there is an equal probability that segment $x_1$ is picked as either segment $x_2$ or segment $x_3$. With the scores squared the odds change in favor of $x_1$, $(S=1.0^2+0.5^2+0.5^2=1.5)$ gives segment $x_1$ a $1.0^2/1.5=0.67$ chance and segments $x_2,x_3$ $0.5^2/1.5=0.167$ chance. The odds are now more than $2:1$ in favor of segment $x_1$.
+To increase the probability of selection of higher scoring segments, we square all scores.
 %
