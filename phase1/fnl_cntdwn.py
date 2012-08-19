@@ -45,6 +45,8 @@ computeFrameStateContrastOnly = compute_frame_state.computeFrameStateContrastOnl
 
 help_message = '''USAGE: roc.py <method> [outfile] [threads] [#param] [smoothness_degree]'''
 
+finaltest_filename = 'finaltest2.json'
+
 def get_hash(mylist=[]):
 
     algorithm = 'sha512'
@@ -97,15 +99,18 @@ def main():
 		else:
 			return None	
 
-	if os.path.isfile('./DataSet/finaltest.json'):
-		f = open('./DataSet/finaltest.json','r')
+	if os.path.isfile('./DataSet/%s' % finaltest_filename):
+		f = open('./DataSet/%s' % finaltest_filename, 'r')
 		content = f.read()
 		finaltest = json.loads(content)
 	else:
 		finaltest = dict()
 
-	methods = [computeFrameStateLauge, computeFrameStateAnders, computeFrameStateMagnitudeOnly, computeFrameStateContrastOnly, computeFrameStateCubic]
-	# methods = [computeFrameStateLauge]
+	# methods = [computeFrameStateLauge, computeFrameStateAnders, computeFrameStateMagnitudeOnly, computeFrameStateContrastOnly, computeFrameStateCubic]
+
+	computeFrameStateLauge = compute_frame_state.computeFrameStateCummulative
+	methods = [computeFrameStateLauge]
+	
 	# methods = [computeFrameStateAnders, computeFrameStateMagnitudeOnly, computeFrameStateContrastOnly, computeFrameStateCubic]
 	for method in methods:
 		print 'method: %s' % method.__name__
@@ -446,7 +451,7 @@ def main():
 		
 	content = json.dumps(finaltest)
 	# write to disc
-	f = open('./DataSet/finaltest.json','w')	
+	f = open('./DataSet/%s' % finaltest_filename,'w')	
 	f.write(content)
 	f.close()	
 
