@@ -18,8 +18,12 @@ We define suitable footage to mean video segments, which are not too shaky or fa
 \subsection{Frame Shift Estimation}\label{sec:frame_shift_estimation}
 %
 We estimate the magnitude of the shift of content between neighbouring frames, and use it as an indication of the \textit{egomotion} (camera movement).\\
-Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} estimates the shift in two subsequent frames, where the direction of a vector is the direction of the shift of content, and the magnitude of that vector how many pixels it was shifted. The advantage of this method is the simplicity in implementation, and low computational costs.\\
-As suggested by the authors, for each pair of subsequent frames, the latter frame is shifted around, in all four directions (up, down, left, right), over 6 iterations. The initial shift distance is 32 pixels. In each iteration this distance is halved. For each direction, in each iteration the Root-Mean-Square (\textit{RMS}) of the difference between the shifted- and the previous- frame is calculated. The direction with the lowest \textit{RMS} is the basis for the following iteration.
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} estimates the shift in two subsequent frames, where the direction of a vector is the direction of the shift of content, and the magnitude of that vector how many pixels it was shifted.\\ %The advantage of this method is the simplicity in implementation, and low computational costs.\\
+% As suggested by the authors, 
+Based on the method by Girgensohn et al. our understanding is as follows: for each pair of subsequent frames, the latter frame is shifted around, in all four directions (up, down, left, right). %, over 6 iterations. 
+The initial shift distance is 32 pixels (suggested by Girgensohn et al.), halved in each iteration. %In each iteration this distance is halved. 
+% For each direction, in each iteration 
+With each shift the Root-Mean-Square (\textit{RMS}) of the difference between the shifted frame and the previous unshifted frame is calculated. The direction with the lowest \textit{RMS} is the basis for the following iteration.
 %
 %Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
 %The algorithm below illustrates how the shift vector for two subsequent frames is computed.
@@ -41,85 +45,86 @@ As suggested by the authors, for each pair of subsequent frames, the latter fram
 %      yield x’,y’
 % \end{verbatim}
 %
-If $v \in V$ is a vector representing a selected shift in an iteration, and $V$ is the set of all shifts performed over all iterations, the shift vector magnitude estimating the intensity of camera motion between two frames, is then simply defined as:
+If $v \in V$ is a vector representing a selected shift in an iteration, then $V$ is the set of all shifts performed over all iterations. The shift vector magnitude estimating the intensity of camera motion between two frames is then defined as:
 %
 \[
 s = \|\sum V\|
 \]
 %
-At 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction. I.e. for frames with a resolution of $\sim$ $640\times360$, even extremely fast camera motion should, in at least in theory, be detected (accuracy is here highly dependant on the blurriness of the frames).\\
-\\
 The \textit{shift vector magnitude ratio}, $S$, is defined as:
 %
 \[
-S = (\|v\|)^2 / M^2, 
+S = s^2 / M^2, 
 \]
 %
-where $v$ is the \textit{shift vector} and $M$ is the largest possible magnitude of the shift vector. A shift in the same direction in each iteration of the shift vector computation will in our configuration at most shift $M = 32+16+8+4+2+1=63$ pixels. We square $v$ and $M$ in order to increase the sensitivity toward bad, while still keeping $S$ in the [0,1] range.
+where $M$ is the largest possible magnitude of the shift vector. A shift in the same direction in each iteration of the shift vector computation will in our configuration at most shift $32+16+8+4+2+1=63$ pixels. We square $s$ and $M$ in order to increase the sensitivity toward bad frames, while still keeping $S$ normalized to [0,1].\\
+%
+At 24 frames per second (fps) this method can theoretically trace camera movements of up to $24 \times (32+16+8+4+2+1) = 1512$ pixels per second, in any direction. I.e. for frames with a resolution of $\sim$ $640\times360$, even extremely fast camera motion should, in at least in theory, be detected (accuracy is here highly dependant on the blurriness of the frames).
 %
 \subsection{Frame Contrast Estimation}\label{sec:frame_contrast_estimation}
 %
-Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} also describes a method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting dark images, it does not detect very bright ones, nor images dominated by textureless surfaces. Our method does not have this disadvantage as we compute a measure of contrast as $c = std(X)$, where $X$ is the set of intensities for all pixels in a frame.\\
-A small standard deviation indicates little contrast/diversity in pixel intensity, ie. a textureless or overly dark/bright image which is less desireable.
-A high standard deviation indicates a high contrast/much diversity in pixel intensity, ie. a textured image or an image with a high variation of pixel intensity which is deseriable.\\
+Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} also describes a method of determining the level of brightness in the image by computing the fraction of pixels above a certain brightness threshold. While this is a sufficient measure for detecting dark images, it does not detect very bright ones, nor images dominated by textureless surfaces. Our method does not have this disadvantage as we compute a measure of contrast as $c = std(X)$, where $X$ is the image matrix.\\
+A small standard deviation indicates little contrast/diversity in pixel intensity, ie. a overly dark/bright image, or an image with little texture, which makes features in the image hard to distinguish. A high standard deviation indicates a high contrast/much diversity in pixel intensity, ie. a textured image or an image with a high variation of pixel intensity which makes features in the image easy to distinguish.\\
 %
 The \textit{contrast} ratio, $C$, is defined as:
 \[
-C = 1 - (c^2 / N^2),
+C = 1 - c^2 / N^2,
 \]
-where $N$ is the largest possible value of $c$. Again, we square both $c$ and $N$ to increase sensitivity toward bad values. For our 8-bit grayscale footage $N = 127.5$, which would be the standard deviation for a frame, whos image-matrix contain only values of 0 and 255, uniformly distributed. We subtract the ratio from 1 in order to make it comparable to the shift vector magnitude ratio.\\
+where $N$ is the largest possible value of $c$. Again, we square both $c$ and $N$ to increase sensitivity toward bad frames. For our 8-bit grayscale footage $N = 127.5$, which would be the standard deviation for a frame, whos image-matrix contain only values of 0 and 255, uniformly distributed. We subtract the ratio from 1 in order to make it comparable to the shift vector magnitude ratio.\\
 %
 \subsection{Triangular Smoothing}\label{sec:triangularsmoothing}
 %
-Both $S$ and $C$ are meassures of how unsuitable a frame is. We perform \textit{trianglur smoothing} on the set of all $S$ and $C$ over all frames in a video, in order to remove outliers. Triangular smoothing is a weighted smoothing function where the degree of smoothing determines the distribution of weights. The biggest weight is given to the element we wanna smooth. The weight of the elements surrounding it are determined by their distance to the this element. The weights decrease in a linear fashion forming a triangular shape, thus the name. We define our triangle of weights as:
+Both $S$ and $C$ are meassures of how unsuitable a frame is. We perform \textit{trianglur smoothing} on the set of all $S$ and $C$ over all frames in a video, in order to remove outliers which can lead to a misclassification. Triangular smoothing is a weighted smoothing function where the degree of smoothing determines the distribution of weights. The largest weight, $w_0$, is given to the element we wish to smooth. %The weight of the elements surrounding it 
+The other weights are determined by their distance to $w_0$, and decrease in a linear fashion. We define the weight function, $T(w)$, as:
 %
 \begin{equation}
-T(w) = [1,2,\dots,w-1,w,w-1,\dots,2,1],
+T(w) = [1,2,\dots,w-1,w,w+1,\dots,2,1].
 \end{equation}\label{eq:triangular}
 %
-where $w$ is the weight of the element we want to smooth.
+% where $w$ is the weight of the element we want to smooth.
 Triangular smoothing can then be described by:
 %
 \[
 S(x, w) = \sum_{i=x-w}^{x+w} \frac{D_{i} T(w)_{i-(x-w)}}{\sum T(w)},
 \]
 %
-where $x$ is the index of the element we want to smooth, $w$ is the weight we want to give it, $D$ is the set of all original values, and $T$ is the triangle of weights defined in \ref{eq:triangular}. For simplicity we have excluded the border cases at the beginning and the end of $D$, where $T$ covers values that are not defined. In those cases we simply calculate the $S$ and $T$ for the values, which \textit{are} defined. Figure \ref{fig:triangularsmoothing} shows the result of performing triangular smoothing on a collection of data, with various values of $w$. We set $w = 12$.
+where $x$ is the index of the element we wish to smooth, $w$ is the applied weight, and $D$ is the set of all original values. %, and $T$ is the triangle of weights defined in \ref{eq:triangular}. 
+KAN VI LIIIIIGE FÅR DEN HER FORMULERET?
+For simplicity we have excluded the border cases at the beginning and the end of $D$, where $T(w)$ covers values that are not defined. In those cases we simply calculate $S$ and $T$ for the values, which \textit{are} defined. Figure \ref{fig:triangularsmoothing} shows the result of performing triangular smoothing on a collection of data, with various values of $w$. We fix $w = 12$ which roughly represents 1 second of footage.
 %
 \begin{figure}
      \centering
      \includegraphics[width=1\textwidth]{img/triangle_smooth.png}
-     \caption{An example of triangular smoothing being applied to some data for various values of $w$.}
+     \caption{An example of triangular smoothing being applied to arbitary data for various values of $w$.}
      \label{fig:triangularsmoothing}
 \end{figure}
 %
 \subsection{Frame State Classification}
 %
-The classifiers described in section \ref{sec:algorithms} takes the the shift vector magnitude ratios and contrast ratios, for a video, and calculate a unsuitability measure, $v$, for each frame. This unsuitability meassure is then used to perform a binary classification of each frame as being either \textit{good} or \textit{bad}. Unless otherwise noted, this classification is performed like this:
-\[
+The classifiers described in section \ref{sec:algorithms} takes the the shift vector magnitude ratios and contrast ratios, for a video, and calculate a unsuitability measure, $v$, for each frame. This unsuitability meassure is then used to perform a binary classification of each frame as being either \textit{good} or \textit{bad}. Unless otherwise noted, this classification is defined as:
+\begin{equation}
 s = 
 \begin{cases}
 \text{good} & \text{ if } v \leq 1\\
 \text{bad} & \text{ otherwise }
 \end{cases}
-\]
+\end{equation}\label{equ:frame_state_classif}
 %
 \subsection{Classifiers}\label{sec:algorithms}
 %
-We test 4 different classifiers, each one taking a different approach.
+We have developed 4 different classifiers, each taking a different approach as described in the following.
 %
 \subsubsection{Contrast Only classification (CO)}
 %
-This classifier only looks at the contrast ratios throughout a video. The frame unsutability meassure, $v$, is defined as $v=\frac{C}{\tau}$, where $\tau$ is some treshold and $C$ is the contrast ratio for that frame.
+This classifier focuses on the contrast ratios throughout a video. The frame unsutability meassure, $v$, is defined as $v=\frac{C}{\tau}$, where $\tau$ is some treshold and $C$ is the contrast ratio for that frame.
 %
 \subsubsection{Shift Magnitude Only classification (SO}
 %
-This classifier only looks at the shift vector magnitude ratios for each frame. The frame unsutability meassure, $v$, is defined as $v=\frac{S}{\tau}$, where $\tau$ is some treshold and $S$ is the shift vector magnitude ratio for that frame.
+This classifier focuses on the shift vector magnitude ratios for each frame. The frame unsutability meassure, $v$, is defined as $v=\frac{S}{\tau}$, where $\tau$ is some treshold and $S$ is the shift vector magnitude ratio for that frame.
 %
 \subsubsection{Independent Contrast and Shift Magnitude classification (ICSM)}
 %
-This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is simmilar to the approach taken by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. We look at the contrast ratio and the shift vector magnitude ratios independantly and classifies frames as being \textit{bad} if either of the two pass their respective thresholds.\\
-The frame unsutability meassure, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$, where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, and $\tau_1$ and $\tau_2$ are some tresholds.
+This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is similar to the approach taken by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. We look at the contrast ratio and the shift vector magnitude ratios independantly and classifies frames as described in (\ref{equ:frame_state_classif}). The frame unsutability meassure, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$, where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, and $\tau_1$ and $\tau_2$ are some tresholds.
 %
 \subsubsection{Cummulative Contrast and Shift Magnitude classification (CCSM)}
 %
@@ -158,7 +163,6 @@ where the frame unsutability measure is defined as $v=(1-w) C + w S$, where $C$ 
 % \]
 % %
 % It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}{\tau_{2}}$.
-% \\NOGEN DER FATTER DETTE? ER VORES VINDERALGORITME....
 % %
 % %Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
 % %
@@ -195,7 +199,7 @@ These gold standards are used as the absolute truth, when we meassure the perfor
 %
 \section{Findings}
 %
-Due to the limited size of our data we perform a k-fold cross validation, as described in section \ref{sec:kfoldxval}, during our tests. The metric of success is whether a method correctly estimates the state of the frames, in respect to the \text{gold standard}. We investigate both the performance of the various classifiers, and also their robustness as a measure of how sensitive they are to parameter change.\\
+Due to the limited size of our data we perform a \emph{k-fold cross validation}, as described in section \ref{sec:kfoldxval}, during our tests. The metric of success is whether a method correctly estimates the state of the frames, in respect to the \text{gold standard}. We investigate both the performance of the various classifiers, and also their robustness as a measure of how sensitive they are to parameter change.\\
 For each classifier we determine the optimal configuration of parameter(s), over $k$ iterations, and calculate a mean based on our findings. The robustness, which is estimated as a function of how well the classifier performs over all tested configurations, is calculated on the entire dataset. We also record some of the side-effects of each configuration such as the average length of a good and bad sequences.\\
 %
 \subsection{K-fold Cross Validation}\label{sec:kfoldxval}
@@ -204,21 +208,29 @@ For each classifier we determine the optimal configuration of parameter(s), over
 %
 \subsection{Parameter tuning}\label{sec:ph1tweaking}
 %
-Parameter tuning is often a matter of maximising positive \textit{precision} and \textit{recall}. Positive precision is the certainty with which we can say that a positive classification is correct, whereas positive recall is the ratio of true positives found compared to how many actually exists.\\
-Our approach is a little different. Because our dataset contain mostly \textit{good} frames we want to make sure that we detect the few \textit{bad} frames that \textit{are} present so we can avoid them. We therfore attempt to maximise positive precision along with \textit{negative} recall.\\
-In order to quantify the quality of our choice of paramter(s) we look at the benefit we gain from it versus the cost that we pay. We define the cost, \textit{C}, and the benefit, \text{B}, as:
+Parameter tuning is often a matter of maximising positive \textit{precision} and \textit{recall}. Positive precision is the certainty with which we can say that a positive classification is correct:
+\[
+\text{Positive Precision } = \frac{\text{\#true positives}}{\text{\#true positives + \#false positives}},
+\]
+whereas positive recall is the ratio of true positives found compared to how many actually exists:
+\[
+\text{Positive Recal } = \frac{\text{\#true positives}}{\text{\#true positives + \#false negatives}}.
+\]
+% Our approach is a little different. Because 
+As our dataset contain mostly \textit{good} frames we wish to award a classifier that detect the few \textit{bad} frames that \textit{are} present. We therfore attempt to maximise positive precision along with \textit{negative} recall.\\
+In order to quantify the quality of our choice of parameter(s) we look at the benefit we gain from it versus the cost that we pay. We define the cost, \textit{C} as:
 %
 \[
-C = 1 - 2\frac{P_{r}N_{p}}{P_{r} + N_{p}}
+C = 1 - 2\frac{P_{r}N_{p}}{P_{r} + N_{p}},
 \]
 %
-and
+and the benefit, \text{B}, as:
 %
 \[
 B = 2\frac{N_{r} P_{p}}{N_{r} + P_{p}},
 \]
 %
-where $P_r$ is positive recall, $N_p$ is negative precision, $P_r$ is positive recall, and $N_p$ is negative precision. In each case we combine the two factors we want to meassure by calculating their evenly distributed harmonic mean. We can then plot $C$ and $B$, for various parameter choices, in a diagram and use this a tool for comparing different configurations of a classifier. Figure \ref{fig:costbenefitdiagram} shows an example of such a diagram.
+where $P_r$ is positive recall, $N_p$ is negative precision, $P_r$ is positive recall, and $N_p$ is negative precision. In each case we combine the two factors we want to meassure by calculating their evenly distributed harmonic mean. FORMULER? We can then plot $C$ and $B$, for various parameter choices, in a diagram and use this a tool for comparing different configurations of a classifier. Figure \ref{fig:costbenefitdiagram} shows an example of such a diagram.
 %
 \begin{figure}
      \centering
@@ -234,8 +246,8 @@ In order to determine the best configuration we calculate the distance from each
 On top of the ordinary parameter tuning and testing, we also attempt to measure the overall robustness of each of the classifiers, with respect to changes of parameters.\\
 Relative Operating Characteristics (\textit{ROC}) diagrams, as described by Fawcett\cite{Fawcett06a}, are a useful tool for quantifying the overall stability of an algorithm. The ROC diagrams plot different parameter configurations as the relation between the resulting \textit{true positive rates} (the benefit) and \textit{false positive rates} (the cost). Plotting this relation yields a curve, whos underlying area can be used as an estimate of the algorithms stability, where a large area indicates a stable algorithm, and a small area indicates an unstable algorithm.\\
 \\
-Inspired by ROC diagrams we do something simmilar. We perform another parameter analysis for each classifier, this time using the entire dataset. We then plot the results in cost/benefit diagrams as described in section \ref{sec:ph1tweaking} and calcuate the area under the curve (\textit{AUC}) formed by the points. The larger the AUC is the more robust the classifier is toward changes to its parameter(s). Since the points produced by most of the classifiers are not evenly distributed over the x-axis of the diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span. It can be argued whether this is approach is the correct way to handle this. It has the effect of normalising undefined regions around $y=x$, which makes it easier to compare the AUCs across all classifiers.\\
-Unlike the k-fold crossvalidating parameter tuning described in section \ref{sec:ph1tweaking}, we learn nothing about how the performance of the individual configurations will generalise. Instead we gain an indication of the overall ability, for each algorithm, to the perform the classification.
+Inspired by ROC diagrams we perform another parameter analysis for each classifier, this time using the entire dataset. We then plot the results in cost/benefit diagrams as described in section \ref{sec:ph1tweaking} and calcuate the area under the curve (\textit{AUC}) formed by the points. The larger the AUC is the more robust the classifier is toward changes to its parameter(s). Since the points produced by most of the classifiers are not evenly distributed over the x-axis of the diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span. It can be argued whether this is approach is the correct way to handle this. It has the effect of normalising undefined regions around $y=x$, which makes it easier to compare the AUCs across all classifiers.\\
+Unlike the parameter tuning described in section \ref{sec:ph1tweaking}, we learn nothing about how the performance of the individual configurations will generalise. Instead we gain an indication of the overall ability, for each algorithm, to the perform the classification.
 %
 \subsection{Multi-parameter algorithms}\label{sec:ph1multiparameter}
 %
@@ -266,10 +278,10 @@ For each frame we compare the classifier results with our gold standard. We trea
 %
 Instead of looking at frames as individual entities we now look at the video as a whole. We treat a video as consisting of a sequence of \textit{good} and \textit{bad} segments. As we iterate through the frames of the video we change back and fourth between these two states. Misclassifications, which happen close to these change-of-state's are punished less than those that happens elsewhere. The rationale behind this is that it is difficult to objectively determine the exact point (frame) where a human observer will consider the quality of a video as changing from one state to the other. Likewise, we do not expect a human observer to notice very short segments of good- or bad- quality footage, if they are surrounded by a significant amount of footage of the opposite type.\\
 For this we need a more advanced \textit{penalty function} than the binary check from describd in section \ref{sec:fbfclass}.\\
-For each video, we look at our gold standard and identify all positions in its sequence of frames where there is change of state. Let $S$ be the set of all these positions. Also let $x$ be any position in the video and let $c$ be some level of tolerance for mistakes. A \emph{penalty function} for determining the ratio of punishment for a misclassification at position $x$ is then defined as:
+For each video, we look at our gold standard and identify all positions in its sequence of frames where there is change of state. Let $S$ be the set of all these positions, $x$ be any position in the video and $c$ be some level of tolerance for mistakes. A \emph{penalty function} for determining the ratio of punishment for a misclassification at position $x$ is then defined as:
 %
 \begin{displaymath}
-P(x) =1 - max_{s\in S}(e^{-\frac{(x-s)^{2}}{2c^{2}}})
+P(x) =1 - \text{max}_{s}(e^{-\frac{(x-s)^{2}}{2c^{2}}})
 \end{displaymath}
 %
 This function places a series of inverted gaussian bell curves at the point of every change of state. Figure \ref{fig:penaltycurve} shows an example of this. The value $c$ defines the width of the curve and thus determines how tolerant we are toward misclassifications in general. We experiment with \textit{tolerance} values of 12, 24 and 48.
@@ -398,7 +410,10 @@ Table \ref{tab:algoperf} shows performance of each algorithm configuration. The 
 Table \ref{tab:algoseq} shows some of the side effects of each configuration. \textit{GSL} stands for \textit{good sequence lenght} and \textit{BSL} means \textit{bad sequence length}. A sequence is defined as a number of subsequent frames that share the same classification. The relative standard deviation of both GSL and BSL are computed, along with the longest good- and bad- sequence.
 %
 \begin{table}
-  \begin{tabular}{| l | c | c | c | c | c | c |}\hline
+  \centering
+  % \begin{tabular}{| >{\centering\arraybackslash}m{1in} | >{\centering\arraybackslash}m{1in} |} \hline
+  % \begin{tabular}{| l | c | c | c | c | c | c |}\hline
+  \begin{tabular}{| l | c | >{\centering\arraybackslash}m{1.75cm} | >{\centering\arraybackslash}m{1.5cm} | c | >{\centering\arraybackslash}m{1.75cm} | >{\centering\arraybackslash}m{1.5cm} |}\hline
   %\begin{tabular}{| !l | ^c | ^c | ^c | ^c | ^c | c |}\hline
     Label & mean GSL & GSL std. dev. \% & longest GSL & mean BSL & BSL std. dev. \% & longest BSL  \\\hline
     ICSM1 & 205 & 217\% & 5105 & 40 & 155\% & 536 \\\hline
