@@ -114,10 +114,10 @@ def computeFrameStateCummulative(magnitudes, contrast, p):
 	states = []
 	state_values = []
 	
-	weight,threshold = p
+	threshold,weight = p
 
 	for i in range(0,len(magnitudes)):
-		state_value = (1-weight) * [contrast[i] + weight * magnitudes[i]
+		state_value = (1-weight) * contrast[i] + weight * magnitudes[i]
 		if state_value > threshold:
 			states.append(0)
 		else:
