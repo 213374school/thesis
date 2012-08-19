@@ -169,7 +169,7 @@ We perform a slight triangular smoothing on the metadata in order to remove outl
 We now look at the amount of movement in each area of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f = [m_{1},m_{2} \dots m_{9}]$, where $m_{i}$ is mean distance of movement occuring in a specific part the frame. This mean is calculated on the magnitude of all adjusted optical flow vectors, in that area. The number of areas exceeding a given threshold, $\tau_{1}$, is then defined as:
 %
 \begin{equation}
-A_{f} = \sum_{i=1}^{9}
+A(f) = \sum_{i=1}^{9}
 \begin{cases}
 0 & \text{if } m_{i} \leq \tau_{1}\\
 1 &  \text{otherwise}
@@ -181,7 +181,7 @@ Calculating individual means and analysing each area seperately, should improve 
 \begin{equation}
 O(f) =
 \begin{cases}
-0 & \text{, if } A_{f} > \tau_{2} \vee f_{e} > \tau_{3} \\
+0 & \text{, if } A(f) > \tau_{2} \vee f_{e} > \tau_{3} \\
 1 &  \text{, otherwise}
 \end{cases},
 \end{equation}
@@ -190,34 +190,34 @@ where $\tau_{2}$ is a threshold that defines how many areas are allowed to excee
 \subsubsection{Vertical Oscillation classifier}\label{sec:verticaloscillationclassifier}
 %
 The \textit{vertical oscillation} classifier attempts to detect footage with vertical movement of objects. Such movement can be caused by people jumping, by people gesticulating heavily whilst talking, or by signs being raised into the air. We look at the variance of the vertical direction of the optical flow vectors over some period of time.\\
-As with the \textit{overview} classifier we analyse the internal movement in different areas of the image, in order to detect local characteristics. Let $m$ be the mean of the vertical movement in an area of a frame. This mean is calculated on the vertical movement of the adjusted optical flow vectors, in that area. The variance in vertical movement in an area of the image at a point $x$ is then defined as:
+As with the \textit{overview} classifier we analyse the internal movement in different areas of the image, in order to detect local characteristics. Let $m$ be the mean of the vertical movement in an area of a frame. This mean is calculated on the vertical movement of the adjusted optical flow vectors, in that area. The variance in vertical movement in an area of the image at frame position $f$ is then defined as:
 %
 \begin{equation}
-v(x) = std(\bigcup_{i=x-s}^{x} M_{i}(x)),
+v(f) = std \left (\bigcup_{i=f-\tau_1}^{f} m(i) \right ),
 \end{equation}
 %
-where $s$ is the timespan over which we want to calculate the variance. For simplicity we omit the case where $x \leq s$. In that case we let $V_{x} = 0$.\\
-Let $V$ be the set of all nine $v$ throughout a video. The number of areas, in a frame $f$, in which vertical oscillation occurs is then defined as:
+where $\tau_1$ is the timespan over which we want to calculate the variance. For simplicity we omit the case where $f \leq \tau_1$. In that case we let $v_{f} = 0$.\\
+Let $V$ be the set of all nine image areas in a video. The number of areas, in a frame at position $f$, in which vertical oscillation occurs is then defined as:
 %
 \begin{equation}
-A_{f} = \sum_{i=1}^{9}
+A(f) = \sum_{i=1}^{9}
 \begin{cases}
-0 & \text{, if } V_{i}(f) < s\\
-1 &  \text{, otherwise}
+0 & \text{if } V_{i}(f) < \tau_2\\
+1 &  \text{otherwise}
 \end{cases}
 \end{equation},
 %
-where $s$ is some threshold defining the minimum level of variance. The \textit{vertical oscillation} classification of a frame is then defined as:
+where $\tau_2$ is some threshold defining the minimum level of variance. The \textit{vertical oscillation} classification of a frame is then defined as:
 %
 \begin{equation}
 V(f) =
 \begin{cases}
-0 & \text{, if } A_{f} < t\\
-1 &  \text{, otherwise}
+0 & \text{if } A(f) < \tau_3\\
+1 &  \text{otherwise}
 \end{cases},
 \end{equation},
 %
-where $t$ is a threshold defining the minimum number of areas in which vertical oscillation must occur.
+where $\tau_3$ is a threshold defining the minimum number of areas in which vertical oscillation must occur.
 %
 % RISKS: (zooming), maybe wrong method
 %
@@ -322,8 +322,8 @@ As a rule of thumb, we consider segments fulfulling these requirements \textit{t
 \subsection{Vertical Oscillation classifier}
 %
 The \textit{vertical oscillation} classifier (described in section \ref{sec:verticaloscillationclassifier}) analyses the internal movement in the frames.\\
-It has three thresholds. $v$ defines the area over which the standard deviation in vertical movement is calculated. $s$ defines the minimum level of variance accepted as vertical oscillation. $t$ defines the number of areas in the frame in which vertical oscillation must occur.\\
-The parameter tuning is done on on a small subset of the dataset (3-4 videos). For the variance coverage we set $v = 12 \text{ frames}$, representing half a second of footage, enough for someone to jump or make a gesticulation. The minimum amount of variance required is set to $s = 5 \text{ pixels}$, which, over 12 frames, will require significant vertical oscillation in order to be achieved. Because vertical oscillation only is required in a small part of the frame in order to be clearly visible, we set $t = 2 \text{ areas}$.\\
+It has three thresholds. $\tau_1$ defines the time span over which the standard deviation in vertical movement is calculated. $\tau_2$ defines the minimum level of variance accepted as vertical oscillation. $\tau_3$ defines the number of areas in the frame in which vertical oscillation must occur.\\
+The parameter tuning is done on on a small subset of the dataset (3-4 videos). For the variance coverage we set $\tau_1 = 12 \text{ frames}$, representing half a second of footage, enough for someone to jump or make a gesticulation. The minimum amount of variance required is set to $\tau_2 = 5 \text{ pixels}$, which, over 12 frames, will require significant vertical oscillation in order to be achieved. Because vertical oscillation only is required in a small part of the frame in order to be clearly visible, we set $\tau_3 = 2 \text{ areas}$.\\
 As with the \textit{overview} classifier, we smooth the metadata with a trinagle width of 120 frames.\\
 \\
 When analysing the performance of the \textit{vertical oscillation} classifier, segments depicting objects being moved up and down are considered \textit{true positives}. In total $\sim$ 14\% of the 8 minutes of the positively classified footage fulfills this requirement. A review show that the vast majority of \textit{false positives} are caused by unsteady camera motion, which we fail to compensate for. Groups of people walking also trigger a lot of \textit{false positives}, which suggest an over-sensitivity to vertical movement.
@@ -333,12 +333,8 @@ When analysing the performance of the \textit{vertical oscillation} classifier, 
 \subsection{Day \& Night classifier}
 %
 The \textit{day/night} classifier (described in section \ref{sec:daynightclassifier}) analyses the overall brightness in a video along with the blue channel.\\
-% <<<<<<< HEAD
-% It only has a single parameter, $m\in [1..10]$, which determines where to make the differentiation between the dark and bright partitions in a histogram of overall brightness in a video. We tried all 10 values and found that $m = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
-% =======
-It has two parameters. $b$ is the number of bins in the histrogram of brightness intensities, and $\tau \in \{1,2,...,b-1,b\}$, which determines where to make the differentiation between the dark and bright partitions in the histogram. We let $b = 10$ and subsequently tried all 10 values of $\tau$. We find that $\tau = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
-% >>>>>>> 0549afbd71f6ef3e7ec4d38234de80b0502f9abd
-%
+It has two parameters. $b$ is the number of bins in the histrogram of brightness intensities, and $\tau \in \{1,2,...,b-1,b\}$, which determines where to make the differentiation between the dark and bright partitions in the histogram. We let $b = 10$ and subsequently tried all 10 values of $\tau$. We find that $\tau = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\
+\\
 The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.
 %
 \subsection{Analysis}
