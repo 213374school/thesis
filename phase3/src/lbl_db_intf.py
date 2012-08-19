@@ -110,20 +110,43 @@ class CandidateFactory:
 
 	def get_ytids(self, lim=-1):
 
-		ytids = [candidate.get('ytid') for candidate in self.candidates]
+		# ytids = [candidate.get('ytid') for candidate in self.candidates]
 
 		d = defaultdict(lambda: 0)
 		# count the number of occurences of each candidate
-		for c in ytids: d[c] += 1
+		for candidate in self.candidates:
+			d[candidate.get('ytid')] += len(candidate.get('l'))**2
+			
 		# sort by the number of occurences (largest first)
 		d = sorted(d.items(), key=lambda (x,y): y, reverse=True)
 		if lim > 0:
 			d = d[:lim]
+		print json.dumps(d, sort_keys=True, indent=4)
 		# and finally the new list of ytids
 		ytids = [x for (x,y) in d]
-		# print 'get_ytids(...): ', ytids
+
+		print 'get_ytids(...) RESULT: ', ytids
 
 		return ytids
+
+	# def get_ytids2(self, lim=-1):
+
+	# 	ytids = [candidate.get('ytid') for candidate in self.candidates]
+
+	# 	d = defaultdict(lambda: 0)
+	# 	# count the number of occurences of each candidate
+	# 	for c in ytids: d[c] += 1
+	# 	# sort by the number of occurences (largest first)
+	# 	d = sorted(d.items(), key=lambda (x,y): y, reverse=True)
+	# 	if lim > 0:
+	# 		d = d[:lim]
+	# 	print json.dumps(d, sort_keys=True, indent=4)
+	# 	# and finally the new list of ytids
+	# 	ytids = [x for (x,y) in d]
+
+	# 	print 'get_ytids(...) RESULT: ', ytids
+
+	# 	return ytids
 
 		# hella lot better than:
 		# return list(set([candidate.get('ytid') for candidate in self.candidates]))
@@ -254,7 +277,7 @@ class Recipe:
 			
 			candidate_factory = CandidateFactory(segment_database)
 			candidates = candidate_factory.get_candidates(labels)
-			print '#immediate candidates: %d' % len(candidates)
+			# print '#immediate candidates: %d' % len(candidates)
 
 			ytids = candidate_factory.get_ytids(20)
 			query = dict(
@@ -269,7 +292,7 @@ class Recipe:
 			ignore_list = self.ignore_list
 
 			candidates = sortCandidates(ytids=ytids, query=query, minSpan=minSpan, maxSpan=maxSpan, interval=interval, spanAlpha=spanAlpha, segment_database=segment_database, ignoreList=ignore_list)
-			print '#candidates: %d' % len(candidates)
+			# print '#candidates: %d' % len(candidates)
 
 			if candidates:
 				# filter out invalid candidates

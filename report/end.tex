@@ -1,6 +1,33 @@
 \chapter{Discussion}
 %
-bla bla bla
+% labeling was so dependant on image quality that the quality assesment was not as much needed (other than optimizations we did not perform)
+% impact of generally high quality videos (pre-edited and then cut up)
+% gold standard is somewhat error prone
+%
+\chapter{Conclusions}
+%
+% \section{Summary}\label{sec:conc_summary}
+%
+Brief summary of the thesis
+%
+\section{Conclusions}\label{sec:conc_concs}
+%
+% Explain the current state-of-the-art on the topic of automatic construction of videos 
+% -> Uncover the current state-of-the-art on the topic of automatic video summaries from multiple sources
+Our first research goal was to uncover the current state-of-the-art on the topic of automatic video summaries from multiple sources. Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method for a semi-automatic way of editing home video, in which they use automated video analysis to identify suitable clips. However they do not perform any contextual analysis of the footage.\\\\
+% Select, possibly extend, and implement a method for segmenting video clips.
+Our image quality assessment was based on methods presented by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} who proposes a simple and effective way of detecting camera movement frame-by-frame by computing a vector describing the direction and magnutide of the movement. They also proposed a method of detecting overly dark images, on which we improved to also detect overly bright images, or images with little texture such as extreme closeups.\\
+We proceeded with different approaches to classifying a single frame of video footage and compare the classification to a gold standard. Several of our approaches provided satisfactory results, but we do question the way we achived the gold standard as this included manual viewing of the entire dataset by one or more human observers and recording their subjective X. OMFORM!\\
+% Develop and implement a method for labeling video segments.
+We successfully labeled video footage based on a contextual analysis. The analysis was based on metadata from the image quality assesment, and metadata computed for the purpose of labelling. We were able to identify public speakers, footage shot from within a crowd, detect police blinker lights, and overview shots. 
+\\
+The correctness of each type of label varies, but the \emph{Person in Focus}-label was correct $X\%$ of the time. Other labels such as the \emph{Vertical Oscillation} bla bla. skriv mere om dette. SKAL BRUGE DISSE TAL!\\\\
+% Develop and implement a method for composing a coherent video summary by aggregating video segments. 
+% -> Develop a method for composing a video summary from multiple sources with a coherent contextual flow
+
+% Evaluate the final architecture and prototype with respect to domain- specific metrics (primarily focusing on quality and processing time)
+%
+\section{Limitations}\label{sec:conc_lims}
 %
 \section{Future Work}\label{sec:futurework}
 %
@@ -9,10 +36,3 @@ Had we had our own video hosting service we would have access to such informatio
 %
 image quality in a live system\\
 more extreme alpha span value
-%
-\chapter{Conclusion}
-%
-labeling was so dependant on image quality that the quality assesment was not as much needed (other than optimizations we did not perform)
-impact of generally high quality videos (pre-edited and then cut up)
-gold standard is somewhat error prone
-%
