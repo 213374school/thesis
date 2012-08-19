@@ -234,9 +234,13 @@ c_{i} = \frac{L_{i}}{R_{i}} - 1
 %
 A value above zero shows that blue is a dominant color in the frame.\footnote{We have later discovered that, due to the way images are converted to greyscale, this is not always true. We describe this problem in detail in the Discussion section for this chapter (section \ref{sec:phase2discussion})}
 $c$ is therefor an indication of what type of footage we are dealing with.\\
-Next, we look at the general distribution of brightness intensities throughout the video. We start by creating a histogram of the brightness distribution across the entire video. The histogram have a range of [0:255] and contain $b$ bins of equal size. For each frame in the video, the mean brightness value is inserted into the histogram. Figure [FIG:REF] shows an example of this mapping.
+Next, we look at the general distribution of brightness intensities throughout the video. We start by creating a histogram of the brightness distribution across the entire video. The histogram have a range of [0:255] and contain $b$ bins of equal size. For each frame in the video, the mean brightness value is inserted into the histogram. Figure \ref{fig:brightness_histogram} shows an example of this mapping.
 %
-[FIGURE]
+\begin{figure}
+     \centering
+     \includegraphics[width=1\textwidth]{img/brightness_histogram.png}
+     \caption{Example of frame brightness intensities being mapped to a histogram.}\label{fig:brightness_histogram}
+\end{figure}
 %
 Now we look at this histogram and compare the mass of the partitions representing the darker frames with the mass of those representing the brighter ones. Let $H$ be the histogram for a video, and let $\tau \in \{1,2,...,b-1,b\}$ be some delimeter value. An indication of daytime is then defined as:
 %
