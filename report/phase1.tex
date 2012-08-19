@@ -110,54 +110,65 @@ We test 4 different classifiers, each one taking a different approach.
 %
 \subsubsection{Contrast Only classification (CO)}
 %
-This classifier only looks at the contrast ratios throughout a video. The frame state, $v$, is defined as $v=\frac{C}{\tau}$, where $\tau$ is some treshold and $C$ is the contrast ratio for that frame.
+This classifier only looks at the contrast ratios throughout a video. The frame unsutability meassure, $v$, is defined as $v=\frac{C}{\tau}$, where $\tau$ is some treshold and $C$ is the contrast ratio for that frame.
 %
 \subsubsection{Shift Magnitude Only classification (SO}
 %
-This classifier only looks at the shift vector magnitude ratios for each frame. The frame state, $v$, is defined as $v=\frac{S}{\tau}$, where $\tau$ is some treshold and $S$ is the shift vector magnitude ratio for that frame.
+This classifier only looks at the shift vector magnitude ratios for each frame. The frame unsutability meassure, $v$, is defined as $v=\frac{S}{\tau}$, where $\tau$ is some treshold and $S$ is the shift vector magnitude ratio for that frame.
 %
 \subsubsection{Independent Contrast and Shift Magnitude classification (ICSM)}
 %
 This methods ignores the cumulative effect of the contrast and shift vector magnitude ratio, and is simmilar to the approach taken by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. We look at the contrast ratio and the shift vector magnitude ratios independantly and classifies frames as being \textit{bad} if either of the two pass their respective thresholds.\\
-The frame state, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$, where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, $\tau_1$ and $\tau_2$ are some tresholds.
+The frame unsutability meassure, $v$, is defined as $v=\text{max}(\frac{C}{\tau_1}, \frac{S}{\tau_2})$, where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, and $\tau_1$ and $\tau_2$ are some tresholds.
 %
 \subsubsection{Cummulative Contrast and Shift Magnitude classification (CCSM)}
-% ANDERS
-This method investigates the cumulative effect of both ratios. If either of the two ratios, or if the combination of ratios, exceed a certain threshold, the frame is classified as \textit{bad}. The frame state is defined as follows:\\
-% With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.
-\[
-s = v \ge \tau,
-\]
-where 
-%If $S$ is the shift vector magnitude ratio, $C$ is the contrast ratio, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then 
-%$v$ is defined as: 
-$v = \alpha S + \beta C$, and $\alpha,\beta$ are weight-factors, and %and $s$ is then determined by $s \equiv v \ge \tau$, where 
-$\tau$ is some treshold. If we wish that $s \equiv S \ge \tau_{1} \vee C \ge \tau_{2}$ it follows that
+%
+This method investigates the cumulative effect of both ratios. If a weighed sum of the two ratios exceeds a certain threshold, the frame is classified as \textit{bad}. In this particular case the frame state is defined as follows:\\
 %
 \[
- \alpha S + \beta C \ge \tau \equiv  S \ge \tau_{1},
+s = 
+\begin{cases}
+\text{good} & \text{ if } v \leq \tau\\
+\text{bad} & \text{ otherwise }
+\end{cases},
 \]
 %
-ie. if $S$ is greater than the treshold $\tau_{1}$ then $\alpha S + \beta C$ must also be greater than the treshold $\tau$.% , the values of $\alpha$ and $\beta$ are determined as follows:
-%the point being that the contribution from $S$ alone can determine the outcome of $s$, 
- We set $C = 0$ and $S$ assumes the lowest possible value, $S = \tau_{1}$, and we can determine the value of $\alpha$ as:
-%
-\[
-\alpha \tau_{1} \ge \tau \Leftrightarrow \alpha \ge \frac{\tau}{\tau_{1}}
-\]
-%
-It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}{\tau_{2}}$.
-\\NOGEN DER FATTER DETTE? ER VORES VINDERALGORITME....
-%
-%Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
-%
-% \paragraph{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$)}
+where the frame unsutability measure is defined as $v=(1-w) C + w S$, where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, $\tau$ is a threshold and $w$ is a weighing between the two ratios.
 % %
-% The last algorithm is a very simplified version of \textit{CCSM}. It attempts to classify the frames by simply taking the mean of \textit{contrast} and \textit{shift vector magnitude} and checking to see if it above a given threshold. The frame state classifier, \text{S(c,s)}, is defined as:
+% % With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.
 % \[
-% S(c,s)=\sqrt[3]{\frac{c^{3}+s^{3}}{2}}
+% s = v \ge \tau,
 % \]
-% The parameter values are cubed (and the result normalised to the [0,1] range) in order further increase their sensitivity toward bad values. Informal experimentation shows that the power of sensitivity does not effect the outcome result in any significant way, so it has been left out as a parameter.
+% where 
+% %If $S$ is the shift vector magnitude ratio, $C$ is the contrast ratio, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then 
+% %$v$ is defined as: 
+% $v = \alpha S + \beta C$, and $\alpha,\beta$ are weight-factors, and %and $s$ is then determined by $s \equiv v \ge \tau$, where 
+% $\tau$ is some treshold. If we wish that $s \equiv S \ge \tau_{1} \vee C \ge \tau_{2}$ it follows that
+% %
+% \[
+%  \alpha S + \beta C \ge \tau \equiv  S \ge \tau_{1},
+% \]
+% %
+% ie. if $S$ is greater than the treshold $\tau_{1}$ then $\alpha S + \beta C$ must also be greater than the treshold $\tau$.% , the values of $\alpha$ and $\beta$ are determined as follows:
+% %the point being that the contribution from $S$ alone can determine the outcome of $s$, 
+%  We set $C = 0$ and $S$ assumes the lowest possible value, $S = \tau_{1}$, and we can determine the value of $\alpha$ as:
+% %
+% \[
+% \alpha \tau_{1} \ge \tau \Leftrightarrow \alpha \ge \frac{\tau}{\tau_{1}}
+% \]
+% %
+% It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}{\tau_{2}}$.
+% \\NOGEN DER FATTER DETTE? ER VORES VINDERALGORITME....
+% %
+% %Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
+% %
+% % \paragraph{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$)}
+% % %
+% % The last algorithm is a very simplified version of \textit{CCSM}. It attempts to classify the frames by simply taking the mean of \textit{contrast} and \textit{shift vector magnitude} and checking to see if it above a given threshold. The frame state classifier, \text{S(c,s)}, is defined as:
+% % \[
+% % S(c,s)=\sqrt[3]{\frac{c^{3}+s^{3}}{2}}
+% % \]
+% % The parameter values are cubed (and the result normalised to the [0,1] range) in order further increase their sensitivity toward bad values. Informal experimentation shows that the power of sensitivity does not effect the outcome result in any significant way, so it has been left out as a parameter.
 %
 \section{Dataset}
 %
