@@ -182,37 +182,37 @@ equal to $1.5$ seconds, and a truncation value of $1/3$.% paramter tuning
 %
 \subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
-The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. Furthermore, in order to avoid overlap with the \textit{person in focus} footage, which often also holds these charactetistics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the \textit{support vector magnitude} metadata described in section \ref{sec:svmdata}, the \textit{optical flow} metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
-We perform a slight triangular smoothing on the metadata in order to remove outliers. We also discard all footage, which has already been classified with the \textit{person in focus} label.\\
+The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. In order to avoid overlap with the \textit{person in focus} footage, which often share these charactetistics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the shift vector magnitude metadata described in section \ref{sec:svmdata}, the optical flow metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
+We perform a slight triangular smoothing on the metadata in order to remove outliers. We also desregard all footage, which has already been classified with the \textit{person in focus} label.\\
 % RISK: One label takes precedence over another (not isolated)
-We now look at the amount of movement in each part of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f_{i} = [m_{1},m_{2} \dots m_{9}]$, where $m_{x}$ is the distance of movement occuring in a specific part the frame, calculated as the mean of the magnitude of all adjusted optical flow vectors, in an area. The number of areas exceeding a given limit, $s$, is then defined as:
+We now look at the amount of movement in each area of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f = [m_{1},m_{2} \dots m_{9}]$, where $m_{i}$ is mean distance of movement occuring in a specific part the frame. This mean is calculated on the magnitude of all adjusted optical flow vectors, in that area. The number of areas exceeding a given threshold, $\tau_{1}$, is then defined as:
 %
 \begin{equation}
 A_{f} = \sum_{i=1}^{9}
 \begin{cases}
-0 & \text{, if } m_{i} \leq s\\
-1 &  \text{, otherwise}
+0 & \text{if } m_{i} \leq \tau_{1}\\
+1 &  \text{otherwise}
 \end{cases}
 \end{equation}
 %
-This way of analysing sub-parts of the image should improve the chance of detecting local charactaristics, which would be lost in an overall analysis of the frame. %Flyt til metadata afsnit?
- Next we combine this meassure with the egomotion in the frame, defined as $f_{e}$. The binary \textit{overview} classification of a frame is defined as:
+Calculating individual means and analysing each area seperately, should improve the chance of detecting local characteristics, which could otherwise have been lost in a global mean.\\
+ Next we combine this meassure with the egomotion, $f_{e}$, as estimated by the shift vector magnitude, at this frame. The binary \textit{overview} classification of a frame is defined as:
 \begin{equation}
 O(f) =
 \begin{cases}
-0 & \text{, if } A_{f} > t \vee f_{e} > u \\
+0 & \text{, if } A_{f} > \tau_{2} \vee f_{e} > \tau_{3} \\
 1 &  \text{, otherwise}
 \end{cases},
 \end{equation}
-where $t$ is a threshold that defines how many areas are allowed to contain too much internal movement, and $u$ is a threshold defining the maximimum \textit{shift vector magnitude} we accept for the frame.
+where $\tau_{2}$ is a threshold that defines how many areas are allowed to exceed the internal movement limit, and $\tau_{3}$ is a threshold defining the maximimum shift vector magnitude we accept for the frame.
 %
 \subsubsection{Vertical Oscillation classifier}\label{sec:verticaloscillationclassifier}
 %
-The \textit{vertical oscillation} classifier attempts to detect footage with vertical movement of objects. Such movement can be caused by people jumping, by people gesticulating heavily whilst talking, or if people are raising signs into the air. In order to do this we look at the variance of the vertical direction of the optical flow vectors over some time.\\
-As with the \textit{overview} classifier we analyse the internal movement in different areas of the image, in order to detect local charactaristics. Let $m \in M$ be the vertical movement in an area of a frame, calculated as the mean of the vertical movement of the adjusted optical flow vectors, in that area. Let $M$ be the set of all $m$. The variance in vertical movement in an area of the image, at a point $x$, is then defined as:
+The \textit{vertical oscillation} classifier attempts to detect footage with vertical movement of objects. Such movement can be caused by people jumping, by people gesticulating heavily whilst talking, or by signs being raised into the air. We look at the variance of the vertical direction of the optical flow vectors over some period of time.\\
+As with the \textit{overview} classifier we analyse the internal movement in different areas of the image, in order to detect local characteristics. Let $m$ be the mean of the vertical movement in an area of a frame. This mean is calculated on the vertical movement of the adjusted optical flow vectors, in that area. The variance in vertical movement in an area of the image at a point $x$ is then defined as:
 %
 \begin{equation}
-v(x) = std(\bigcup_{i=x-s}^{x} M_{i}),
+v(x) = std(\bigcup_{i=x-s}^{x} M_{i}(x)),
 \end{equation}
 %
 where $s$ is the timespan over which we want to calculate the variance. For simplicity we omit the case where $x \leq s$. In that case we let $V_{x} = 0$.\\
@@ -248,7 +248,7 @@ A fallacy in this method are cases of just two people in a frame which are easil
 %
 \subsubsection{Day \& Night classifier}\label{sec:daynightclassifier}
 %
-Night footage is not only darker than footage recorded during the day. It also contains significantly less blue color, which is the reason it often has a brownish or red tint. Our \textit{day/night} classifier analyses both the \textit{blue channel} metadata (described in section \ref{sec:blue_channel}) and the \textit{brightness} metadata (described in section \ref{sec:brightnessdata}).\\
+Night footage is not only darker than footage recorded during the day, it also contains significantly less blue color, which is the reason it often has a brownish or red tint. Our \textit{day/night} classifier analyses both the \textit{blue channel} metadata (described in section \ref{sec:blue_channel}) and the \textit{brightness} metadata (described in section \ref{sec:brightnessdata}).\\
 First, we look at the correlation between the blue color channel and the overall brightness. Let $i$ be the frame position in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $c_{i}$ is defined as:\\
 % http://opencv.willowgarage.com/documentation/python/miscellaneous_image_transformations.html#cvtcolor
 % 0.299R + 0.587G + 0.114B
@@ -257,12 +257,13 @@ First, we look at the correlation between the blue color channel and the overall
 c_{i} = \frac{L_{i}}{R_{i}} - 1
 \end{equation}
 %
-A value above zero shows that blue is a dominant color in the frame. $c$ is therefor an indication of what type of footage we are dealing with.\\
-Next, we look at the general distribution of brightness intensities throughout the video. We start by creating a histogram of the brightness distribution across the entire video. The histograms have a range of [0:255] and contain 10 bins of equal size. For each frame in the video, the mean brightness value is inserted into the histogram. Figure [FIG:REF] shows an example of this mapping.
+A value above zero shows that blue is a dominant color in the frame.\footnote{We have later discovered that, due to the way images are converted to greyscale, this is not always true. We describe this problem in detail in the Discussion section for this chapter (section \ref{sec:phase2discussion})}
+$c$ is therefor an indication of what type of footage we are dealing with.\\
+Next, we look at the general distribution of brightness intensities throughout the video. We start by creating a histogram of the brightness distribution across the entire video. The histogram have a range of [0:255] and contain $b$ bins of equal size. For each frame in the video, the mean brightness value is inserted into the histogram. Figure [FIG:REF] shows an example of this mapping.
 %
 [FIGURE]
 %
-Now we look at this histrogram and compare the mass of the partitions representing the darker frames with the mass of those representing the brighter ones. Let $H$ be the histogram for a video, and let $m\in [1..10]$ be some delimeter value. An indication of daytime is then defined as:
+Now we look at this histogram and compare the mass of the partitions representing the darker frames with the mass of those representing the brighter ones. Let $H$ be the histogram for a video, and let $\tau \in \{1,2,...,b-1,b\}$ be some delimeter value. An indication of daytime is then defined as:
 %
 \begin{equation}
 D = \sum_{i=1}^{m}H_{i} < \sum_{j=m+1}^{10}H_{j}
@@ -272,8 +273,8 @@ Finally, let $C$ be the mean of all $c$ in a video. Our \textit{day/night} class
 \begin{equation}
 S =
 \begin{cases}
-\text{day} & \text{, if } C > 0 \vee D \\
-\text{night} &  \text{, otherwise}
+\text{day} & \text{if } C > 0 \vee D \\
+\text{night} &  \text{otherwise}
 \end{cases}
 \end{equation}
 %
@@ -310,8 +311,8 @@ Almost 21 minutes of the entire dataset is classified as containing a person in 
 \subsection{Overview classifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
-The classifier has three thresholds, $s$, $t$ and $u$. $s$ is the maximum internal movement allowed in an area. $t$ is the maximum number of areas, which are allowed to break this limit, and $u$ is the maximum allowed egomotion for the entire frame.\\
-The parameter tuning was done a small subset of the dataset, consisting of a handful of videos. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
+The classifier has three thresholds, $\tau_{1}$, $\tau_{2}$ and $\tau_{3}$. $\tau_{1}$ is the maximum internal movement allowed in an area. $\tau_{2}$ is the maximum number of areas, which are allowed to break this limit, and $\tau_{3}$ is the maximum allowed egomotion for the entire frame.\\
+The parameter tuning was done a small subset of the dataset, consisting of a handful of videos. Setting $\tau_{1} = 2 \text{ pixels}$ and $\tau_{2} = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $\tau_{3} = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
 Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.\\
 \\
 It is difficult to exactly define what an \textit{overview} clip is. These are the charactaristics we look after when determining performance:
@@ -348,13 +349,24 @@ We consider footage recorded within a crowd, or in close proximity to several pe
 \subsection{Day \& Night classifier}
 %
 The \textit{day/night} classifier (described in section \ref{sec:daynightclassifier}) analyses the overall brightness in a video along with the blue channel.\\
-It only has a single parameter, $m\in [1..10]$, which determines where to make the differentiation between the dark and bright partitions in a histogram of overall brightness in a video. We tried all 10 values and fin that $m = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
+It has two parameters. $b$ is the number of bins in the histrogram of brightness intensities, and $\tau \in \{1,2,...,b-1,b\}$, which determines where to make the differentiation between the dark and bright partitions in the histogram. We let $b = 10$ and subsequently tried all 10 values of $\tau$. We find that $\tau = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\\\
 %
 The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.
 %
 \subsection{Analysis}
 %
-\subsection{Risks and Limitations}
+\subsection{Discussion}\label{sec:phase2discussion}
 %
+The \textit{overview}- and the \textit{person in focus}- labels are defined to be mutually exclusive. In case of a overlap the latter is used. However, due to the order in which the labels are generated and post-processed, overlaps \textit{can} actually occur. Because the \textit{person in focus} labels are interpolated (as described in section \ref{sec:labelmerge}) only after the the \textit{overview} classifier have used them for its classification, the new, interpolated \textit{person in focus} labels may actually cover areas which are also labelled as overviews.\\
+\\
+In the \textit{day/night} classifier we compare the blue channel intesity of a frame with the overall brightness, in order to determine if blue is a dominant color. However, the overall brightness is calculated from the intensity of the greyscale version of the frame. We assumed that this intensity is based on the mean of all the channels in the orginal RGB image. We have later learned that the individual channels are weighed differently in this conversion. OpenCV, which we use define the intesity, $Y$, of a pixel as:
+%
+\[
+Y = 0.299 \times R + 0.587 \times  G + 0.114 \times B,
+\]
+%
+where $R$, $G$, and $B$ are the red-, green-, and blue- intensity of the pixel.\\
+Skriv lidt om hvilken betydning det har for vores resultater.
+% Skriv lidt om hvilken betydning det har for vores resultater.
 \section{Summary}
 %
