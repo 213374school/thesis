@@ -109,6 +109,26 @@ def computeFrameStateLauge(magnitudes, contrast, p=(0.01, 0.75)):
 	return states, state_values
 
 
+def computeFrameStateCummulative(magnitudes, contrast, p):
+
+	states = []
+	state_values = []
+	
+	weight,threshold = p
+
+	for i in range(0,len(magnitudes)):
+		state_value = (1-weight) * [contrast[i] + weight * magnitudes[i]
+		if state_value > threshold:
+			states.append(0)
+		else:
+			states.append(1)
+		state_values.append(state_value)
+
+
+	return states, state_values
+
+
+
 def computeFrameStateNaiive(magnitudes, contrast, p=-1):
 	
 	states = []
