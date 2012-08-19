@@ -32,9 +32,9 @@ The first statement investigates the quality of our choice of labels, and to som
 %
 \subsubsection{Setup}
 %
-Our test environment runs on \textit{Google App Engine} and consist of a minimalistic website. To discern interuptive elementsplayer-controls are removed from the YouTube embedded player (the user can still pause the video by clicking on it or by using the space-bar on their keyboard). The questionnaire was not shown before the end of the video in order not to disctract attention to it. The video-title, which would appear briefly in the top of the player is the hex-value of a randomly generated number to ensure a non-descript title.\\
-Each user session is tracked using a randomly generated identifier. We do not make any attempt to track users across different sessions so we are unable to track a returning test-user, but it does give us a rough measure of how many different test-users we have, how many questionnaires they answered on average.\\
-To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test is available in Appendix [SEC:REF], in both languages.\\
+Our test environment runs on \textit{Google App Engine} and consist of a minimalistic website. To discern interuptive elements player-controls are hidden in the embedded YouTube-player (the user can still pause the video). The questionnaire is not shown before the end of the video not to disctract the actual viewing. The video title appears briefly in the top of the player is a randomly generated non-descript title.\\%, which would appear briefly in the top of the player is the hex-value of a randomly generated number to ensure a non-descript title.\\
+Each user session is tracked using a randomly generated identifier. We do not make any attempt to track users across different sessions and we are unable to track a returning test-user, but it does give us a rough measure of how many different test-users we have, how many questionnaires they answered on average.\\
+To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test is available in Appendix \ref{sec:blargh}, in both languages.\\
 The test is designed so that the test user can see as few or as many videos as she wants. A circular queue of videos is shared between all users, meaning that a new user will start at the video following the one that was last rated. Answers are stored after each succesful rating.\\
 The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\\\
 %
@@ -56,7 +56,7 @@ We investigate several aspects of the video summary aggregation. Most importantl
 %
 \subsubsection{Random label}
 %
-These video summaries are slightly \textit{less} random. Instead of selecting video clips randomly from the footage, we instead generate a random recipe and create a video summary from it. This is done by generating a sequence of 5 \textit{ingredients} (described in section [SEC:REF]), each containing a random set of 1 to 3 \textit{requested labels}. The minimum length of a video clip, $min$, is randomly set to be between 2 and 9 seconds. The maximum length is randomly set to be between $min$ and $2 \cdot min$.\\
+These video summaries are slightly \textit{less} random. Instead of selecting video clips randomly from the footage, we instead generate a random recipe and create a video summary from it. This is done by generating a sequence of 5 \textit{ingredients} (described in section \ref{sec:blargh}), each containing a random set of 1 to 3 \textit{requested labels}. The minimum length of a video clip, $min$, is randomly set to be between 2 and 9 seconds. The maximum length is randomly set to be between $min$ and $2 \cdot min$.\\
 Because these video summaries are based on footage where labels were detected, we expect their content to be of higher quality than the videos described in the previous section.
 %
 \subsubsection{Designer}\label{sec:phase4designer}
@@ -77,7 +77,7 @@ The \textit{designer} video summaries are based on our own recipe. The ingredien
 During recipe tuning we realized that the overview label and person in focus label often overlapped. Although the two labels are mutually exclusive in a single 
 % KIM: frame? segment?
 % ANDERS: jeg fatter heller ikke en hvede af det her? hvad prøver vi at sige?
-, a segment containing both can still be generated if its score is sufficiently big (see section [SEC:REF til Segment Score]). To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our classifiers).\\
+, a segment containing both can still be generated if its score is sufficiently big (see section \ref{sec:segment_score}). To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our classifiers).\\
 Likewise there are typically two types of crowd shots. One, which has someone in focus, and the other one, which has not. We wanted the latter type.
 %
 \subsubsection{Human edited}
@@ -131,7 +131,7 @@ We start by looking at an overview of the data we gathered, and then go into det
 %
 At the time of writing, our test has been online for around 4 weeks. In that time 160 videos have been observed and rated over 25 sessions. HVAD ER EN SESSION?\\
 The average number of answers per session is 6.4, with a median of 5.0. The shortest session contains 1 answer and the longest contain 25\\
-In addition to the answers required for each video, we also received 11 notes from the test users. REFERENCE TIL HVOR DE KAN SES (HAR LAVET TABEL)\\
+In addition to the answers required for each video, we also received 11 notes from the test users as can be seen in table \ref{tab:notes}.\\
 108 (67.5\%) are answers from the danish version of the test. 52 (32.5\%) is from the enlish version. Each videos in the test is rated 7 or 8 times.
 %
 \subsubsection{Histograms}\label{sec:histograms}

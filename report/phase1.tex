@@ -331,7 +331,6 @@ Classifier configuration and configuration is used interchangeably in the follow
 \end{table}\\
 %
 Table \ref{tab:algoperf} shows performance of each algorithm configuration. The parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalisability, and a high relative standard deviation indicates a low generalisability. \textit{DS} is the distance score, describe in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provides results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence a measure of how the performance of the configuration will generalise to other data. \textit{AUC} (Area Under the Curve), as described in \ref{sec:robustness}, is only indirectly related to the specific configuration, as it a result of all parameters configuratations we have tested. It gives an indication of how robust the algorithm performs.
-%In Table \ref{tab:algoperf} the parameter(s) relative standard deviation is a measure of how much the parameter (is expected to) generalize to different data, where a low standard deviation equals a high level of generalization. The Distance Score (DS) is described in section \ref{sec:ph1tweaking}, and Area Under the Curve (AUC) is described in section \ref{sec:robustness}.\\
 %
 \begin{table}
   %\begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
@@ -386,7 +385,6 @@ Table \ref{tab:algoperf} shows performance of each algorithm configuration. The 
 \end{table}\\
 %
 Table \ref{tab:algoseq} shows some of the side effects of each configuration. \textit{GSL} stands for \textit{good sequence lenght} and \textit{BSL} means \textit{bad sequence length}. A sequence is defined as a number of subsequent frames that share the same classification. The relative standard deviation of both GSL and BSL are computed, along with the longest good- and bad- sequence.
-%In Table \ref{tab:algoseq} a Good Sequence Length (GSL) is the number of consecutive good frames, and a Bad Sequence Length (BSL) is the number of consecutive bad frames. Both measures is an average (over each test-set) and the relative standard deviation along with the longest GSL and BSL is also supplied in Table \ref{tab:algoseq}.
 %
 \begin{table}
   \begin{tabular}{| l | c | c | c | c | c | c |}\hline

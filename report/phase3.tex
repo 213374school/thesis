@@ -27,31 +27,43 @@ An ingredient is described by:
 \subsection{Candidates}\label{sec:candidates}
 %
 To avoid computing a score for all segments in all videos, we find the most promising segments and call these candidates. The candidates are defined as all permutations of segments for which a select set, $L$, of labels is present.
-Overlapping segments are added to the candidates, where overlapping segments originate from the same source video, do not share the same label, and 
+Given two segments, $s_1$ and $s_2$, where $s(l)$ is the label(s) in segment $s$, $s(v)$ is the video that segment $s$ originates from, then segments $s_1$ and $s_2$ overlap if:
+\[
+s_1(l) \neq s_2(l) \text{ and }
+s_1(v) = s_2(v),
+\]
+and
 %
 \[
 \text{max}(a, c) < \text{min}(b, d),
 \]
 %
-where $a$ and $b$ are the start and end frame in the first segment, and $c$ and $d$ are the start and end frame in the second segment. If the segments overlap a new segment, $c$, has labels that are the union of labels in the two segments FORMEL?, and
+where $a$ and $b$ are the start and end frame in the $s_1$, and $c$ and $d$ are the start and end frame in $s_2$. If the segments overlap, a new segment, $s_3$, is added to the candidates and defined by
+%
+\[
+s_3(v) = s_1(v) \text{ and }
+s_3(l) = s_1(l) \cup s_2(l),
+\]
+%
+and
 %
 \[
 x,y = \text{max}(a, c), \text{min}(b, d),
 \]
 %
-where $x$ is the start frame in segment $c$ and $y$ is the end frame in segment $c$. if $y-x < \tau$, for some treshold $\tau$, segment $c$ is discarded, ie. the overlap is too small for $c$ to be of any significance.\\
+where $x$ is the start frame in $s_3$ and $y$ is the end frame in $s_3$. if $y-x < \tau$, for some treshold $\tau$, $s_3$ is disregarded, ie. the overlap is too small for $s_3$ to be of any significance.\\
 The candidates are sorted by number of labels in each (the most relevant candidate is usually the one where multiple labels overlap). The top most candidates are the most promising, and a score for each is computed as described in section \ref{sec:segment_score}.
 %
 %
 \subsection{Segment Score}\label{sec:segment_score}
 %
-% Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.
-%
-The most fitting sub-parts of the video are found and scored based on how well they fulfill the label requirements we have constructed for the segment in question as well as how well they match the time span we are looking to fill. Each aspect is encapsulated in each their seperate fulfilment ratio, which are then later combined into a final score.
+LAUGE: omformuler + husk: Remember to mention that segments chosen in part 3 are marked as used and can't be chosen again in that video.\\
+The most fitting sub-parts (not a segment by our definition) of the video are found and scored based on how well they fulfill the label requirements we have constructed for the segment in question as well as how well they match the time span we are looking to fill. Each aspect is encapsulated in each their seperate fulfilment ratio, which are then later combined into a final score.
 %
 \subsubsection{Label fulfilment}
 %
 For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of labels we would like to be present in the segment, $n$ be the number of labels in $L_{x}$, $L_{y}$ be the set of labels which we require to be present, and $L_{z}$ be the set of labels which are forbidden to be present. Also let $f_{l}$ and $f_{n}$ be the set of requested labels present in frame $f$, and the number of requested labels present in frame $f$, respectively, where $f$ is a frame in the video. The requirement fulfilment-ratio for each frame is defined like this:\\
+DER ER VIRKELIG MANGE VARIABLER I SPIL HER...
 %
 \begin{equation}
 R(f) = \frac{f_{n}}{n} \cdot Y(f) \cdot Z(f),
@@ -62,8 +74,8 @@ where
 \begin{equation}
 Y(f) =
 \begin{cases}
-1 & \text{, if} f_{l} \cap L_{y} = L_{y}\\
-0 &  \text{, otherwise}
+1 & \text{if} f_{l} \cap L_{y} = L_{y}\\
+0 &  \text{otherwise}
 \end{cases},
 \end{equation} 
 %
@@ -72,8 +84,8 @@ and
 \begin{equation}
 Z(f) =
 \begin{cases}
-1 & \text{, if} f_{l} \cap L_{z} = \emptyset\\
-0 &  \text{, otherwise}
+1 & \text{if} f_{l} \cap L_{z} = \emptyset\\
+0 &  \text{otherwise}
 \end{cases}.
 \end{equation} 
 %
@@ -92,14 +104,14 @@ The other aspect used to determine the score of a sub-part of a video is how wel
 1 & \text{, if } T_{max} = T_{min}\\
 \frac{l-T_{min}}{T_{max}-T_{min}} &  \text{, otherwise}
 \end{cases}
-\end{equation} 
+\end{equation}\label{equ:fulfilment}
 % KIM: antager at T_min <= l <= T_max
 %
 A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have a ratio of one. 
 %
 \subsubsection{Segment Score}
 %
-The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $R$ be a set of the label fulfilment ratios for each frame in the video, define in [FORMULA:REF]. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then defined as:\\
+The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighted against each other. Let $R$ be a set of the label fulfilment ratios for each frame in the video, defined in \ref{equ:fulfilment}. Also, for each possible sub-part (that does not exceed the maximum length defined in the time span requirement), let $v$ be the frame number where the sub-part begins, $w$ be the frame number where it ends, and $l$ be the length of it in frames. The score for the sub-part is then defined as:\\
 %
 \begin{equation}
 S(v,w) =(1-\alpha) \cdot \sum_{i=v}^{w} \frac{R(i)}{l} + \alpha \cdot \tau(l)
