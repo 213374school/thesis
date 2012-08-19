@@ -40,6 +40,12 @@ An integral image (aka. summed area table) is a matrix where any point $(x,y$ is
 AdaBoost (Adaptive Boosting) is a meta-algorithm for boosting machine learning algorithms where subsequent classifiers built are tweaked in favor of those instances misclassified by previous classifiers. The derivative algorithm is a modification of AdaBoost that constrains each returned (weak) classifier to be dependent only on a single feature, which in turn is deemed a critical feature.\\
 HCC also employs a method of using less complex processing to detect promising regions, the rationale being that it is often possible to rapidly determine where an object may occur within an image, and then apply the more complex processing on these regions.
 %
+\subsection{Optical Flow}
+%
+For analysing internal movement within the frames, we use the pyramidal implementation of the Lucas Kanade Feature Tracker described by Bouguet\cite{Bouguet2000} (supplied by OpenCV).\\
+Optical flow is a tool for detecting how individual pixels move around between consecutive frames $I$ and $J$. If $(x,y)$ is the position of a pixel in $I$, this is done searching for the pixel at position $(x+d_x,y+d_y)$ in $J$, which is most similar. The optical flow of $x$ is defined as the $d=(d_x,d_y)$, for which the difference in pixel intensity is smallest. The search is done in a search window around the original position. The size of this window determines the trade-off between precision and robustness.\\
+The pyramidical implementation creates several \textit{levels} of images, each level halfing the resolution of them. Starting with the smallest resolution images, an estimation of the optical flow is performed. This estimation is then passed to the next level, where it is improved. This is repeated all the way up to the orginal images, where the final optical flow vector is computed.
+%
 \subsection{Metadata}
 %
 This section describes the different type of metadata we extract.
@@ -73,37 +79,25 @@ A more complex optimization can be achived by exploiting the temporal data. Ie. 
 % MOVE TO RESULTS:\\
 % we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set). We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second).\\
 %
-\subsubsection{Optical Flow}\label{sec:opticalflowdata}
+\subsubsection{Internal movement}\label{sec:opticalflowdata}
 %
-\paragraph{Optical Flow - Hvordan virker lortet?}
-%
-For in-frame event extraction we use optical flow \cite{Bouguet2000}.
-%
-% Lauge: Her skal skrives noget om hvordan optical flow (Lucas Kanade, artiklen ovenfor) fungerer
-%
-Unfortunately, most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. Although Reisman et al. \cite{CrowdDetectionInVideoSequences} \textit{do} work with images from a camera fixed on a moving vehicle, their appraoch is still not applicable to our scenario, since our videos are recorded mostly by handheld devices, whose movement are a lot less predictable.\\
-%
-\paragraph{Optical Flow - Hvad gør vi?}
-%
-Where \textit{shift vector magnitudes} tells us something about how the camera itself moves, optical flow attempts to explain how the content within each frame moves. There has been a substancial amount of research put into this field. Most of our footage is recorded by handheld cameras often under very poor conditions. Extracting the optical flow of our videos is therefore not only a matter of analysing how reference points move around in the frame. First we must estimate the \textit{egomotion} (the motion of the camera) itself, in order to \textit{stabilise} the frame.
+Where \textit{shift vector magnitudes} tells us something about how the camera itself moves, the internal movement in a frame (computed using optical flow) attempts to explain how the content within each frame moves. A lot of research has been done on this subject. Unfortunately, most of the existing work done on both event- and crowd- classification focuses on settings with stationary cameras. Although Reisman et al. \cite{CrowdDetectionInVideoSequences} \textit{do} work with images from a camera fixed on a moving vehicle, their appraoch is still not applicable to our scenario, since our videos are recorded mostly by handheld devices, whose movement are a lot less predictable. Extracting the internal movement of our videos is therefore not only a matter of analysing how reference points move around in the frame. First we must estimate the \textit{egomotion} (the motion of the camera) itself, in order to \textit{stabilise} the frame.
 %
 \paragraph{Frame stabilisation}
 %
 There are several ways to do this. An option is to use the \textit{shift vector magnitudes} that we have already computed. This intuitively makes sense since they are suppose to describe the movement of the camera at at each frame in the video. However, it turns out that although this data may be suitable for describing the general type of cameara movement (shaking, panning), especially when the data is smoothed across several frames, it has a relatively high margin of error for individual frames. This is especially the case if the camera moves very fast or if there actually \textit{is} a lot of movement within the frame. Another option is use the mean of all the optical flow vectors as the egomotion. Alternatively one could use the most commonly occuring vector. However, our experimentation showed that these two methods suffer from one serious limitation. If moving objects in the frame are very close to the camera, they tend to become more influencial than the stationary background and they end up swapping roles. The egomotion is then based on the movement of the large object, the opposite of what we want. The border-case for this condition is especially problematic. This occurs when a moving object takes up half of the frame. Often, changes in position will then \textit{periodically} cause it to be more or less dominant than the background. In these cases the egomotion vector will jump from one extreme to the other, in close succession, and thus become completely useless.\\
 Some of these problems could probably be alleviated through further analysis or averaging across time. However, through our experimentation we came up with an approach that seems more promising.\\
 \\
-\textit{Corner detection} refers to identifying features in a frame, which are \textit{good to track}. They are areas (or points), which are likely to be clearly distinguishable on the following frames. This is often done by locating areas with low \textit{self simmilarity}. That is, areas that do not look like other areas close by. We found that generally, these points has a tendency to be present in stationary objects in the frame far more often than in moving objects, and thus form a very decent base for our egomotion vector. The implementation we use to identify these features is based on the Shi-Tomasi corner detection algorithm described by Shi et al. \cite{Shi_1994_3266}. We track these features and define our egomotion to be the mean of all the resulting displacement vectors.\\\\
-%
+\textit{Corner detection} refers to identifying features in a frame, which are \textit{good to track}. They are areas (or points), which are likely to be clearly distinguishable on the following frames. This is often done by locating areas with low \textit{self simmilarity}. That is, areas that do not look like other areas close by. We found that generally, these points has a tendency to be present in stationary objects in the frame far more often than in moving objects, and thus form a very decent base for our egomotion vector. The implementation we use to identify these features is based on the Shi-Tomasi corner detection algorithm described by Shi et al. \cite{Shi_1994_3266}. We track these features and define our egomotion to be the mean of all the resulting displacement vectors.\\
+\\
 Note: We have later come across other, more advanced techniques for calculating the egomotion of a video. Raudies et al. \cite{Raudies:2009:ELM:1612122.1612125} describes such a method. Unfortunately, do to our late discovery of this method we have not been able to test it.
 % Lauge: Der skal skrives noget mere om denne metode, hvis den skal nævnes, desuden skal dette rykkes til future work
 %
 \paragraph{Detecting movement}
 %
-We now look at the movement within the frames. We do this by placing a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet \cite{Bouguet2000}.
-% Flyt til parameter tuning:
-We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels through two iterations.\\% TODO: ACTUALLY UNDERSTAND THIS and describe it here!!!
-%
-Some of the resulting vectors are considered invalid if we are unable to track them. This is often the case with points in the sky or in surfaces without any distinct features) or if the point being tracked ends up outside of the subsequent frame. Let $E$ be our egomotion vector. Then, for every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
+We now look at the movement within the frames. We do this by placing a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet \cite{Bouguet2000}. We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels over two pyramidical levels.\\
+Some of the resulting vectors are discarded if the feature tracking was unsuccessful. This is often the case with features in the sky or in surfaces without any distinct features, or if the point being tracked ends up outside of the subsequent frame.\\
+Let $E$ be our egomotion vector. Then, for every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
 \begin{equation}
 v' = v - E
 \end{equation}
@@ -143,7 +137,7 @@ We analyze the blue channel mean as a function of time, and if these values are 
      \includegraphics[width=1.05\textwidth]{img/triangles.jpg}
      \caption{}\label{fig:triangles}
 \end{figure}\\
-% Lauge: Mangler title + Lav rigtig figur
+% Lauge: Mangler title
 Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other
 \[
 \text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1, \text{std}([\|e\|,\|f\|]) < \tau_2,
