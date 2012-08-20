@@ -24,10 +24,11 @@ The actual labeling is subsequently done by analysing the metadata using a colle
 %
 \subsection{Haar Cascade Classifier}\label{sec:hcc}
 %
-The Haar Cascade Classifiers (HCC)\cite{viola01,lienhart01,schmidt01,schmidt02} is an efficient tool for facial detection. It uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola\cite{viola01} achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
+The Haar Cascade Classifiers (HCC)\cite{viola01,lienhart01,schmidt01,schmidt02} classifies Haar-like features, which is an efficient way of detecting specific objects in an image. A Haar-like feature describes how to categorize subsections of an image, where the categorization is based on the difference in sums of pixel intensities in adjancent regions. For ex. in an average human face the eye-region is generally darker than the cheeks, hence if two adjacent regions is the eyes and the cheeks. then there should be a significant difference in pixel intensity sums of these two regions, indicating a human face. Ie. this difference and the relative position of the two regions makes up a Haar-like feature.\\
+% A Haar-like feature considers adjacent rectangular regions at a specific location in a detection window, sums up the pixel intensities in each region and calculates the difference between these sums. This difference is then used to categorize subsections of an image. For example, let us say we have an image database with human faces. It is a common observation that among all faces the region of the eyes is darker than the region of the cheeks. Therefore a common haar feature for face detection is a set of two adjacent rectangles that lie above the eye and the cheek region. The position of these rectangles is defined relative to a detection window that acts like a bounding box to the target object (the face in this case).
+HCC uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola\cite{viola01} achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
 %
-An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img} where $\square ABCD$ can be computed as $C-(D+B)+A$, ie. the sum of any subpart of the integral image can be quickly determined. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions/substractions.
-HVAD BLIVER INTEGRAL IMAGE BRUGT TIL?
+An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img} where the area of $\square ABCD$ can be computed as $S=A-B-C+D$, ie. the sum of any subpart of the integral image can be quickly determined. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions/substractions. When detecting Haar-like features the region sums can be computed efficiently using this datastructure.
 %
 \begin{figure}[!ht]
      \centering
@@ -68,7 +69,9 @@ This particular type of metadata is extracted from the original videos (before g
 %
 Detecting the presence of people will help us determine if footage was recorded from within a crowd, described in detail in section \ref{sec:incrowd}, or if the footage has focus on a specific person, described in detail in section \ref{sec:infocus}, which indicates that this person is of special interest, ex. a speaker.\\
 OpenCV provides a python-implementation of an already trained Haar Cascade Classifier, as described in section \ref{sec:hcc}, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
-By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate.\\
+%
+By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ex. shaky video-clips have a reduced detection rate.\\
+%
 A possible optimization is to only analayze select frames (ex. every third frame) which we do not believe will have a significant negative impact on the detection rate as we already interpolate the detected objects from frame to frame. Further optimizations involve exploiting the ready-at-hand metadata, such as the general frame quality which severely impacts facial detection rates.\\
 A more complex optimization can be achived by exploiting the temporal data. Ie. instead of analyzing the entire frame using an expanding search window, we could utilize knowledge of where people were present in the previous frame, and then deploy the search window nearby. This would require a customized HCC which is a major increase in complexity compared to the other mentioned optimizations.
 %
@@ -128,12 +131,13 @@ We analyze the blue channel mean as a function of time, and if these values are 
      \caption{Example of an oscillating blue channel, and the lengths we use to detect it}\label{fig:triangles}
 \end{figure}\\
 %
-Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other:
+Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other by:
+%
 \[
-\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1, \text{std}([\|e\|,\|f\|]) < \tau_2,
+\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1,~\text{std}([\|e\|,\|f\|]) < \tau_2,
 \]
-% a,b,c, og d skal defineres i tekst
-for thresholds $\tau_1$ and $\tau_"$ where std is the standard deviation. If the standard deviation of either group of vertices is below their given treshold it means that they do not form triangles that are part of an oscillation.\\
+%
+for thresholds $\tau_1$ and $\tau_2$ where std is the standard deviation. If the standard deviation of either group of vertices is below their given treshold it means that they form triangles that are part of an oscillation.\\
 The blue channel mean is smoothed using triangle smoothing as described in section \ref{sec:triangularsmoothing}, as this results in softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge}.
 %
 \subsubsection{Person in Focus classifier}\label{sec:infocus}
@@ -142,7 +146,7 @@ We compute a moving average of the people presence metadata, but excluding objec
 %
 \subsubsection{In-Crowd classifier}\label{sec:incrowd}
 %
-We compute a moving average of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth}. Nearby segments are merged as described in section \ref{sec:labelmerge}.
+The in-crowd classifier counts a moving average of the number of faces in each frame. The count is smoothed as described in section \ref{sec:labelsmooth}, and post-smoothing counts less than $\tau$ are mapped to to 0, and values larger than $\tau$ are mapped to 1, where a value of 0 means that the frame is not shot from within a crowd, and a value of 1 means that the frame \emph{is} shot from within a crowd. Nearby segments are finally merged as described in section \ref{sec:labelmerge}.
 %
 \subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
@@ -271,10 +275,7 @@ Almost 21 minutes of the entire dataset is classified as containing a person in 
 %
 \subsubsection{In-Crowd classifier}
 %
-% ANDERS: OMSKRIV TIL SMOOTHED
-When computing the moving average over people presence metadata, we do it over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The labels are smoothed using a smoothness degree of 24 which
-%SOMETHING WITH MOVING AVERAGE.
-The values are truncated at 0.9 as they are not normalized to the range 0 to 1 as our data often is.
+When computing the moving average in this classifiers it is done over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The frames are smoothed using a smoothness degree of 24 as described in section \ref{sec:triangularsmoothing}, and values less than $\tau=0.9$ are mapped to 0, otherwise 1. $\tau=0.9$ roughly translates to an extrapolated count of almost one face.\\
 %
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 \\
