@@ -37,7 +37,7 @@ The list of videos are sorted by their candidate score and the most promising (t
 \subsection{Segment Score}\label{sec:segment_score}
 %
 We perform a frame-by-frame analysis on each candidate video in order to determine what sub-part of it best fit the requirements established by the ingredient. This analysis is performed on all parts of the video, which has not already been used for the video summary we are in the process of generating. The most fitting sub-part is passed along to the final segment chooser (described in section \ref{sec:choosing_segment}).\\
-The analysis analysis at two aspects of \textit{fulfilment}. First we look at how well a sub-part fulfills the label requirement established by the ingredient. Then we look at its time span requirement. These two levels of fulfilment (defined as ratios) are then finally weighed together.
+The analysis is done on two aspects of \textit{fulfilment}. First we look at how well a sub-part fulfills the label requirement established by the ingredient. Then we look at its time span requirement. These two levels of fulfilment (defined as ratios) are then finally weighed together.
 %
 \subsubsection{Label fulfilment}
 %
@@ -85,7 +85,7 @@ The other aspect used to determine the score of a sub-part of a video is how wel
 %
 A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have a ratio of one. 
 %
-\subsubsection{Segment Score}
+\subsubsection{The final score}
 %
 The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighed against each other. Let $R$ be a set of the label fulfilment ratios for all frames in the video, as defined in \ref{equ:fulfilment}. Also, for each possible sub-part (that does not break the minimum- and maximum- lengths defined in the time span requirement), let $v$ be the frame number where the sub-part begins, and $l$ be the length of it in frames. The score for a sub-part is then defined as:\\
 %
