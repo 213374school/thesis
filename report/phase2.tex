@@ -267,15 +267,15 @@ When computing the moving average over people presence metadata, we do it over 4
 We meassure performance based on how many of the classified segments has a specific person in focus. Segments with several people or crowds are considered incorrectly classified.\\
 Almost 21 minutes of the entire dataset is classified as containing a person in focus. Hereof we consider $\sim$ 90\% to be \textit{true positives}.
 %
-\subsubsection{In-Crowd classifier}
+\subsubsection{In-Crowd classifier}\label{sec:peformanceforincrowdclassifier}
 %
 When computing the moving average in this classifiers it is done over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The frames are smoothed using a smoothness degree of 24 as described in section \ref{sec:triangularsmoothing}, and values less than $\tau=0.9$ are mapped to 0, otherwise 1. $\tau=0.9$ roughly translates to an extrapolated count of almost one face.\\
 %
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 \\
-We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly $14\%$ of the $\sim 31$ minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus. DET ER VEL IKKE "CAUSED BY"? - RETTERE AT DE FALSE POSITIVES PRIMÆRT HAR ET SAMMENFALD MED PERSON IN FOCUS.
+We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly $14\%$ of the $\sim 31$ minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus
 %
-\subsubsection{Overview classifier}
+\subsubsection{Overview classifier}\label{sec:peformanceforoverviewclassifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
 The classifier has three thresholds, $\tau_{1}$, $\tau_{2}$ and $\tau_{3}$. $\tau_{1}$ is the maximum internal movement allowed in an area. $\tau_{2}$ is the maximum number of areas, which are allowed to break this limit, and $\tau_{3}$ is the maximum allowed egomotion for the entire frame.\\
@@ -317,7 +317,9 @@ For the classifiers based on person detection, a lot false positives are caused 
 \subsection{Discussion}\label{sec:phase2discussion}
 %
 In hindsight we should have expected the \textit{person in focus}-issue to be a problem, not only in the overview classifier, but also in the in-crowd classifier. A lot of footage which is actually of persons in focus is also classified positively by these two classifiers. As we shall show in the next chapter we can to some degree compensate for these shortcomings when we construct the final video summaries. The details for this are described in section \ref{sec:phase4designer}.\\
-Most false positives in the vertical oscillation classifier is caused by unsteady camera movement, which it fails to account for. A pre-limmenary image quality assesment might help in lowering the amount of false positives.
+Most false positives in the vertical oscillation classifier is caused by unsteady camera movement, which it fails to account for. A pre-limmenary image quality assesment might help in lowering the amount of false positives.\\
+\\
+The labeling is done on the entire dataset. That means that we do not use the image quality assessments we calculated in chapter \ref{chp:image_qual_ass} to filter out videos before the labeling. In fact, it seems that for most of the classifiers, positive classification only occurs in segments where the image quality is good. The vertical oscillation classifier is the obvious exception to this.
 %
 \subsubsection{Risks and Limitations}
 %
