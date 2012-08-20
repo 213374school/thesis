@@ -1,96 +1,20 @@
 compare method: simpleCompare, smoothness: 12
-method: computeFrameStateLauge
-distance for best parameter((0.05, 0.80)): 0.34
+method: computeFrameStateCummulative
+distance for best parameter((0.05, 1.00)): 0.35
 computing segment lengths...
-distance for best parameter((0.05, 0.70)): 0.39
+distance for best parameter((0.04, 1.00)): 0.40
 computing segment lengths...
-distance for best parameter((0.07, 0.70)): 0.66
+distance for best parameter((0.11, 0.90)): 0.69
 computing segment lengths...
-distance for best parameter((0.05, 0.70)): 0.72
+distance for best parameter((0.04, 1.00)): 0.74
 computing segment lengths...
-distance for best parameter((0.05, 0.70)): 0.57
+distance for best parameter((0.09, 0.90)): 0.57
 computing segment lengths...
-param: (0.054,0.720), std. dev. (14.8, 5.6)% 
-avr. distance score: 0.54, std. dev. 27.52%
-avr. good sequence lenght: 247.9, std. dev. 198.6%, median: 75.5
-avr. bad sequence lenght: 47.1, std. dev. 152.2%, median: 28.0
-longest good sequence: 5115, shortest good sequence: 4
-longest bad sequence: 608, shortest bad sequence: 1
-computing AUC
-AUC(mean) = 0.51, std. dev. = 39.69%
-method: computeFrameStateAnders
-distance for best parameter(0.08): 0.34
-computing segment lengths...
-distance for best parameter(0.07): 0.40
-computing segment lengths...
-distance for best parameter(0.12): 0.68
-computing segment lengths...
-distance for best parameter(0.08): 0.73
-computing segment lengths...
-distance for best parameter(0.09): 0.57
-computing segment lengths...
-param: 0.088, std. dev. 19.6% 
-avr. distance score: 0.54, std. dev. 27.85%
-avr. good sequence lenght: 244.7, std. dev. 199.9%, median: 75.0
-avr. bad sequence lenght: 47.1, std. dev. 164.3%, median: 27.0
-longest good sequence: 5118, shortest good sequence: 3
-longest bad sequence: 739, shortest bad sequence: 1
-computing AUC
-AUC = 0.67
-method: computeFrameStateMagnitudeOnly
-distance for best parameter(0.05): 0.35
-computing segment lengths...
-distance for best parameter(0.04): 0.40
-computing segment lengths...
-distance for best parameter(0.06): 0.67
-computing segment lengths...
-distance for best parameter(0.04): 0.74
-computing segment lengths...
-distance for best parameter(0.05): 0.56
-computing segment lengths...
-param: 0.048, std. dev. 15.6% 
-avr. distance score: 0.54, std. dev. 27.54%
-avr. good sequence lenght: 230.9, std. dev. 205.7%, median: 70.5
-avr. bad sequence lenght: 46.8, std. dev. 169.6%, median: 27.0
+param: (0.066,0.960), std. dev. (43.5, 5.1)% 
+avr. distance score: 0.55, std. dev. 27.87%
+avr. good sequence lenght: 244.7, std. dev. 200.0%, median: 74.0
+avr. bad sequence lenght: 47.6, std. dev. 171.8%, median: 28.0
 longest good sequence: 5115, shortest good sequence: 4
 longest bad sequence: 1087, shortest bad sequence: 1
 computing AUC
-AUC = 0.65
-method: computeFrameStateContrastOnly
-distance for best parameter(0.47): 0.47
-computing segment lengths...
-distance for best parameter(0.46): 0.65
-computing segment lengths...
-distance for best parameter(0.46): 0.93
-computing segment lengths...
-distance for best parameter(0.44): 1.13
-computing segment lengths...
-distance for best parameter(0.47): 0.88
-computing segment lengths...
-param: 0.460, std. dev. 2.4% 
-avr. distance score: 0.81, std. dev. 28.21%
-avr. good sequence lenght: 327.6, std. dev. 316.8%, median: 77.0
-avr. bad sequence lenght: 84.1, std. dev. 185.2%, median: 35.5
-longest good sequence: 11079, shortest good sequence: 1
-longest bad sequence: 1718, shortest bad sequence: 3
-computing AUC
-AUC = 0.40
-method: computeFrameStateCubic
-distance for best parameter(0.37): 0.41
-computing segment lengths...
-distance for best parameter(0.37): 0.59
-computing segment lengths...
-distance for best parameter(0.37): 0.90
-computing segment lengths...
-distance for best parameter(0.35): 1.07
-computing segment lengths...
-distance for best parameter(0.37): 0.83
-computing segment lengths...
-param: 0.366, std. dev. 2.2% 
-avr. distance score: 0.76, std. dev. 30.87%
-avr. good sequence lenght: 308.5, std. dev. 300.8%, median: 77.0
-avr. bad sequence lenght: 80.1, std. dev. 190.2%, median: 33.5
-longest good sequence: 11078, shortest good sequence: 4
-longest bad sequence: 1692, shortest bad sequence: 3
-computing AUC
-AUC = 0.44
+AUC(mean) = 0.54, std. dev. = 13.92%
