@@ -21,26 +21,6 @@ For each pair of subsequent frames, the latter frame is shifted around, in all f
 % For each direction, in each iteration 
 With each shift the Root-Mean-Square (\textit{RMS}) of the difference between the shifted frame and the previous unshifted frame is calculated. The direction with the lowest \textit{RMS} is the basis for the following iteration.
 %
-%Shifting a matrix is a simple matter of cutting away parts of the matrix to align the two, and computing the \textit{RMS} is archived in a few inexpensive matrix-computations. Since the frame size of a video determines the amount of movement, which can be detected more or fewer shift-iterations may be better. Girgensohn et al. \cite{Girgensohn:2000:SAH:354401.354415} do not mention the frame size of their videos. We simply stick with the same number of iterations as them, which should be more than enough.\\
-%The algorithm below illustrates how the shift vector for two subsequent frames is computed.
-%
-% \begin{verbatim}
-%      f  <- read frame
-%      f’ <- read frame
-%      for i in [32, 16, 8, 4, 2, 1]:
-%           e’ <- infinity
-%           for d in [left, right, up, down]:
-%                s <- shift f’ i pixels in direction d
-%                e <- compute RMS(f-s)
-%                if e < e’:
-%                     x,y <- i * (d[x],d[y])
-%                     e’  <- e
-%           x’,y’ <- x,y
-%           f’ <- shift f’ x pixels right
-%           f’ <- shift f’ y pixels up
-%      yield x’,y’
-% \end{verbatim}
-%
 If $v \in V$ is a vector representing a selected shift in an iteration, then $V$ is the set of all shifts performed over all iterations. The shift vector magnitude estimating the intensity of camera motion between two frames is then defined as:
 %
 \[
@@ -135,40 +115,6 @@ s =
 \]
 %
 where the frame unsutability measure is defined as $v=(1-w) C + w S$, where $C$ is the contrast ratio, $S$ is the shift vector magnitude ratio, $\tau$ is a threshold and $w$ is a weighing between the two ratios.
-% %
-% % With this method we ensure that either factor will be able to deem a frame unsuitable, and if both weights are close to their respective treshold the cumulative contribution will still deem the frame unsuitable.
-% \[
-% s = v \ge \tau,
-% \]
-% where 
-% %If $S$ is the shift vector magnitude ratio, $C$ is the contrast ratio, $s$ is either 1 (suitable) or 0 (unsuitable), and $v$ is a measure of suitability, then 
-% %$v$ is defined as: 
-% $v = \alpha S + \beta C$, and $\alpha,\beta$ are weight-factors, and %and $s$ is then determined by $s \equiv v \ge \tau$, where 
-% $\tau$ is some treshold. If we wish that $s \equiv S \ge \tau_{1} \vee C \ge \tau_{2}$ it follows that
-% %
-% \[
-%  \alpha S + \beta C \ge \tau \equiv  S \ge \tau_{1},
-% \]
-% %
-% ie. if $S$ is greater than the treshold $\tau_{1}$ then $\alpha S + \beta C$ must also be greater than the treshold $\tau$.% , the values of $\alpha$ and $\beta$ are determined as follows:
-% %the point being that the contribution from $S$ alone can determine the outcome of $s$, 
-%  We set $C = 0$ and $S$ assumes the lowest possible value, $S = \tau_{1}$, and we can determine the value of $\alpha$ as:
-% %
-% \[
-% \alpha \tau_{1} \ge \tau \Leftrightarrow \alpha \ge \frac{\tau}{\tau_{1}}
-% \]
-% %
-% It follows that the value of $\beta$ can be determined as $\beta \ge \frac{\tau}{\tau_{2}}$.
-% %
-% %Another approach is $v = (a^x + b^x)^{\frac{1}{x}}$ for a given value of $x > 1$, and then testing $v$ against a given treshold, $\tau$. It is somewhat similar to the previously mentioned approach where we multiply by some factor, and then add the values, the difference being that large values will weigh much more than small ones.
-% %
-% % \paragraph{Simplified contrast and shift magnitude ($\text{CCSM}^{3}$)}
-% % %
-% % The last algorithm is a very simplified version of \textit{CCSM}. It attempts to classify the frames by simply taking the mean of \textit{contrast} and \textit{shift vector magnitude} and checking to see if it above a given threshold. The frame state classifier, \text{S(c,s)}, is defined as:
-% % \[
-% % S(c,s)=\sqrt[3]{\frac{c^{3}+s^{3}}{2}}
-% % \]
-% % The parameter values are cubed (and the result normalised to the [0,1] range) in order further increase their sensitivity toward bad values. Informal experimentation shows that the power of sensitivity does not effect the outcome result in any significant way, so it has been left out as a parameter.
 %
 \section{Dataset}
 %
@@ -213,7 +159,7 @@ whereas positive recall is the ratio of true positives found compared to how man
 \text{Positive Recal } = \frac{\text{\#true positives}}{\text{\#true positives + \#false negatives}}.
 \]
 % Our approach is a little different. Because 
-As our dataset contain mostly \textit{good} frames we wish to award a classifier that detect the few \textit{bad} frames that \textit{are} present. We therfore attempt to maximise positive precision along with \textit{negative} recall.\\
+As our dataset contain mostly \textit{good} frames we instead wish to award a classifier that detect the few \textit{bad} frames that \textit{are} present. We therfore attempt to maximise positive precision along with \textit{negative} recall.\\
 In order to quantify the quality of our choice of parameter(s) we look at the benefit we gain from it versus the cost that we pay. We define the cost, \textit{C} as:
 %
 \[
@@ -266,11 +212,11 @@ For the robustness test all cost/benefit curves are plottet in a three dimension
 %
 We perform two different tests. The first (described in section \ref{sec:fbfclass}) treats all classifications equally, while the second (described in section \ref{sec:tempclass}) also looks at the at the gold standard of surrounding frames and use this information as a metric for determining how to rate misclassifications. Finally we also experiment with various degrees of smoothing of the classifier results. This is described in section \ref{sec:classsmooth}
 %
-\subsubsection{Frame by frame classification (FFC)}\label{sec:fbfclass}
+\subsubsection{Frame by frame comparison (FFC)}\label{sec:fbfclass}
 %
 For each frame we compare the classifier results with our gold standard. We treat classifications as being either \textit{true} or \textit{false} and use the amount of true and false positives/negatives to calculate their respective precision and recall.
 %
-\subsubsection{Temporal classification (TC)}\label{sec:tempclass}
+\subsubsection{Temporal comparison (TC)}\label{sec:tempclass}
 %
 Instead of looking at frames as individual entities we now look at the video as a whole. We treat a video as consisting of a sequence of \textit{good} and \textit{bad} segments. As we iterate through the frames of the video we change back and fourth between these two states. Misclassifications, which happen close to these change-of-state's are punished less than those that happens elsewhere. The rationale behind this is that it is difficult to objectively determine the exact point (frame) where a human observer will consider the quality of a video as changing from one state to the other. Likewise, we do not expect a human observer to notice very short segments of good- or bad- quality footage, if they are surrounded by a significant amount of footage of the opposite type.\\
 For this we need a more advanced \textit{penalty function} than the binary check from describd in section \ref{sec:fbfclass}.\\
@@ -460,38 +406,44 @@ Table \ref{tab:algoseq} shows some of the side effects of each configuration. \t
 %
 \subsection{Analysis}
 %
-Table \ref{tab:algoperf} summarizes the primary results of our test, where the Distance Score is the most important attribute for rating the performance of a configuration. Note that configuration are meassured in both the the Frame-by-Frame, and the Temporal Classification test. Results derived from comparison methods are not directly compareable as the Frame-by-Frame method always punishes misclassifications harder than the Temporal Classification method. Configuration labels with a postfix of 1 or 2 uses the Frame-by-Frame comparison method, and labels with a postfix of 3 to 7 uses the Temporal Classification method.\\
-The Distance Score standard deviation are all in the area of $25-35\%$ except some configurations of the \textit{contrast only} classifier. Both of these configurations uses the Temporal Classification method with a tolerance of 48 (the highest tested), and both has the worst score compared to other algorithms with compareable configurations.\\
+Table \ref{tab:algoperf} summarizes the primary results of our test, where the Distance Score is the most important attribute for rating the performance of a configuration. Note that configuration are meassured in both the the Frame-by-Frame-, and the Temporal comparison test cases. Results derived from diffent comparison methods are not directly compareable as the Frame-by-Frame method always punishes misclassifications harder than the Temporal comparison method. Configuration labels with a postfix of 1 or 2 uses the Frame-by-Frame comparison method, and labels with a postfix of 3 to 7 uses the Temporal comparison method.\\
+The Distance Score standard deviation are all in the area of $25-35\%$, except for configurations \textit{CO4} and \textit{CO6}, of the \textit{contrast only} classifier. Both of these configurations uses the Temporal comparison method with a tolerance of 48 (the highest tested), and both has the worst score compared to other algorithms with compareable configurations.\\
+% HER SKAL SKRIVES LIDT OM AUC:
+....
+% -----------
+% DETTE SKAL SKRIVES OM TIL AT DER IKKE ER EN KLAR VINDER BLANDT TOP 2(/3):
 We have marked the configuration with the best performance results in Table \ref{tab:algoperf} with \textbf{bold}, namely CCSM7. It has a relatively low \textit{distance score} of $0.36$ which is better than or equal to 15 out of 28 configurations. CCSM7 uses the Temporal Classification method with the the lowest tested \textit{tolerance}, 12, and a smoothness degree of 0, ie. no smoothing, which means it will be punished fully for any errors compared to most other configurations. CCSM7 also has a relatively large AUC which indicates that the algorithm itself is fairly robust. All other test results for this classifier also has large AUCs, further supporting its case.\\
 A close runners up is ICSM7 which had the same Distance Score as CCSM7. It is however not nearly as robust as CCSM7 which is due to some parameter configurations of the contrast ratio treshold producing very poor results.\\
-% Discussion?:
-The SO algorithms performs almost as well as the CCSM and ICSM algorithms, which leads us to believe that the camera movement is the defining attribute when estimating image quality. We do however only have a fairly limited amount of night-shots, which could be the reason for this.\\
-% ---
+% -----------
+That there is no significant difference between the performance of the SO classifier and the CCSM, and ICSM classifier is surprising since the former only makes use of the shift vector magnitude ratios for classification.\\
 Table \ref{tab:algoseq} summarizes some of the side-effects of each configuration. Of note is that the mean BSL is no more than 2 digits, they are all in the range $39-84$, for all configurations which tells us that the classifiers generally only classify short segments of footage as bad.\\
 Table \ref{tab:algoseq} also shows that, on average, 5 times more footage is classified as good, than bad. Both the mean- and longest- GSL, are much bigger than their BSL counterpart, in all configurations.\\
 %
-% MEASURE HOW GOOD THE CCSM7 CONFIGURATION ACTUALLY WAS. IE. HOW MANY FRAMES DID IT GUESS CORRECTLY, AND HOW MANY DID IT GUESS WRONG.
-%
 \subsection{Discussion}\label{sec:phase1discussion}
-% 
-During the computation of the \textit{contrast}- and \textit{shift vector magnitude}- ratios for a frame, we square the contrast and the shift vector values in order to increase the classifiers sensitivity toward bad frames. We have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation. Another important thing to note is that we actually compute \textit{contrast} differently than Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general.\\
+%
+There is no significant difference in the performance of the CO, ICSM and CCSM classifiers, which all deliver reasonable results. The surprisingly good performance of the SO classifier, leads us to believe that the camera movement is the defining attribute when estimating image quality. Based on our results, it could be argued that the SO classifier is the best, simply because of its simplicity and high level of robustness. We do however only have a limited amount of night footage in our dataset, which could explain why it performs so well. Intuitively it makes sense to include the brightness or contrast of the video frames as a metric, but we are unable to conclude that it is necessary. In this context it should be noted that we actually compute \textit{contrast} differently than Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415}, as described in section \ref{sec:frame_contrast_estimation}. Our method should be more robust toward very uniformly colored frames, but their original method could be more effective in general, and thus increase the importance of the lightning conditions in the videos.\\
+The relative low robustness of the ICSM and CCSM algorithms are to be expected, since they have several parameters.
+%
+\subsubsection{Risks and Limitations}
+%
+Probably most important, is the fact that our dataset contains an unproportional amount of good footage. This is most likely due to the fact that we get our videos from YouTube, where we know that at least one human has already screened the footage and deemed it wortht uploading. This should be expected to skew the parameter tuning of our classifiers significantlty.\\
+\\
+During the computation of the \textit{contrast}- and \textit{shift vector magnitude}- ratios for a frame, we square the contrast and the shift vector values in order to increase the classifiers sensitivity toward bad frames. We have not done any real experimentation in this context and it is possible that a higher or lower power would yield better results. Furthermore we smooth these values across neighbouring frames in order to eliminate the worst outliers. It does not seem to have any significant effect on the final correctness of the algorithms, but this is neither an area in which we have done any real experimentation.\\
 \\
 When generating the cost and benefit scores we calculate the harmonic mean between the positive precision and the negative recall, as well as the positive recall and the negative precision, respectively. In our experimentation we have simply weighted the two values in each pair evenly, but it is possible that a skewed weighting in one or both of means would perform differently. It is even possible that this pair combination is not the right one for the task, although we argue that it intuitively makes sense.\\
 \\
-Also mentioned ealier, when calculating the AUC's for each algorithm we insert the points (0,0) (1,1) along with the points generated by the cost/benefit calculations in order to make sure each algorithm's curve cover the entire span of the x-axis. This has the effect of normalising the AUC around $y = x$, which is useful when we compare the AUCs for the different classifiers. It is however possible, that the very fact that a curve is not defined all along the x-axis is a sign of low robustness especially if the curve only is present near x = 1, that is, if the cost value is generally very high. If this is the case we risk ending up with invalid assumptions of robustness.\\
+Also, as described in section \ref{sec:robustness}, when calculating the AUC's for each algorithm we insert the points (0,0) (1,1) along with the points generated by the cost/benefit calculations in order to make sure each algorithm's curve cover the entire span of the x-axis. This has the effect of normalising the AUC around $y = x$, which is useful when we compare the AUCs for the different classifiers. It is however possible, that the very fact that a curve is not defined all along the x-axis is a sign of low robustness especially if the curve only is present near x = 1, that is, if the cost value is generally very high. If this is the case we risk ending up with invalid assumptions of robustness.\\
 \\
-In the \textit{ICSM} algorithm we chose to simplify our tuning process by decreasing the precision on the \textit{contrast} ratio threshold. The rationale for this is described in section~ \ref{sec:ph1multiparameter}. This means that our understanding of the influence of contrast in this algorithm is less detailed.\\
-In section \ref{sec:ph1tweaking}, when estimating the performance of various parameter configurations for the different classifiers, we calculate a score based on the plottet configurations distance from the optimal coordinate (0,1). We have later realised that this \textit{distance score} has some drawbacks. As long as the curve, generated by the plots, curves toward (1,0), the point closest to the (1,0) \textit{is} usually the best configuration. However, if this is not the case we risk making false assumptions.
+In the the multi-parameter classifiers (section \ref{sec:ph1multiparameter}), we decrease the precision on one of the parameters. This means that our understanding of the influence of this paramter is less detailed.\\
 \\
-HER SKAL SKRIVES NOGET MERE!!!!
-% HER SKAL SKRIVES NOGET MERE!!!!
+In section \ref{sec:ph1tweaking}, when estimating the performance of various parameter configurations for the different classifiers, we calculate a score based on the plottet configurations distance from the optimal coordinate (0,1). We have later realised that this \textit{distance score} has some drawbacks. Optimally all points on the line $y = x + b$ should share the same score as they all share the same relation of trade-off between cost and benefit. This is not the case with the distance score. As an alternative we suggest simply calculating the score as $s = B - C$, where $B$ and $C$ is the benefit and cost, respectively. In our case, due to the fact that the curve, generated by the configurations plots, always curves toward (1,0), the point closest to the (1,0) \textit{is} usually the best configuration. For this reason we do not expect our results to suffer significantly from this blunder. However, it should still be considered a risk.\\
+\\
+It should also be noted that the gold standard we generate itself has an undefined margin of error. We have not performed any formal tests as to the objectiveness of the standard, however, informal testing did show some disagreement amongst the authors.\\
 \\
 Finally, it should be mentioned that all our tests are performed by treating the quality assessment problem as a task of binary classification. Such a classificatio may be needlessly harsh. Instead the original \textit{unsuitability score} could be used as a weight in later processing phases. However, the nature of our tests, especially the way in which we generate our gold standard, as described in section \ref{sec:goldstandard}, requires us to simplify the problem into this binary form. Some of the information about the quality of the frames, which are lost by doing this, are to some extent accounted for, for example in the Temporal Classification test case, which allows for misclassifications to be treated in a more soft manner, but others are undeniably lost. This should also be taken into account, when considering the generalisability of our results.
 %
 \section{Summary}
 %
-We have explored different methods for estimating the image quality in video footage. Our approach focuses on the overall level of contrast in the individual frames as well as the movement of the camera. As our dataset includes relatively few night-shots we have not been able to confidently measure the importance of the contrast variable in the proposed methods. We do however have an indication of methods that considers contrast along with camera movement have an edge compared to methods that only looks on either of the two, where a method that considers only contrast performs poorly.\\
-Our dataset is in general of high quality, as all data has been screened by a human before it was put on YouTube. Some of it has even been edited into videos video, which we later cut up and use as raw footage. \\
-The gold standard itself has an undefined margin of error. We never got around to estimating just how error-prone it was to have a single person subjectively determine if a frame was good or bad. Informal testing did show some disagreement amongst the authors.
- %We have constructed, and testet, a set of algoritms, which uses these two variables to compute an unsuitability score for each frame in the videos. This score is then cast into the binary range using configurable threshold values. We compare the different algorithms 
-%
+We have investigated different methods for estimating the image quality in video footage. Our approach is based on the work of Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} and focuses on the overall level of contrast in the individual frames as well as the movement of the camera.\\
+We have meassured the performance of four different classifiers on a dataset of videos collected from YouTube. We have not been able to confidently establish the importance of the contrast variable in the proposed method. We suspect this is caused by the fact that our dataset includes relatively few night-shots.\\
+Overall the results we achieve seems reasonable. They are however subject to a significant amount of risks caused by various choices and limitations.
