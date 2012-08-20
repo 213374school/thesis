@@ -21,7 +21,7 @@ def main():
 
 	# CORE 2
 	# os.system('./fnl_cntdwn.py temporal 12 24')
-	# os.system('./fnl_cntdwn.py temporal 0 12')
+	os.system('./fnl_cntdwn.py temporal 0 12')
 	# os.system('./fnl_cntdwn.py temporal 12 24 > better_smooth12_tol24.txt')
 	# os.system('./fnl_cntdwn.py temporal 0 12 > better_smooth0_tol12.txt')
 
