@@ -1,7 +1,6 @@
 %
 \chapter{Grouping and labeling}
 %
-%Grouping and labeling comes down to extracting information about what is happening in a piece of video footage. 
 We want to be able to distinguish between different types of scenes so that we have a way to structure the final video summaries. We apply a label to each frame in a video, using a label-classifier, and then group consequtive frames with the same label.
 %
 \section{Literature Study}
@@ -12,11 +11,9 @@ Optical Flow, as described by Bouguet \cite{Bouguet2000}, can also be used to de
 % Lauge: Der skal skrives lidt mere til disse artikler.
 Reisman et al. \cite{CrowdDetectionInVideoSequences} describes a way to identify crowds of pedestrians from a moving vehicle by detecting inward moving optical flow. I.e. flow which is highly likely to be caused by moving objects and not due to a change of view-point.\\
 Arandjelović \cite{Arandjelovic08crowddetection} attempts to identify crowded regions in still images based on the hypothesis that crowds contain a certain general structure, namely that an image with crowds in it will contain regions, which at a close scale resembles individual people, while at a larger scale will contain repetative structures.\\
-% Lauge: Flere crowd detection artikler?
 Zhong et al. \cite{10.1109/CVPR.2004.78} describes a technique for unsupervised detection of unusual events in a video stream. The entire stream is divided into overlapping 4 second segments from which an overall movement pattern is established. Individual segments that differ too much from this patter are considered unusual.\\
 % Lauge: Day/Night article her skal uddybes og omskrives:
 In \cite{mangler} ?HVEM? describes how to classify still images through a hierachy of Support Vector Machines, including day/night classification. UDDYB\\
-% Lauge: Jeg har rykket Haar Cascade classifier ned i sit eget afsnit under Method, men måske skal vi lige have en enkelt linje om det her
 Angin et. al \cite{10.1109/MDM.2010.71} describes a method of automatically detecting the color of traffic lights. UDDYB % Lauge: Vi skal lige have læst/skrevet lidt mere om denne og evt. relation til police blinker detecion
 %
 \section{Method}
@@ -30,6 +27,7 @@ The actual labeling is subsequently done by analysing the metadata using a colle
 The Haar Cascade Classifiers (HCC)\cite{viola01,lienhart01,schmidt01,schmidt02} is an efficient tool for facial detection. It uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola\cite{viola01} achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
 %
 An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img} where $\square ABCD$ can be computed as $C-(D+B)+A$, ie. the sum of any subpart of the integral image can be quickly determined. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions/substractions.
+HVAD BLIVER INTEGRAL IMAGE BRUGT TIL?
 %
 \begin{figure}[!ht]
      \centering
@@ -95,13 +93,13 @@ Note: We have later come across other, more advanced techniques for calculating 
 %
 \paragraph{Detecting movement}
 %
-We now look at the movement within the frames. We do this by placing a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet \cite{Bouguet2000}. We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels over two pyramidical levels.\\
-Some of the resulting vectors are discarded if the feature tracking was unsuccessful. This is often the case with features in the sky or in surfaces without any distinct features, or if the point being tracked ends up outside of the subsequent frame.\\
-Let $E$ be our egomotion vector. Then, for every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
+We now look at the movement within the frames. We place a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet\cite{Bouguet2000}. We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels over two pyramidical levels.\\
+Some of the resulting vectors are discarded if the feature tracking was unsuccessful. This is often the case with features in the sky or in surfaces without any distinct features, or if the point being tracked ends up outside of the following frame.\\
+For every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
 \begin{equation}
-v' = v - E
+v' = v - e,
 \end{equation}
-Let $V'$ describe the set of all isolated movement vectors $v'$. $V'$ then describes the movement of objects within the frames.\\
+where $e$ is the egomotion vector for the frame. The set of all $v'$ then describes the internal movement of objects within the frames.\\
 Each vector $v' \in V'$ describes the movement of one particular point in the original grid. By looking at the different directions of flow we may be able to say something about what is going on in the video. To simplify the data we divide the optical flow vectors up into nine segments as shown in figure \ref{fig:opticalflow}. We calculate the mean of the movement vectors in each group, seperately, and use these nine new vectors to describe the overall flow in different parts of the frame.
 %
 % Lauge: RISK - This model may be too simple, for good results
@@ -116,8 +114,7 @@ The \textit{optical flow} metadata consist of sets of these nine vectors, calcul
 %
 \subsection{Label classifiers}
 %
-%Each classifier performs a binary classifaction on a specific label. The classifier analyses all the available footage and returns a collection of indexes to all the segments where it believs the specific label it to be present. These indexes consist of a reference to the video in question, as well as a start and end index. 
-A label classifier performs a binary classification on each frame in a given video. For each video the classifier computes groups of consequtive frames with the same label. Such a group is called a segment. Depending on the classifier, the segments are post-processed using \textit{segment interpolation} and/or \textit{segment smoothing}. Some classifiers have this as a builtin feature.
+A label classifier performs a binary classification on each frame in a given video. For each video the classifier computes groups of consecutive frames with the same label. Such a group is called a segment. Depending on the classifier, the segments are post-processed using \textit{segment interpolation} and/or \textit{segment smoothing}. Some classifiers have this as a builtin feature.
 %
 \subsubsection{Segment Smoothing}\label{sec:labelsmooth}
 %
@@ -157,10 +154,9 @@ We compute a moving average of the people presence metadata to determine if the 
 %
 \subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
-The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. In order to avoid overlap with the \textit{person in focus} footage, which often share these charactetistics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the shift vector magnitude metadata described in section \ref{sec:svmdata}, the optical flow metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
+The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. In order to avoid overlap with the \textit{person in focus} footage, which often share these characteristics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the shift vector magnitude metadata described in section \ref{sec:svmdata}, the optical flow metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
 We perform a slight triangular smoothing on the metadata in order to remove outliers. We also desregard all footage, which has already been classified with the \textit{person in focus} label.\\
-% RISK: One label takes precedence over another (not isolated)
-We now look at the amount of movement in each area of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f = [m_{1},m_{2} \dots m_{9}]$, where $m_{i}$ is mean distance of movement occuring in a specific part the frame. This mean is calculated on the magnitude of all adjusted optical flow vectors, in that area. The number of areas exceeding a given threshold, $\tau_{1}$, is then defined as:
+We now look at the amount of movement in each area of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f = [m_{1},m_{2} \dots m_{9}]$, where $m_{i}$ is mean distance of movement occuring in a specific area the frame. This mean is calculated on the magnitude of all adjusted optical flow vectors, in that area. The number of areas exceeding a given threshold, $\tau_{1}$, is then defined as:
 %
 \begin{equation}
 A(f) = \sum_{i=1}^{9}
@@ -175,8 +171,8 @@ Calculating individual means and analysing each area seperately, should improve 
 \begin{equation}
 O(f) =
 \begin{cases}
-0 & \text{, if } A(f) > \tau_{2} \vee f_{e} > \tau_{3} \\
-1 &  \text{, otherwise}
+0 & \text{if } A(f) > \tau_{2} \vee f_{e} > \tau_{3} \\
+1 &  \text{otherwise}
 \end{cases},
 \end{equation}
 where $\tau_{2}$ is a threshold that defines how many areas are allowed to exceed the internal movement limit, and $\tau_{3}$ is a threshold defining the maximimum shift vector magnitude we accept for the frame.
@@ -219,8 +215,6 @@ where $\tau_3$ is a threshold defining the minimum number of areas in which vert
 %
 Night footage is not only darker than footage recorded during the day, it also contains significantly less blue color, which is the reason it often has a brownish or red tint. Our \textit{day/night} classifier analyses both the \textit{blue channel} metadata (described in section \ref{sec:blue_channel}) and the \textit{brightness} metadata (described in section \ref{sec:brightnessdata}).\\
 First, we look at the correlation between the blue color channel and the overall brightness. Let $i$ be the frame position in the video, and let $R$ and $L$ be the set of brightness- and \textit{blueness}- values for all frames, respectively. Then the correlation $c_{i}$ is defined as:\\
-% http://opencv.willowgarage.com/documentation/python/miscellaneous_image_transformations.html#cvtcolor
-% 0.299R + 0.587G + 0.114B
 %
 \begin{equation}
 c_{i} = \frac{L_{i}}{R_{i}} - 1
@@ -298,13 +292,8 @@ We consider footage recorded within a crowd, or in close proximity to several pe
 \subsection{Overview classifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
-% <<<<<<< HEAD
-% The classifier has three thresholds, $s$, $t$ and $u$. $s$ is the maximum internal movement allowed in an area. $t$ is the maximum number of areas, which are allowed to break this limit, and $u$ is the maximum allowed egomotion for the entire frame.\\
-% The parameter tuning was done on a small subset of the dataset, consisting of a handful of videos. Setting $s = 2 \text{ pixels}$ and $t = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $u = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
-% =======
 The classifier has three thresholds, $\tau_{1}$, $\tau_{2}$ and $\tau_{3}$. $\tau_{1}$ is the maximum internal movement allowed in an area. $\tau_{2}$ is the maximum number of areas, which are allowed to break this limit, and $\tau_{3}$ is the maximum allowed egomotion for the entire frame.\\
 The parameter tuning was done a small subset of the dataset, consisting of a handful of videos. Setting $\tau_{1} = 2 \text{ pixels}$ and $\tau_{2} = 2 \text{ areas}$, seems to ensure sufficiently low levels of internal movement. Setting $\tau_{3} = 10 \text{ pixels}$ appears to keep unsteady camera movement at a minimum, while still allowing for panoramic movement, which we do not want to discard.\\
-% >>>>>>> 0549afbd71f6ef3e7ec4d38234de80b0502f9abd
 Lastly, for the triangular smoothing of the metadata a triangle width of 120 frames is used. We have not performed any tuning on this parameter.\\
 \\
 It is difficult to exactly define what an \textit{overview} clip is. These are the charactaristics we look after when determining performance:
@@ -341,7 +330,7 @@ The classification is performed on 301 video-clips where $\sim$ 88\% of them con
 %
 The \textit{overview}- and the \textit{person in focus}- labels are defined to be mutually exclusive. In case of a overlap the latter is used. However, due to the order in which the labels are generated and post-processed, overlaps \textit{can} actually occur. Because the \textit{person in focus} labels are interpolated (as described in section \ref{sec:labelmerge}) only after the the \textit{overview} classifier have used them for its classification, the new, interpolated \textit{person in focus} labels may actually cover areas which are also labelled as overviews.\\
 \\
-In the \textit{day/night} classifier we compare the blue channel intesity of a frame with the overall brightness, in order to determine if blue is a dominant color. However, the overall brightness is calculated from the intensity of the greyscale version of the frame. We assumed that this intensity is based on the mean of all the channels in the orginal RGB image. We have later learned that the individual channels are weighed differently in this conversion. OpenCV, which we use define the intesity, $Y$, of a pixel as:
+In the \textit{day/night} classifier we compare the blue channel intesity of a frame with the overall brightness, in order to determine if blue is a dominant color. However, the overall brightness is calculated from the intensity of the greyscale version of the frame. We assumed that this intensity is based on the mean of all the channels in the orginal RGB image. We have later learned that the individual channels are weighed differently in this conversion. OpenCV, which we use, define the intesity, $Y$, of a pixel as:
 %
 \[
 Y = 0.299 \times R + 0.587 \times  G + 0.114 \times B,
@@ -350,5 +339,7 @@ Y = 0.299 \times R + 0.587 \times  G + 0.114 \times B,
 where $R$, $G$, and $B$ are the red-, green-, and blue- intensity of the pixel.\\
 Skriv lidt om hvilken betydning det har for vores resultater.
 % Skriv lidt om hvilken betydning det har for vores resultater.
+% http://opencv.willowgarage.com/documentation/python/miscellaneous_image_transformations.html#cvtcolor
+%
 \section{Summary}
 %
