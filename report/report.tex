@@ -8,7 +8,9 @@
 \usepackage{multirow}
 \usepackage{graphicx}
 \usepackage{array}
-
+\usepackage{subfigure}
+% fixes "too many unprocessed floats" problem
+\usepackage{placeins}
 % packages needed for matrix2latex
 % scientific notation, 1\e{9} will print as 1x10^9
 \providecommand{\e}[1]{\ensuremath{\times 10^{#1}}}
@@ -97,7 +99,9 @@
 \newpage
 \appendix
 \include{appendix}
-% \include{p1figs}
+\chapter{Cost/Benefit Diagrams}\label{app:cbdia}
+\renewcommand{\thesubfigure}{\thefigure.\arabic{subfigure}}
+\include{p1figs}
 \bibliographystyle{plain}
 \bibliography{references}
 \end{document}
