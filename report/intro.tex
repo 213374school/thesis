@@ -8,11 +8,11 @@ With the processing power of distributed computing and the advancement in the fi
 %
 \section{Overview}
 %
-In our work we focus on a selection of problems related to creating a video summarizer. We have facilitated this process into a three-step pipeline as described below.
+In our work we focus on a selection of problems related to creating a video summarizer. We have facilitated this process into a three-step pipeline as described below. Each phase is described in its own chapter where we describe previous work, methods being used, and performance. In the end of the report we make an overall conclusion on the work done across all three phases.
 %
 \subsection{Image quality assessment}\label{sec:videoclipsegmentation}
 %
-Image quality assessment refers to the process of quantifying image quality in raw video footage, %Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. 
+Image quality assessment, as described in chapter \ref{chp:image_qual_ass}, refers to the process of quantifying image quality in raw video footage, %Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. 
 which can be used later on when final video summaries, or as a way to remove unsuitable material to speed up computionally heavy operations, such as facial detection, in later phases. %Even if one does not want to remove any material this early on, it could be used as a metric for prioritising later operations. 
 %This could be relevant in a live system where one might want to prioritise later analyses based on what footage is most likely to be most useful.  - FUTURE WORK
 % Frame quality assessment is based on lighting conditions in individual video-frames as well as the overall camera movement throughout the video.
@@ -20,7 +20,7 @@ Image quality assessment is based on lighting conditions and overall camera move
 %
 \subsection{Grouping and Labeling}
 %
-Labeling is a contextual analysis of video footage. 
+Grouping and labeling, described in chapter \ref{chp:group_and_label}, is a contextual analysis of video footage. 
 %This context can be expressed in many forms; 
 Brightenss and color intensity tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and proximity, of people in the footage. 
 More advanced image processesing such as optical flow can tell us something about object movement in the video, ex. a waving banner. 
@@ -30,12 +30,7 @@ We focus on a broad set of different methods, each focusing on one aspect of the
 %
 \subsection{Video Summary}
 %
-Labelling provides the abstraction level we need in order to create video summaries. Based on the accuracy of a label, we can identify a scene with a specific context. A summary is several scenes cut together, hence we can create a summary with a specific contextual flow.
-%We constructed a \textit{recipe language} which uses the different labels as a palette from which the recipe is created. 
-%
-\subsection{Test}
-%
-The video summaries are finally assesed by a panel of human observers. Each observer is presented to a questionnaire after they have watched a video summary, providing us valuable feedback.
+Labelling provides the abstraction level we need in order to create video summaries. Based on the accuracy of a label, we can identify a scene with a specific context. A summary is several scenes cut together, hence we can create a summary with a specific contextual flow. Chapter \ref{chp:video_summaries} describes how these summaries are created. The video summaries are finally assesed by a panel of human observers. Each observer is presented to a questionnaire after they have watched a video summary, providing us valuable feedback.
 %The generated video summaries are assessed by a panel of human oberservers. The summaries range from \textit{randomly generated summaries} to \textit{recipe based summaries} and control samples of human edited summaries. 
 %
 \section{Research Goals}
