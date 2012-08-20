@@ -57,11 +57,23 @@ The inspiration for this project based on an idea of a service that would proces
 %
 \section{Future Work}\label{sec:futurework}
 %
-% KIM: 60 kommentarer til denne section
-% Had we had our own video hosting service we would have access to such information.Had we further had our own client application in which all video was recorded we would even be able to acquire additional information about the circumstances in which the footage was recorded. Examples of this could be information about the movement of the camera (from accelerometers) and proximity to other devices recording the same scene (through Bluetooth). The purpose of our method for building our dataset has been to simulate that we do in fact have access to some of this information, as well as making it as easy as possible to estimate the rest.
-% %
-% image quality in a live system\\
+% Had we had our own video hosting service we would have access to such information.Had we further had our own client application in which all video was recorded we would even be able to acquire additional information about the circumstances in which the footage was recorded. Examples of this could be information about the movement of the camera (from accelerometers) and proximity to other devices recording the same scene (through Bluetooth). The purpose of our method for building our dataset has been to simulate that we do in fact have access to some of this information, as well as making it as easy as possible to estimate the rest. -> BLARGH
+% 
 % more extreme alpha span value
-% dataset
-% nye labels?
 % forbedringer i trin i pipeline?
+%
+% tager skidtet i kronologisk rækkefølge
+%
+% dataset
+%
+We achived respectable results when assessing image quality but as described in section \ref{sec:phase1discussion} our gold standard was greatly influenced by a dataset with primarily high quality footage. The way we created the gold standard was undoubtedly biased as it was done by the same person who would implement the classifiers and it would be interesting to see the results if the gold standard was subjected to a formal procedure including several different evaluations as the evaluation is subjective in nature.
+\\
+%
+The results from our labeling classifiers was mixed, but we later realized that the poorly performing classifiers could be significantly improved by making some labels mutually exclusive, ie. using multiple weak classifiers we may be able to create several strong classifiers. The problem was remedied in a later phase of development and we do not expect it to have any impact on final results. We also skipped the time-consuming process of manually labeling the entire dataset to compute true and false negatives which would give us a more exact measure of performance of the label classifiers.\\
+Besides improving upon already developed classifiers we could investigate the possibilities for new classifiers which would give us a larger number of labels, hence more diverse summaries. % nye labels
+\\
+%
+As we were unable to measure any statistical significant effect in the different ways of creating a video summary it would be interesting to see if this would change if we solved some of the inherent falacies such as a dataset with far too little poor footage. The goal was to somewhat create a summary that was compareable to one created by a human which we achived depending on how one interprets the results, but we also did no better than randomly cutting footage together. We are also not sure if the test panelists fully understood the questionnaire, and a revised testing scenario coupled with a more rough dataset could provide a whole different outlook. % revise test
+\\
+%
+The movitation and original idea included a service that would process live-streams and provide a near-live summary of these. We have shown that video-summaries is by all means an achiveable feat, and the next logical step towards such a service would included sorting which classifiers would be useable as is, and which would require improvement, either in classification-rates, or in efficiency. % live system
