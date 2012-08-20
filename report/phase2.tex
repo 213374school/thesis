@@ -1,5 +1,5 @@
 %
-\chapter{Grouping and labeling}
+\chapter{Grouping and labeling}\label{chp:group_and_label}
 %
 We want to be able to distinguish between different types of scenes so that we have a way to structure the final video summaries. We apply a label to each frame in a video, using a label-classifier, and then group consequtive frames with the same label.
 %
@@ -273,7 +273,7 @@ When computing the moving average in this classifiers it is done over 12 frames,
 %
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 \\
-We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly 14\% of the $\sim$ 31 minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus.
+We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly $14\%$ of the $\sim 31$ minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus. DET ER VEL IKKE "CAUSED BY"? - RETTERE AT DE FALSE POSITIVES PRIMÆRT HAR ET SAMMENFALD MED PERSON IN FOCUS.
 %
 \subsubsection{Overview classifier}
 %
