@@ -25,14 +25,14 @@ The first statement investigates the quality of our choice of labels, and to som
 \begin{figure}
      \centering
      \includegraphics[width=1.0\textwidth]{img/quest_dump.png}
-     \caption{Example of questionnaire on test-site}\label{fig:questdump}
+     \caption{Example of questionnaire on the test-site}\label{fig:questdump}
 \end{figure}
 %
 \subsubsection{Setup}
 %
 Our test environment runs on \textit{Google App Engine} and consist of a minimalistic website. To discern interuptive elements player-controls are hidden in the embedded YouTube-player (the user can still pause the video). The questionnaire is not shown before the end of the video not to disctract the actual viewing. The video title appears briefly in the top of the player is a randomly generated non-descript title.\\
 Each user session is tracked using a randomly generated identifier. We do not make any attempt to track users across different sessions and we are unable to track a returning test-user, but it does give us a rough measure of how many different test-users we have, how many questionnaires they answered on average.\\
-To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test is available in Appendix \ref{sec:blargh}, in both languages.\\
+To increase the availability of our test environment everything is localised into danish and english. The resulting locale is recorded along with each result, in case the specific translations have an effect on our results. All text in the test can be seen in figure \ref{fig:website}, in both languages.\\
 The test is designed so that the test user can see as few or as many videos as she wants. A circular queue of videos is shared between all users, meaning that a new user will start at the video following the one that was last rated. Answers are stored after each succesful rating.\\
 The test users concist of friends and relatives contacted through facebook. In order to help spread the test to more people we also placed a Facebook Like-button and a Twitter button discretely in the bottom of the questionnaires.\\\\
 %
@@ -41,7 +41,7 @@ The test-site can be found at: http://thesis.fmitcar.appspot.com/thesis/start/ a
 \begin{figure}
      \centering
      \includegraphics[width=1.0\textwidth]{img/website.png}
-     \caption{Example of test-site}\label{fig:website}
+     \caption{Example of a page in the test-site}\label{fig:website}
 \end{figure}
 %
 \subsection{Test videos}
@@ -55,7 +55,7 @@ We generate the videos from all the labelled videos. Each video only uses footag
 %
 \subsubsection{Random label}
 %
-These video summaries are slightly \textit{less} random. Instead of selecting video clips randomly from the footage, we instead generate a random recipe and create a video summary from it. This is done by generating a sequence of 5 \textit{ingredients} (described in section \ref{sec:blargh}), each containing a random set of 1 to 3 \textit{requested labels}. The minimum length of a video clip, $min$, is randomly set to be between 2 and 9 seconds. The maximum length is randomly set to be between $min$ and $2 \cdot min$.\\
+These video summaries are slightly \textit{less} random. Instead of selecting video clips randomly from the footage, we instead generate a random recipe and create a video summary from it. This is done by generating a sequence of 5 \textit{ingredients} (described in section \ref{sec:recipe}), each containing a random set of 1 to 3 \textit{requested labels}. The minimum length of a video clip, $min$, is randomly set to be between 2 and 9 seconds. The maximum length is randomly set to be between $min$ and $2 \cdot min$.\\
 Because these video summaries are based on footage where labels were detected, we expect their content to be of higher quality than the videos described in the previous section.
 %
 \subsubsection{Designer}\label{sec:phase4designer}
