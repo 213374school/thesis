@@ -27,6 +27,7 @@ The actual labeling is subsequently done by analysing the metadata using a colle
 The Haar Cascade Classifiers (HCC)\cite{viola01,lienhart01,schmidt01,schmidt02} is an efficient tool for facial detection. It uses a data-structure called an integral image, an algorithm based on AdaBoost that selects critical visual features, and a method that combines complex classifiers to compute on the most promising object-like regions. Initial results by Viola\cite{viola01} achives 15 frames per second detection in an 384 by 288 pixel image using, by todays standards, outdated hardware.\\
 %
 An integral image (aka. summed area table) is a matrix where any point $(x,y$ is the sum of all pixels above and to the left of $(x,y)$ illustrated in Figure \ref{fig:integral_img} where $\square ABCD$ can be computed as $C-(D+B)+A$, ie. the sum of any subpart of the integral image can be quickly determined. Not only is the computation of this matrix efficient as a function of its nature (it can reuse already computed sums when building the matrix), the sum at any given point can be computed in constant time as it can be done by 4 lookups in the matrix followed by 4 additions/substractions.
+HVAD BLIVER INTEGRAL IMAGE BRUGT TIL?
 %
 \begin{figure}[!ht]
      \centering
@@ -92,13 +93,13 @@ Note: We have later come across other, more advanced techniques for calculating 
 %
 \paragraph{Detecting movement}
 %
-We now look at the movement within the frames. We do this by placing a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet \cite{Bouguet2000}. We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels over two pyramidical levels.\\
-Some of the resulting vectors are discarded if the feature tracking was unsuccessful. This is often the case with features in the sky or in surfaces without any distinct features, or if the point being tracked ends up outside of the subsequent frame.\\
-Let $E$ be our egomotion vector. Then, for every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
+We now look at the movement within the frames. We place a grid of points across the frame and perform optical flow analysis on them. We use a pyramidal implementation of the Lucas Kanade feature tracker described by Bouguet\cite{Bouguet2000}. We do the analysis with a grid of 24x16 points, using a search window of 30x30 pixels over two pyramidical levels.\\
+Some of the resulting vectors are discarded if the feature tracking was unsuccessful. This is often the case with features in the sky or in surfaces without any distinct features, or if the point being tracked ends up outside of the following frame.\\
+For every vector $v \in V$, where $V$ is the set of valid displacement vectors, the isolated movement vector $v'$ is defined as:
 \begin{equation}
-v' = v - E
+v' = v - e,
 \end{equation}
-Let $V'$ describe the set of all isolated movement vectors $v'$. $V'$ then describes the movement of objects within the frames.\\
+where $e$ is the egomotion vector for the frame. The set of all $v'$ then describes the internal movement of objects within the frames.\\
 Each vector $v' \in V'$ describes the movement of one particular point in the original grid. By looking at the different directions of flow we may be able to say something about what is going on in the video. To simplify the data we divide the optical flow vectors up into nine segments as shown in figure \ref{fig:opticalflow}. We calculate the mean of the movement vectors in each group, seperately, and use these nine new vectors to describe the overall flow in different parts of the frame.
 %
 % Lauge: RISK - This model may be too simple, for good results
@@ -113,7 +114,7 @@ The \textit{optical flow} metadata consist of sets of these nine vectors, calcul
 %
 \subsection{Label classifiers}
 %
-A label classifier performs a binary classification on each frame in a given video. For each video the classifier computes groups of consequtive frames with the same label. Such a group is called a segment. Depending on the classifier, the segments are post-processed using \textit{segment interpolation} and/or \textit{segment smoothing}. Some classifiers have this as a builtin feature.
+A label classifier performs a binary classification on each frame in a given video. For each video the classifier computes groups of consecutive frames with the same label. Such a group is called a segment. Depending on the classifier, the segments are post-processed using \textit{segment interpolation} and/or \textit{segment smoothing}. Some classifiers have this as a builtin feature.
 %
 \subsubsection{Segment Smoothing}\label{sec:labelsmooth}
 %
@@ -153,9 +154,9 @@ We compute a moving average of the people presence metadata to determine if the 
 %
 \subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
-The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. In order to avoid overlap with the \textit{person in focus} footage, which often share these charactetistics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the shift vector magnitude metadata described in section \ref{sec:svmdata}, the optical flow metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
+The \textit{overview} classifier attempts to detect footage with negligible egomotion, as well as little internal movement within the frames. In order to avoid overlap with the \textit{person in focus} footage, which often share these characteristics, we also require the overview footage to not focus on any person in particular. The overview classifier uses the shift vector magnitude metadata described in section \ref{sec:svmdata}, the optical flow metadata described in section \ref{sec:opticalflowdata}, as well as the actual labels classified by the \textit{person in focus} classifier described in section \ref{sec:infocus}.\\
 We perform a slight triangular smoothing on the metadata in order to remove outliers. We also desregard all footage, which has already been classified with the \textit{person in focus} label.\\
-We now look at the amount of movement in each area of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f = [m_{1},m_{2} \dots m_{9}]$, where $m_{i}$ is mean distance of movement occuring in a specific part the frame. This mean is calculated on the magnitude of all adjusted optical flow vectors, in that area. The number of areas exceeding a given threshold, $\tau_{1}$, is then defined as:
+We now look at the amount of movement in each area of the image in order to determine if a frame contain too much internal movement. Let the internal movement in a frame be defined as $f = [m_{1},m_{2} \dots m_{9}]$, where $m_{i}$ is mean distance of movement occuring in a specific area the frame. This mean is calculated on the magnitude of all adjusted optical flow vectors, in that area. The number of areas exceeding a given threshold, $\tau_{1}$, is then defined as:
 %
 \begin{equation}
 A(f) = \sum_{i=1}^{9}
@@ -170,8 +171,8 @@ Calculating individual means and analysing each area seperately, should improve 
 \begin{equation}
 O(f) =
 \begin{cases}
-0 & \text{, if } A(f) > \tau_{2} \vee f_{e} > \tau_{3} \\
-1 &  \text{, otherwise}
+0 & \text{if } A(f) > \tau_{2} \vee f_{e} > \tau_{3} \\
+1 &  \text{otherwise}
 \end{cases},
 \end{equation}
 where $\tau_{2}$ is a threshold that defines how many areas are allowed to exceed the internal movement limit, and $\tau_{3}$ is a threshold defining the maximimum shift vector magnitude we accept for the frame.
