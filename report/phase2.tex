@@ -151,7 +151,7 @@ We compute a moving average of the people presence metadata, but excluding objec
 %
 \subsubsection{In-Crowd classifier}\label{sec:incrowd}
 %
-We compute a moving average of the people presence metadata to determine if the frame is shot from within a crowd, or slightly overlooking a crowd. The frames and their respective label are smoothed as described in section \ref{sec:labelsmooth}. Nearby segments are merged as described in section \ref{sec:labelmerge}.
+The in-crowd classifier counts a moving average of the number of faces in each frame. The count is smoothed as described in section \ref{sec:labelsmooth}, and post-smoothing counts less than $\tau$ are mapped to to 0, and values larger than $\tau$ are mapped to 1, where a value of 0 means that the frame is not shot from within a crowd, and a value of 1 means that the frame \emph{is} shot from within a crowd. Nearby segments are finally merged as described in section \ref{sec:labelmerge}.
 %
 \subsubsection{Overview classifier}\label{sec:overviewclassifier}
 %
@@ -281,10 +281,7 @@ Almost 21 minutes of the entire dataset is classified as containing a person in 
 %
 \subsubsection{In-Crowd classifier}
 %
-% ANDERS: OMSKRIV TIL SMOOTHED
-When computing the moving average over people presence metadata, we do it over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The labels are smoothed using a smoothness degree of 24 which
-%SOMETHING WITH MOVING AVERAGE.
-The values are truncated at 0.9 as they are not normalized to the range 0 to 1 as our data often is.
+When computing the moving average in this classifiers it is done over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The frames are smoothed using a smoothness degree of 24 as described in section \ref{sec:triangularsmoothing}, and values less than $\tau=0.9$ are mapped to 0, otherwise 1. $\tau=0.9$ roughly translates to an extrapolated count of almost one face.\\
 %
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 \\
