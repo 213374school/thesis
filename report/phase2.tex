@@ -253,23 +253,24 @@ S =
 %
 This section describes the parameter tuning of the classifiers along with some informal performance statistics. In general all tuning is done through emperical testing. These parameters should therefore only be seen as a starting point for more extensive research. Unless otherwise noted, tuning is done on a small subset of the dataset. The entire dataset consists of 131617 frames ($\sim$ 90 minutes) of footage. For all, but the \textit{day/night} classifier, performance is meassured only in true positives/false positives. We derive the results from manual observation of the classified segments, where each classification is determined to be either correct or wrong.\\
 %
-PEOPLE DETECTOR:\\
-we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set). We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second).\\
-%
 \subsection{Segment Interpolation and Smoothing}
 %
 When interpolating segments we require that two neighbouring segments (direct neighbours) are within a certain distance in order to be valid candidates for interpolation. Unless otherwise noted, this distance is 24 frames.\\
 When smoothing the segments with triangular smoothing we found that a degree of 36 gave reasonable results. This roughly corresponds to smoothing over 3 seconds of video footage. Unless otherwise noted values less than $1/3$ are truncated as described in section \ref{sec:labelsmooth}.
 %
-\subsection{Police Blinker classifier}
+\subsection{Classifier performance}
+%
+we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set). We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second).\\
+%
+\subsubsection{Police Blinker classifier}
 %
 Before we investigate if the blue channel mean is oscillating, we smooth the values with a smoothing degree of 5 to get slightly smoother curves, but still retaining much of the original data.\\
 The segments are also interpolated, as described in section \ref{sec:labelmerge}, but we interpolate segments up to as much as 48 frames apart, instead of the standard 36.
 %
 We meassure performance based on how many of the classified segments contain police blinkers or actually has police personal present in the footage. We include the latter scenario because the light from police blinkers off-screen may be detectable in the blue color channel, even if it is not visible to the human eye.\\
-Out of the total $\sim$ 90 minutes of footage 699 frames $\sim$ 30 seconds are classified positive. Of this $\sim$ 65\% are what we consider \textit{true positives}. % Lidt her om false positives. Hvad er grunden til dem?
+Out of the total $\sim$ 90 minutes of footage 699 frames $\sim$ 30 seconds are classified positive. Of this $\sim$ 65\% are what we consider \textit{true positives}.
 %
-\subsection{Person in Focus classifier}
+\subsubsection{Person in Focus classifier}
 %
 When computing the moving average over people presence metadata, we do it over 4 frames. This means that the data needs to be fairly consistent already in order to get a consistent detection, ie. just a few frames with no person detected within the centered bounding box would diminish the moving average towards zero.\\
 %
@@ -277,7 +278,7 @@ We meassure performance based on how many of the classified segments has a speci
 Almost 21 minutes of the entire dataset is classified as containing a person in focus. Hereof we consider $\sim$ 90\% to be \textit{true positives}.
 %
 %
-\subsection{In-Crowd classifier}
+\subsubsection{In-Crowd classifier}
 %
 When computing the moving average over people presence metadata, we do it over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The labels are smoothed using a smoothness degree of 24 which SOMETHING WITH MOVING AVERAGE. The values are truncated at 0.9 as they are not normalized to the range 0 to 1 as our data often is.
 %
@@ -285,11 +286,9 @@ A fallacy in this method are cases of just two people in a frame which are easil
 \\
 We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly 14\% of the $\sim$ 31 minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus.
 %
-% Til analyse: In hindsight we should have expected the \textit{person in focus}-issue to be a problem.
-%
 % Til phase 4: Due to the \textit{person in focus}-issue with in-crowd shot we attempt to do correction by forbidding the former label in the latter shots :P
 %
-\subsection{Overview classifier}
+\subsubsection{Overview classifier}
 %
 The \textit{overview} classifier (described in section \ref{sec:overviewclassifier}) analyses both the internal movement in the frames, as well as the overall egomotion of the camera.\\
 The classifier has three thresholds, $\tau_{1}$, $\tau_{2}$ and $\tau_{3}$. $\tau_{1}$ is the maximum internal movement allowed in an area. $\tau_{2}$ is the maximum number of areas, which are allowed to break this limit, and $\tau_{3}$ is the maximum allowed egomotion for the entire frame.\\
@@ -317,17 +316,26 @@ When analysing the performance of the \textit{vertical oscillation} classifier, 
 %
 % Til analyse: A pre-limmenary image quality assesment might help in lowering the amount of \textit{false positives}.
 %
-\subsection{Day \& Night classifier}
+\subsubsection{Day \& Night classifier}
 %
 The \textit{day/night} classifier (described in section \ref{sec:daynightclassifier}) analyses the overall brightness in a video along with the blue channel.\\
 It has two parameters. $b$ is the number of bins in the histrogram of brightness intensities, and $\tau \in \{1,2,...,b-1,b\}$, which determines where to make the differentiation between the dark and bright partitions in the histogram. We let $b = 10$ and subsequently tried all 10 values of $\tau$. We find that $\tau = 3$ yields the best results. The parameter tuning is done on the entire dataset and is thus almost certainly overfitted.\\
 \\
-The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. And even then, many of the false classification occur in videos in the evening or the late afternoon, which are difficult to classify, even manually.
+The classification is performed on 301 video-clips where $\sim$ 88\% of them contain daytime footage. Using this parameter we are able to correctly classify videos with $\sim$ 97\% accuracy. Many of the false classification occur in videos in the evening or the late afternoon.
 %
 \subsection{Analysis}
 %
+The peformance of the different classifiers various a lot. Only the \textit{person in focus}- and the \textit{day/night}- classifiers have performances that can be considered good. Both classifiers have a true positive rate above 90\%. Of the few misclassification, that \textit{does} occur in the day/night classifier, most occur in videos recorded in the evening or the late afternoon, which are difficult to classify, even manually. The \textit{in-crowd}- and \textit{vertical oscillation}- classifiers, in particular, perform very bad.\\
+The two main reasons for misclassifications appear to be unsteady camera movement (for the vertical oscillation classifier) and the presence of a person in focus (for the in-crowd-, and overview- classifier).
+%
 \subsection{Discussion}\label{sec:phase2discussion}
 %
+In hindsight we should have expected the \textit{person in focus}-issue to be a problem, not only in the overview classifier, but also in the in-crowd classifier. A lot of footage which is actually of persons in focus is also classified positively by these two classifiers. As we shall show in the next chapter we can to some degree compensate for these shortcomings when we construct the final video summaries. The details for this are described in section \ref{sec:phase4designer}.
+%
+\subsubsection{Risks and Limitations}
+%
+Most of our tests only analyses the true- and false- positive rates for the classfiers. A more thorough test would also look at the rates for negative classification. However, this would require us to create a gold standard for each frame in the dataset, for each label we want to test, something we simply did not have the time to do. The analysis 
+\\
 The \textit{overview}- and the \textit{person in focus}- labels are defined to be mutually exclusive. In case of a overlap the latter is used. However, due to the order in which the labels are generated and post-processed, overlaps \textit{can} actually occur. Because the \textit{person in focus} labels are interpolated (as described in section \ref{sec:labelmerge}) only after the the \textit{overview} classifier have used them for its classification, the new, interpolated \textit{person in focus} labels may actually cover areas which are also labelled as overviews.\\
 \\
 In the \textit{day/night} classifier we compare the blue channel intesity of a frame with the overall brightness, in order to determine if blue is a dominant color. However, the overall brightness is calculated from the intensity of the greyscale version of the frame. We assumed that this intensity is based on the mean of all the channels in the orginal RGB image. We have later learned that the individual channels are weighed differently in this conversion. OpenCV, which we use, define the intesity, $Y$, of a pixel as:
@@ -337,9 +345,8 @@ Y = 0.299 \times R + 0.587 \times  G + 0.114 \times B,
 \]
 %
 where $R$, $G$, and $B$ are the red-, green-, and blue- intensity of the pixel.\\
-Skriv lidt om hvilken betydning det har for vores resultater.
-% Skriv lidt om hvilken betydning det har for vores resultater.
-% http://opencv.willowgarage.com/documentation/python/miscellaneous_image_transformations.html#cvtcolor
+\\
+
 %
 \section{Summary}
 %
