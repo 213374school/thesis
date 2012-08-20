@@ -118,7 +118,7 @@ A label classifier performs a binary classification on each frame in a given vid
 %
 \subsubsection{Segment Smoothing}\label{sec:labelsmooth}
 %
-If segments from the same video are fragmented we apply triangle smoothing on the segments, as described in section \ref{sec:triangularsmoothing}. Prior to smoothing each frame had either a 1 (label present) or a 0 (label not present), but post-smoothing they are a fraction between 0 and 1. These values are subsequently truncated to 0 if they are below a certain treshold.
+If segments from the same video are fragmented we apply triangle smoothing on the segments, as described in section \ref{sec:triangularsmoothing}. Prior to smoothing, each frame had a value of either 1 (label present) or 0 (label not present), but post-smoothing they are a fraction between 0 and 1. These values are subsequently mapped to either 0 or 1, based on a certain threshold, $\tau$.
 %
 \subsubsection{Segment Interpolation}\label{sec:labelmerge}
 %
@@ -256,7 +256,7 @@ This section describes the parameter tuning of the classifiers along with some i
 \subsection{Segment Interpolation and Smoothing}
 %
 When interpolating segments we require that two neighbouring segments (direct neighbours) are within a certain distance in order to be valid candidates for interpolation. Unless otherwise noted, this distance is 24 frames.\\
-When smoothing the segments with triangular smoothing we found that a degree of 36 gave reasonable results. This roughly corresponds to smoothing over 3 seconds of video footage. Unless otherwise noted values less than $1/3$ are truncated as described in section \ref{sec:labelsmooth}.
+When smoothing the segments with triangular smoothing we found that a degree of 36 gave reasonable results. This roughly corresponds to smoothing over 3 seconds of video footage. Unless otherwise noted values less than $\tau=1/3$ are mapped to 0, as described in section \ref{sec:labelsmooth}.
 %
 \subsection{Classifier performance}
 %
@@ -280,7 +280,10 @@ Almost 21 minutes of the entire dataset is classified as containing a person in 
 %
 \subsubsection{In-Crowd classifier}
 %
-When computing the moving average over people presence metadata, we do it over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The labels are smoothed using a smoothness degree of 24 which SOMETHING WITH MOVING AVERAGE. The values are truncated at 0.9 as they are not normalized to the range 0 to 1 as our data often is.
+% ANDERS: OMSKRIV TIL SMOOTHED
+When computing the moving average over people presence metadata, we do it over 12 frames, which roughly translates to half a second. This allows for some inconsitency in the people presence metadata. The labels are smoothed using a smoothness degree of 24 which
+%SOMETHING WITH MOVING AVERAGE.
+The values are truncated at 0.9 as they are not normalized to the range 0 to 1 as our data often is.
 %
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 \\
