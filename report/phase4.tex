@@ -46,8 +46,9 @@ The test-site can be found at: http://thesis.fmitcar.appspot.com/thesis/start/ a
 %
 \subsection{Test videos}
 %
-We investigate several aspects of the video summary aggregation. Most importantly we investigate how our automatically generated video summaries compare to human edited ones, and how both these groups compare to randomly generated video summaries.
-% KIM: generalt noget om hvilke processer/faser som har indvirkning på de følgende videoer. hvad har vi med/ikke med og hvorfor? evt. noget om indvirkningen på videoen (hvad vi vurderer)
+We investigate several aspects of the video summary aggregation. Most importantly we investigate how our automatically generated video summaries compare to human edited ones, and how both these groups compare to randomly generated video summaries.\\
+We generate the videos from all the labelled videos. Each video only uses footage from the event it is summarising.
+%
 \subsubsection{Random}
 %
 \textit{Random} video summaries are generated without any use of labels. They consist of 6 videoclips selected randomly from the footage for a particular event. Each clip has a random length between 2 and 10 seconds. Only one clip is selected from each video, in order to avoid repeating or overlapping footage, which would be a dead giveaway. These video summaries are thought of as a baseline - we expect them to perform poorly.
@@ -59,10 +60,9 @@ Because these video summaries are based on footage where labels were detected, w
 %
 \subsubsection{Designer}\label{sec:phase4designer}
 %
-The \textit{designer} video summaries are based on our own recipe. The ingredients are outlined below:
-% KIM: skriv meget mere om hvad er hvad. altså hvad er overview shot, crowd shot, etc. hvad betyder x-y seconds? etc.
+The \textit{designer} video summaries are based on our own recipe. It tries to include segments of overview shots (segments classified positively by the \textit{overview} classifier), crowd shots (the \textit{in-crowd} classifier) and shots with persons in focus (\textit{person in focus} classifier). A minimum and maximum length for each segment is also defined. The ingredients are outlined below:
+%
 \begin{enumerate}
-% KIM: ingredients must come in this order?
 \item Overview shot, 3-5 seconds, no person in focus
 \item Overview shot, 3-6 seconds, no person in focus
 \item Crowd shot, 3-6 seconds, no person in focus
@@ -72,19 +72,9 @@ The \textit{designer} video summaries are based on our own recipe. The ingredien
 \item Overview shot, 3-5 seconds, no person in focus
 \end{enumerate}
 %
-%
-%
-%
-% Skriv om compensation for person-in-focus
-%
-%
-%
-%
-During recipe tuning we realized that the overview label and person in focus label often overlapped. Although the two labels are mutually exclusive in a single 
-% KIM: frame? segment?
-% ANDERS: jeg fatter heller ikke en hvede af det her? hvad prøver vi at sige?
-, a segment containing both can still be generated if its score is sufficiently big (see section \ref{sec:segment_score}). To reduce the odds of having a person in focus on overview shots we put this label into the forbidden labels list (an overview can still have a person in focus not caught by our classifiers).\\
-Likewise there are typically two types of crowd shots. One, which has someone in focus, and the other one, which has not. We wanted the latter type.
+The list of ingredients also define the order of the segments in the final video summary. In order to compensate for the mediocre performance of the \textit{overview} classifier (detailed in section \ref{sec:peformanceforoverviewclassifier}), and the the extremely poor performance of the \textit{in-crowd} classifier (detailed in section \ref{sec:peformanceforincrowdclassifier}), we define \textit{person in focus} to be a forbidden label in all ingredients, where we do not specifically want such a segment. As described previously, a person in focus is the primary reason misclassifications in both classifiers.\\
+\\
+In an attempt to maintain contextual flow within the final video summary, we also require all daytime segments to preceed night-time segments. A segment breaking this rule is discarded and another is found. This only has an impact on the COP15 videos, as this dataset is the only which contain night-time footage.
 %
 \subsubsection{Human edited}
 %
@@ -92,17 +82,15 @@ We used human edited video summaries as a control sample. These videos are taken
 %
 \subsubsection{Other aspects}\label{sec:otheraspects}
 %
-% KIM: hvorfor kun teste a=0.25 og a=0.50? og hvad svarer værdien til? argumenter for valget.
-On top of comparing the quality of the different types of videos described above, we also investigate the result of using different $\alpha$-span values to regulate the weighting between label- and timespan- fulfilment. Different values should affect both the length of the individual video clips, and the total length of the video summary.\\
+On top of comparing the quality of the different types of videos described above, we also investigate the result of using different $\alpha$ values to regulate the weighting between label- and timespan- fulfilment. Different values should affect both the length of the individual video clips, and the total length of the video summary. We experiment with $\alpha=0.25$ and $alpha=0.50$. Higher values gives to much priority to the timespan, which means that the content of the final video summary becomes to difficult to control.\\
 Finally, we also want to know if the actual events in the footage has any influence of our results.\\\\
 %
 In total there are 21 videos summaries in the test. Their distribution is shown in figure \ref{tab:videosintest}.
 %
-% KIM: inkluder titel og beskriv hvordan man kan se video
 \begin{table}\centering
     \begin{tabular}{|l|l|l|l|}
         \hline
-        Method       & Event           & $\alpha$-span & YouTube ID \\ \hline
+        Method       & Event           & $\alpha$      & YouTube ID \\ \hline
         random       & ACTA Aarhus     & ~             & 5swFsRKsI7I \\ % 2806c14722
         random       & ACTA Copenhagen & ~             & XYHr6gZqkTs \\ % 48b62f11dc
         random       & COP 15          & ~             & hrxbQNTBqNQ \\ % dd7d1998f8
