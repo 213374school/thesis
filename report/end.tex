@@ -6,14 +6,34 @@
 %
 \chapter{Conclusions}
 %
-% \section{Summary}\label{sec:conc_summary}
+%Brief summary of the thesis
 %
-Brief summary of the thesis
+% chapter summary
+%
+% We have investigated different methods for estimating the image quality in video footage. Our approach is based on the work of Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} and focuses on the overall level of contrast in the individual frames as well as the movement of the camera.\\
+% We have meassured the performance of four different classifiers on a dataset of videos collected from YouTube. We have not been able to confidently establish the importance of the contrast variable in the proposed method. We suspect this is caused by the fact that our dataset includes relatively few night-shots.\\
+% Overall the results we achieve seems reasonable. They are however subject to a significant amount of risks caused by various choices and limitations.
+%
+In chapter \ref{chp:image_qual_ass} we assessed video image quality based on an approach by Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} where we analysed image contrast and identified camera movement in each frame of a video. Using four different classifiers we achived results compareable to an established gold standard.
+%
+% chapter summary
+% We have investigated different methods for labeling video footage, depending on their content. We have made use of more advanced techniques, such as Haar Cascade classifiers\cite{viola01,lienhart01,schmidt01,schmidt02} (for detecting people), and Optical Flow\cite{Bouguet2000} (for analysing internal movement in the frames), but also experimented with simpler, home-made, techniques.\\
+% We have created, and tested, classifiers for detecting crowds, overview footage, the presence of police blinkers, interesting persons and high levels of internal vertical movement. We have also created classifiers for labeling day-time and night-time footage.\\
+% We experience a varying degrees of performance. \textit{Day/night}- and \textit{person in focus}- classification delivers promising results. Contrary, the performance of \textit{in-crowd}- and \textit{vertical oscillation}- clasification, is very bad. The two remaining classifiers, the \textit{overview}- and \textit{police blinker}- classifiers, deliver mediocre results.
+%
+In chapter \ref{chp:group_and_label} we developed and implemented methods for labeling video footage using already established work such as Haar Cascade classifiers and optical flow, and also some of our own design. Most of our label-classifiers achived respectable results, and were able to identify ex. public speakers with $\sim 90\%$ true positives.
+%
+% chapter summary (tmp.)
+%
+% We have described a way to automatically generate video summaries based on a defined \textit{recipe}. We have shown how, given a collection of labelled footage, we can estimate an overall fulfilment ratio for each segment of said footage, and use this an indicator of what to include in the final video.\\
+% We have compared this method with various control groups, both consisting of randomly generated-, but also of humanly edited- videos. This was done through an online survey were a group of test users watched the different videos and rated them on various aspects.\\
+% The results from this survey are inconclusive. The test users ability to differentiate between the various types of videos is not statistical significant. We have speculated on the various possible reasons for these findings.\\
+%
+In chapter \ref{chp:video_summaries} we designed a method of automating video summaries, and these summaries along with three different control sampes was subsequently evaluated by an online test panel. The results from the evaluation showed to be statistically insignificant, indicating that the panelists were unable to distinguish between the summaries and the control samples.
 %
 \section{Conclusions}\label{sec:conc_concs}
 %
-% Explain the current state-of-the-art on the topic of automatic construction of videos 
-% -> Uncover the current state-of-the-art on the topic of automatic video summaries from multiple sources
+% Uncover the current state-of-the-art on the topic of automatic video summaries from multiple sources
 Our first research goal was to uncover the current state-of-the-art on the topic of automatic video summaries from multiple sources. Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method for a semi-automatic way of editing home video, in which they use automated video analysis to identify suitable clips. However they do not perform any contextual analysis of the footage.
 \\\\
 % Select, possibly extend, and implement a method for segmenting video clips.
@@ -24,8 +44,7 @@ We successfully labeled video footage based on a contextual analysis. The analys
 \\
 The correctness of each type of label varies, but the \emph{Person in Focus}-label was correct $X\%$ of the time. Other labels such as the \emph{Vertical Oscillation} bla bla. skriv mere om dette. SKAL BRUGE DISSE TAL!
 \\\\
-% Develop and implement a method for composing a coherent video summary by aggregating video segments. 
-% -> Develop a method for composing a video summary from multiple sources with a coherent contextual flow
+% Develop a method for composing a video summary from multiple sources with a coherent contextual flow
 When we had completed labelling the video footage we moved on to creating the video summaries. We used a cooking analogy where a recipe is a list of ingredients, in a specific order, each defining a type of footage, that we would like to include in the final video. For each ingredient we try to find the most fitting sub-part of a video that matches the description of the ingredient, where the ingredient would be a list of parameters such as labels required and how long the part should be. For this purpose we designed an algorithm that computes a score for each sub-part based on an input ingredient and available footage.\\
 We initially had plans of using machine learning for creating the summary, but this would require extensive training, possibly involving external feedback, and simply would not fit within the scope of the project.
 \\\\
@@ -39,7 +58,10 @@ The inspiration for this project based on an idea of a service that would proces
 \section{Future Work}\label{sec:futurework}
 %
 % KIM: 60 kommentarer til denne section
-Had we had our own video hosting service we would have access to such information.Had we further had our own client application in which all video was recorded we would even be able to acquire additional information about the circumstances in which the footage was recorded. Examples of this could be information about the movement of the camera (from accelerometers) and proximity to other devices recording the same scene (through Bluetooth). The purpose of our method for building our dataset has been to simulate that we do in fact have access to some of this information, as well as making it as easy as possible to estimate the rest.
-%
-image quality in a live system\\
-more extreme alpha span value
+% Had we had our own video hosting service we would have access to such information.Had we further had our own client application in which all video was recorded we would even be able to acquire additional information about the circumstances in which the footage was recorded. Examples of this could be information about the movement of the camera (from accelerometers) and proximity to other devices recording the same scene (through Bluetooth). The purpose of our method for building our dataset has been to simulate that we do in fact have access to some of this information, as well as making it as easy as possible to estimate the rest.
+% %
+% image quality in a live system\\
+% more extreme alpha span value
+% dataset
+% nye labels?
+% forbedringer i trin i pipeline?
