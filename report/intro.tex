@@ -10,28 +10,17 @@ With the processing power of distributed computing and the advancement in the fi
 %
 In our work we focus on a selection of problems related to creating a video summarizer. We have facilitated this process into a three-step pipeline as described below. Each phase is described in its own chapter where we describe previous work, methods being used, and performance. In the end of the report we make an overall conclusion on the work done across all three phases.
 %
-\subsection{Image quality assessment}\label{sec:videoclipsegmentation}
+\subsection{Image Quality Assessment}\label{sec:videoclipsegmentation}
 %
-Image quality assessment, as described in chapter \ref{chp:image_qual_ass}, refers to the process of quantifying image quality in raw video footage, %Since footage may be very long or of poor quality it is important to be able to divide it into smaller sub-sections from which we can select the very best parts of the original video-clips. 
-which can be used later on when final video summaries, or as a way to remove unsuitable material to speed up computionally heavy operations, such as facial detection, in later phases. %Even if one does not want to remove any material this early on, it could be used as a metric for prioritising later operations. 
-%This could be relevant in a live system where one might want to prioritise later analyses based on what footage is most likely to be most useful.  - FUTURE WORK
-% Frame quality assessment is based on lighting conditions in individual video-frames as well as the overall camera movement throughout the video.
-Image quality assessment is based on lighting conditions and overall camera movement throughout the video.
+Image quality assessment, as described in chapter \ref{chp:image_qual_ass}, refers to the process of quantifying image quality in raw video footage, which can be used later on when final video summaries, or as a way to remove unsuitable material to speed up computionally heavy operations, such as facial detection, in later phases. Image quality assessment is based on lighting conditions and overall camera movement throughout the video.
 %
 \subsection{Grouping and Labeling}
 %
-Grouping and labeling, described in chapter \ref{chp:group_and_label}, is a contextual analysis of video footage. 
-%This context can be expressed in many forms; 
-Brightenss and color intensity tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and proximity, of people in the footage. 
-More advanced image processesing such as optical flow can tell us something about object movement in the video, ex. a waving banner. 
-%More advanced image processesing such as optical flow can tell us something about what specific actions are occuring in the video, ex. a waving banner or people dancing. 
-We focus on a broad set of different methods, each focusing on one aspect of the contextual analysis. These classifiers yield a set of labels for each individual frame.
-%We actually find that this phase of grouping and labeling the footage, in our case, proved the initial frame quality assessment to be less important than we first expected. In general, at least for our selection of methods, classification only happens in footage that is of decent image quality.
+Grouping and labeling, described in chapter \ref{chp:group_and_label}, is a contextual analysis of video footage. Brightenss and color intensity tells us something about whether the footage was recorded during the day or the night. Facial detection can be used to estimate the number, and proximity, of people in the footage. More advanced image processesing such as optical flow can tell us something about object movement in the video, ex. a waving banner. We focus on a broad set of different methods, each focusing on one aspect of the contextual analysis. These classifiers yield a set of labels for each individual frame.
 %
 \subsection{Video Summary}
 %
 Labelling provides the abstraction level we need in order to create video summaries. Based on the accuracy of a label, we can identify a scene with a specific context. A summary is several scenes cut together, hence we can create a summary with a specific contextual flow. Chapter \ref{chp:video_summaries} describes how these summaries are created. The video summaries are finally assesed by a panel of human observers. Each observer is presented to a questionnaire after they have watched a video summary, providing us valuable feedback.
-%The generated video summaries are assessed by a panel of human oberservers. The summaries range from \textit{randomly generated summaries} to \textit{recipe based summaries} and control samples of human edited summaries. 
 %
 \section{Research Goals}
 %
@@ -47,79 +36,51 @@ Below are listed the research goals for this project
 %
 \section{Limitations}
 %
-% Lauge: Man kan argumentere for at vi måske bør samle alle limitations i vores afsluttende RISK afsnit. HELLE FOR AFRIKA!!!
-% skal uddybes og evt. flyttes andet sted hen. hvor?
-%
-% \subsection{Data source}
-%
-%
-% \subsection{Type of events}
-%
-%The perfect system would be able to handle all kinds of different events. However, i
 In order to limit the scope our work we have restricted ourselves to focusing on one kind of scenario: urban protests and demonstrations. Although this subject still yields diverse footage of everything from public speeches to police arrests it is only natural that some of the results we archive and the conclusions we make will not necessarily generalise to other kinds of scenarios.
 %
 \section{Dataset}\label{sec:dataset}
 %
 Our vision of a full blown system is one that continuously receives raw video footage of from different events directly from the mobile devices recording it. This footage would then be processed by the system and used in a near-live coverage of that specific event. Since such a system currently does not exist, our goal is to build a dataset which as closely as possible mimics this scenario. We do this by identifying a small collection of recent events, namely ACTA Copenhagen, ACTA Aarhus, and COP15, and collect video-clips of these from YouTube.
 %
-% \subsection{Building the dataset}
+\subsection{Getting the Videos}
 %
-%Since the vast majority of the videos available online do not suit our needs and since no efficient tool exist for efficiently finding the ones that does, 
-The construction of our dataset is a somewhat manual process as described below. %Each phase of this project poses specific challenges with regards to the dataset needed for testing. Specific choices will be described in detail in their respective sections. %However, general decisions are described below.
-%
-\subsection{Getting the videos}
-%
-All the videos in our dataset have been found on YouTube. Due to limitations in the YouTube API and the way YouTube stores video, most of the video metadata is unavailable to us. We do not have access to the original time of recording, as well as potential geo-location data. Instead we have to rely on YouTube tags. When users upload a video to YouTube they can choose to attach a set of tags and categories to it. We find that these tags and categories, when chosen correctly, can be an efficient way to search for related video footage. For example, events like protests and demonstration can often be found by searching for a tag describing the cause behind the event along with one describing the location (ex. name of a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location cannot be accurately identified through these attributes. For example, a video promoting a demonstration before it begins will often be tagged the same as the footage later recorded \emph{at} the event.\\\\ %It may be possible to filter out such false-positives by further analysing its meta-data, but there does not seem to be a simple (or general) way to do this.\\\\
+All the videos in our dataset have been found on YouTube. Due to limitations in the YouTube API and the way YouTube stores video, most of the video metadata is unavailable to us. We do not have access to the original time of recording, as well as potential geo-location data. Instead we have to rely on YouTube tags. When users upload a video to YouTube they can choose to attach a set of tags and categories to it. We find that these tags and categories, when chosen correctly, can be an efficient way to search for related video footage. For example, events like protests and demonstration can often be found by searching for a tag describing the cause behind the event along with one describing the location (ex. name of a city). This way we are able to make a crude connection between the video footage and a specific time and location. Problems arise when the footage from a time and location cannot be accurately identified through these attributes. For example, a video promoting a demonstration before it begins will often be tagged the same as the footage later recorded \emph{at} the event.\\\\
 %
 Using the YouTube API we searched for videos related to the seperate events described below.
 %
-\subsubsection{ACTA protest, Copenhagen, 2012}
+\subsubsection{ACTA Protest, Copenhagen, 2012}
 %
 This event spans a handful of hours starting during the day and continuing into the late afternoon and early evening. The footage is spread out over a smaller area in Copenhagen city, and shows people both in walking and standing protest at various locations, and also public speakers.
 %
-\subsubsection{ACTA protest, Aarhus, 2012}
+\subsubsection{ACTA Protest, Aarhus, 2012}
 %
 The ACTA Aarhus event, taking place in Aarhus city, is recorded on the same day as the ACTA Copenhagen event. Although it contains fewer videos, they are generally longer and mostly show public speakers. The footage is recorded exclusively during the day.
 %
-\subsubsection{COP 15 Climate summit, Copenhagen, 2009}
+\subsubsection{COP15 Climate Summit, Copenhagen, 2009}
 %
 This is the event with the most diverse footage. Since the event occured over several days, this sub-set of videos contain footage from a lot of different places recorded over a longer timespan. It is also the only of the events with night recordings, that have footage with significant police presence, and footage of people being arrested.
 %
-\subsection{Removal of unwanted material}
+\subsection{Removal of Unwanted Material}
 %
 Since the purpose of our dataset is to mimic raw, unedited footage as much as possible we perform some manual filtering during our YouTube searches. Videos matching the criteria below are not included in our dataset, although they appeared in YouTube searches.
 %
-\subsubsection{Unrelated videos}
+\subsubsection{Unrelated Videos}
 %
 All videos that are unrelated as a result of ambiguous search queries are removed. An example of this is the police chase videos resulting from a search for protest videos from the COP15 Climate summit (we guess the reason being that \emph{cop} is slang for police).
 %
-\subsubsection{Related, non-event videos}
+\subsubsection{Related, Non-event Videos}
 %
 These videos are related to the event we want, but they are not \emph{from} the event. This is the result of a ambiguous search query or an errornous video tag. Examples include videos that promote an event or which had nothing to do with the protests around it.
 %
-\subsection{Partial use of material}
+\subsection{Partial Use of Material}
 %
-%In some cases part of a video-clip may be suitable for a specific test although the clip in its entirety does not live up to our requirements. An example of this would be a video of an event that was obviously produced from several other video-clips. Although using such a clip as if it was raw footage would severely hurt the credibility of our results, some of its sub-segments (or maybe even the entire video) can sometimes be used in specific tests, for example as a \textit{golden standard} of what good footage or a good video summary should look like.
-% REWRITE:
 Some video footage contains parts that are suitable to be included in our dataset. This could be human edited video where we wish to include some or all scenes. Another use of this footage is as a \textit{gold standard} for high quality video, as it has already been viewed by a human and deemed worthy to include in a final cut video.
 %
-\subsection{Pre-processing of the videos}
+\subsection{Pre-processing of the Videos}
 %
 The video available online are recorded on different devices and stored in different formats. In order to generalise the later analysis, all videos are converted to the Apple MPEG-4 video format \textit{m4v}, resized to a height of 360 pixels, 24 frames per second, and 1600 kbit data per second. Videos of this size are manageable computationally, while still retaining the quality needed for later analysis. Due to the different aspect ratios of each video, width may differ slightly post conversion, but the scale for all videos is the same. Unless otherwise noted the video is converted to grayscale prior to analysis.
 %
-% \subsubsection{Limitations as a result of our dataset}
-%
-% Lauge: Dette afsnit mangler stadigt at blive skrevet færdigt. Alt efter længde skal det måske rykkes om i slutingen af rapporten sammen med resten...
-%
-% Anders: det nævner som sådan ikke nogen begrænsninger, blot en række nice-to-have features hvis vi havde haft en streaming service (som er forholdsvis irrelevant)
-%
-%A lot of the limitations in our research should be obvious at this point. We chose to only focus on a very small subset of all the possible scenarios a fully automatic system should be able to handle. Furthermore, we screen the data manually in order to make sure it is usable. However, much of the necessity for this is based on the fact that we do not have access to the raw footage as well as all the meta-data originally attached to a video-clip. Our main goal was to create a dataset, which mostly contains original raw footage or, in the cases where it makes sense, video-clips, which we can pretend is raw footage. The task of determining whether a video-clip belongs to this category is, in many ways, much easier if you know exactly when and where it was recorded. Furthermore raw footage also often contain information about the source device it was recorded on, which again would tell us that the video data is unaltered. Had we had our own video hosting service we would have access to such information.
-%
-%
-% \section{Dataset}\label{sec:framequalityassessmentdataset}
-%
-%
-\subsection{Videos in the dataset}
+\subsection{Videos in the Dataset}
 %
 Table \ref{tab:orgdataset1} and \ref{tab:orgdataset2} shows an overview of the original dataset. The YouTube ID can be used to find the video on YouTube by searching for the ID on YouTube or creating an url as \emph{http://www.youtube.com/watch?v=\{YouTube ID\}} (without the curly braces).
 %
@@ -150,38 +111,10 @@ Table \ref{tab:orgdataset1} and \ref{tab:orgdataset2} shows an overview of the o
 			gbZl6ULwBTU & COP15 & 04:54 \\
 			gNNyOtTTqG8 & ACTA Cph. & 03:37 \\
 			gx6GcelB77g & ACTA Cph. & 03:15 \\
-			% hkMeDA\_dmVs & ACTA Aarhus & 00:41 \\
-			% HZqLXxw7gKw & ACTA Cph. & 06:57 \\
-			% jWcTF0ar16Y & COP15 & 00:28 \\
-			% K-rva3BK3-g & COP15 & 00:11 \\
-			% k7PUAmM-s5A & ACTA Cph. & 00:22 \\
-			% m0Bflqu7BmA & ACTA Cph. & 02:22 \\
-			% me8XUQegpuU & ACTA Cph. & 02:19 \\
-			% mg4uzsWDBeo & ACTA Cph. & 02:58 \\
-			% Mp18LlWWSBw & COP15 & 02:05 \\
-			% OxDHuh0jrnc & ACTA Cph. & 02:22 \\
-			% PdyIqBKFHGk & ACTA Cph. & 00:40 \\
-			% q4kzDaJJBqw & ACTA Cph. & 15:50 \\
-			% QdfuVVLHp4o & ACTA Cph. & 00:20 \\
-			% R-aHHMUIbR0 & ACTA Cph. & 06:32 \\
-			% r2r7NgW0nWk & COP15 & 02:03 \\
-			% SdkuOzvT4cY & COP15 & 02:34 \\
-			% sE\_LLzFKlOM & COP15 & 00:17 \\
-			% tDXzuBLjgJ8 & COP15 & 02:46 \\
-			% u2LxLvU5Evg & COP15 & 01:19 \\
-			% uhE8LQMC9mg & ACTA Aarhus & 05:53 \\
-			% v2enoP8IHxw & ACTA Aarhus & 08:25 \\
-			% %vKfrOFqMoaY COP15 - men er ret sikker på vi ikke bruger den
-			% woZKDvlEhc4 & ACTA Aarhus & 08:10 \\
-			% wxiI97Qp08w & COP15 & 01:17 \\
-			% xIjRHCy3FN8 & COP15 & 03:11 \\
-			% xLCxe1neqYo & ACTA Cph. & 03:11 \\
-			% yN0C8hkwSAo & COP15 & 02:12 \\
 		\bottomrule
 		\end{tabular}
 	\end{center}
 \end{table}
-%
 %
 \begin{table}[!ht]
 	\begin{center}
@@ -212,7 +145,6 @@ Table \ref{tab:orgdataset1} and \ref{tab:orgdataset2} shows an overview of the o
 			u2LxLvU5Evg & COP15 & 01:19 \\
 			uhE8LQMC9mg & ACTA Aarhus & 05:53 \\
 			v2enoP8IHxw & ACTA Aarhus & 08:25 \\
-			%vKfrOFqMoaY COP15 - men er ret sikker på vi ikke bruger den
 			woZKDvlEhc4 & ACTA Aarhus & 08:10 \\
 			wxiI97Qp08w & COP15 & 01:17 \\
 			xIjRHCy3FN8 & COP15 & 03:11 \\

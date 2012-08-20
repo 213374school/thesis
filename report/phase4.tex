@@ -44,7 +44,7 @@ The test-site can be found at: http://thesis.fmitcar.appspot.com/thesis/start/ a
      \caption{Example of test-site}\label{fig:website}
 \end{figure}
 %
-\subsection{Test videos}
+\subsection{Test Videos}
 %
 We investigate several aspects of the video summary aggregation. Most importantly we investigate how our automatically generated video summaries compare to human edited ones, and how both these groups compare to randomly generated video summaries.\\
 We generate the videos from all the labelled videos. Each video only uses footage from the event it is summarising.
@@ -53,7 +53,7 @@ We generate the videos from all the labelled videos. Each video only uses footag
 %
 \textit{Random} video summaries are generated without any use of labels. They consist of 6 videoclips selected randomly from the footage for a particular event. Each clip has a random length between 2 and 10 seconds. Only one clip is selected from each video, in order to avoid repeating or overlapping footage, which would be a dead giveaway. These video summaries are thought of as a baseline - we expect them to perform poorly.
 %
-\subsubsection{Random label}
+\subsubsection{Random Label}
 %
 These video summaries are slightly \textit{less} random. Instead of selecting video clips randomly from the footage, we instead generate a random recipe and create a video summary from it. This is done by generating a sequence of 5 \textit{ingredients} (described in section \ref{sec:blargh}), each containing a random set of 1 to 3 \textit{requested labels}. The minimum length of a video clip, $min$, is randomly set to be between 2 and 9 seconds. The maximum length is randomly set to be between $min$ and $2 \cdot min$.\\
 Because these video summaries are based on footage where labels were detected, we expect their content to be of higher quality than the videos described in the previous section.
@@ -76,11 +76,11 @@ The list of ingredients also define the order of the segments in the final video
 \\
 In an attempt to maintain contextual flow within the final video summary, we also require all daytime segments to preceed night-time segments. A segment breaking this rule is discarded and another is found. This only has an impact on the COP15 videos, as this dataset is the only which contain night-time footage.
 %
-\subsubsection{Human edited}
+\subsubsection{Human Edited}
 %
 We used human edited video summaries as a control sample. These videos are taken from some of the orginal videos, which we found on YouTube and later split up. Therefore they contain the same footage as is available to the \textit{random-}, \textit{random label-}, and \textit{designer-} summarizers. This should ensure that they do not look too different. We expect these to perform as well as the designer recipies or better.
 %
-\subsubsection{Other aspects}\label{sec:otheraspects}
+\subsubsection{Other Aspects}\label{sec:otheraspects}
 %
 On top of comparing the quality of the different types of videos described above, we also investigate the result of using different $\alpha$ values to regulate the weighting between label- and timespan- fulfilment. Different values should affect both the length of the individual video clips, and the total length of the video summary. We experiment with $\alpha=0.25$ and $alpha=0.50$. Higher values gives to much priority to the timespan, which means that the content of the final video summary becomes to difficult to control.\\
 Finally, we also want to know if the actual events in the footage has any influence of our results.\\\\
@@ -158,16 +158,13 @@ Histograms shows the distribution of data, and is a visual tool to aid in determ
 %
 \subsubsection{Friedman Test}\label{sec:friedman}
 %
-The Friedman rank sum test
-% KIM: reference
- is a non-parametric statistical test, and is used to detect differences in methods in multiple tests. In our case we have multiple methods, datasets, and parameters, and each test participant can be viewed as a seperate test.\\
- We test against the null-hypotheses stated as follows: 
- %
- \begin{itemize}
- \item There is no significant measureable difference in the methods used to generate a video
- \item There is no significant measureable difference in the dataset used to generate a video
- \item There is no significant measureable difference in the $\alpha-$span parameter used to generate a video
- \end{itemize}
+The Friedman rank sum test is a non-parametric statistical test, and is used to detect differences in methods in multiple tests. In our case we have multiple methods, datasets, and parameters, and each test participant can be viewed as a seperate test. We test against the null-hypotheses stated as follows: 
+%
+\begin{itemize}
+\item There is no significant measureable difference in the methods used to generate a video
+\item There is no significant measureable difference in the dataset used to generate a video
+\item There is no significant measureable difference in the $\alpha-$span parameter used to generate a video
+\end{itemize}
 %
 The histograms in section \ref{sec:histograms} shows us that the data does not follow any specific distribution, which forces us to deploy a non-parametric statistical test. The disadvantage of employing a non-parametric test is that it requires a larger sample size to draw conclusions with the same degree of confidence as a parametric test.\\
 %
@@ -178,7 +175,6 @@ Results of our Friedman test can be found in Tables \ref{tab:fried_alpha}, \ref{
 \input{matrix2latex/recipies}
 \input{matrix2latex/datasets}
 \input{matrix2latex/alpha-span}
-%
 \\
 Table \ref{tab:fried_recip} shows the result from videos generated by the each method, Table \ref{tab:fried_dataset} shows the results from videos partitioned by which dataset a given video is generated from, and Table \ref{tab:fried_alpha} shows the effect of different $\alpha$-span values (described in section \ref{sec:recipe})
 %
@@ -197,7 +193,7 @@ There is also no significant measureable effect of choosing different $\alpha$-v
 %
 There was also no significant measureable difference between the three datasets, except in content, which is no surprise as the datasets differ primarily on content as described in section \ref{sec:dataset}.\\
 %
-We have omitted analysis of the comments in Table \ref{tab:notes} and instead included them in the discussion section of this chapter.\\
+We have omitted analysis of the comments in Table \ref{tab:notes} and instead included them in the discussion section of this chapter.
 %
 \subsection{Discussion}
 %
@@ -221,3 +217,4 @@ We have described a way to automatically generate video summaries based on a def
 We have described a method for estimating how well a segment of footage fulfills a specific requirement, as defined by an ingredient in a recipe. This meassure of fulfillment can be used as an indicator for what segments to include in the final video.\\
 We have compared this method with various control groups, both consisting of randomly generated-, but also of humanly edited- videos. This was done through an online survey were a group of test users observed the different videos and rated them on various aspects, such as content, length, and editing quality.\\
 The results from this survey are inconclusive. The test users ability to differentiate between the various types of videos is not statistical significant. We have speculated on the various possible reasons for these findings and concluded that a lack of feedback, as well as the ambiguity in the phrased statements in the test, may be the cause.
+%

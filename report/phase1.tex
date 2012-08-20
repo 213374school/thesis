@@ -3,7 +3,7 @@
 %
 In this section we attempt to estimate the overall \textit{watchability} of the footage we have in our dataset. This forms the basis for knowing which parts of the videos are suitable for human observation in a final video summary.
 %
-\section{Literature study}
+\section{Literature Study}
 %
 Girgensohn et al.\cite{Girgensohn:2000:SAH:354401.354415} describes a method to estimate the camera motion in a video by computing a shift-vector between subsequent frames. They also look into lighting conditions in individual frames by calculating the percentage of pixels within a specific boundary; an indication of reasonable exposure levels in the frame.\\
 The \textit{spring loading effect}\cite{Girgensohn:2000:SAH:354401.354415}, also described by Girgensohn et al., is a way to balance clip lengths. Each frame is given an \textit{unsuitability} score based on the image quality in the frame, and the camera motion in the area around the frame. It treats the \textit{unsuitability} of the surrounding frames as an additional cost for including them in the clip. The purpose of this is to automatically fit segmented clips to match a desired total clip length.\\
@@ -117,11 +117,11 @@ This section describe details about our dataset that are only relevant for image
 %
 The dataset contains 25 raw videos. The length of the clips range from 10 seconds to 10 minutes, totaling somewhere around one hour of footage. All videos appear to have been recorded using hand-held devices so the quality of the footage varies a lot. In order to be able to train and test on this part of the dataset, we generate a \textit{gold standard} manually for each video as descibed in section \ref{sec:goldstandard} below.
 %
-\subsection{Pre-edited YouTube videos}\label{ph1:preeditedyoutube}
+\subsection{Pre-edited YouTube Videos}\label{ph1:preeditedyoutube}
 %
 Most videos available on YouTube have already been edited in some way. Our dataset contain 16 pre-edited vidoes ($\sim$ 30 minutes). In order to use this footage we cut each video into multiple clips, at the points of its scene boundaries. This editing is done manually. Because some of these scenes are undesireable we also perform a manual clean up. Examples of scenes which are removed are; scenes with much on-screen text, credits, montages, ie. scenes that would not be considered raw footage, as well as very short scenes. Footage, which has undergone editing such as \textit{frame stabilisation}, are slowed down, or sped up, are not removed.
 %
-\subsection{Own recordings}
+\subsection{Own Recordings}
 %
 The dataset also contains five videos, which we have recorded ourselves. These videos depict various scenarios involving low contrast and darkness, shakiness, fast camera movement and completely still footage. These videos serve as a starting point for parameter tuning. Unlike much of the other footage, which is also used throughout the later phases, these videos are only used in our image quality assesement experiments.
 %
@@ -135,7 +135,7 @@ These gold standards are used as the absolute truth, when we meassure the perfor
 \section{Findings}
 %
 Due to the limited size of our data we perform a \emph{k-fold cross validation}, as described in section \ref{sec:kfoldxval}, during our tests. The metric of success is whether a method correctly estimates the state of the frames, in respect to the \text{gold standard}. We investigate both the performance of the various classifiers, and also their robustness as a measure of how sensitive they are to parameter change.\\
-For each classifier we determine the optimal configuration of parameter(s), over $k$ iterations, and calculate a mean based on our findings. The robustness, which is estimated as a function of how well the classifier performs over all tested configurations, is calculated on the entire dataset. We also record some of the side-effects of each configuration such as the average length of a good and bad sequences.\\
+For each classifier we determine the optimal configuration of parameter(s), over $k$ iterations, and calculate a mean based on our findings. The robustness, which is estimated as a function of how well the classifier performs over all tested configurations, is calculated on the entire dataset. We also record some of the side-effects of each configuration such as the average length of a good and bad sequences.
 %
 \subsection{K-fold Cross Validation}\label{sec:kfoldxval}
 %
@@ -184,7 +184,7 @@ Relative Operating Characteristics (\textit{ROC}) diagrams, as described by Fawc
 Inspired by ROC diagrams we perform another parameter analysis for each classifier, this time using the entire dataset. We then plot the results in cost/benefit diagrams as described in section \ref{sec:ph1tweaking} and calcuate the area under the curve (\textit{AUC}) formed by the points. The larger the AUC is the more robust the classifier is toward changes to its parameter(s). Since the points produced by most of the classifiers are not evenly distributed over the x-axis of the diagram, we insert points at the (0,0) and (1,1) coordinate in order to cover the entire span. It has the effect of normalising undefined regions around $y=x$, which makes it easier to compare the AUCs across all classifiers.\\
 Unlike the parameter tuning described in section \ref{sec:ph1tweaking}, we learn nothing about how the performance of the individual configurations will generalise. Instead we gain an indication of the overall ability, for each algorithm, to the perform the classification.
 %
-\subsection{Multi-parameter classifiers}\label{sec:ph1multiparameter}
+\subsection{Multi-parameter Classifiers}\label{sec:ph1multiparameter}
 %
 The parameter tuning, and generation of cost/benefit diagrams, for the single parameter classifiers is straightforward. The \textit{ICSM} and \textit{CCSM} classifiers have two parameters. The additional parameter makes parameter tuning much more computationaly expensive. All parameters in our classifiers are expressed as ratios between 0 and 1. The single-parameter classifiers are tuned by changing their single parameters by one percentage point in each iteration. This limits the number of configuration to 101. Doing the same with the multi parameter classifier would require more than 10.000 iterations, which is much too expensive.\\
 In order to bring this number down we did a prelimenary probing using increments of 10 percentage point for each parameter. From the results we see that, for the ICSM classifier, the \textit{contrast}-threshold parameter is directly corrolated with the span over which performance is defined. This is seen clearly in figure \ref{fig:3dcostbenefitdiagram}. Based on this observation, we choose to perform a full analysis where the effect of the shift vector magnitude ratio is tested down to a one percentage point precision, and the effect of the contrast ratio threshold is tested at a 10 percentage point precision.\\
@@ -202,15 +202,15 @@ For the robustness test all cost/benefit curves are plottet in a three dimension
      \label{fig:3dcostbenefitdiagram}
 \end{figure}
 %
-\subsection{Test cases}\label{sec:testcases}
+\subsection{Test Cases}\label{sec:testcases}
 %
 We perform two different tests. The first (described in section \ref{sec:fbfclass}) treats all classifications equally, while the second (described in section \ref{sec:tempclass}) also looks at the at the gold standard of surrounding frames and use this information as a metric for determining how to rate misclassifications. Finally we also experiment with various degrees of smoothing of the classifier results. This is described in section \ref{sec:classsmooth}
 %
-\subsubsection{Frame by frame comparison (FFC)}\label{sec:fbfclass}
+\subsubsection{Frame by Frame Comparison (FFC)}\label{sec:fbfclass}
 %
 For each frame we compare the classifier results with our gold standard. We treat classifications as being either \textit{true} or \textit{false} and use the amount of true and false positives/negatives to calculate their respective precision and recall.
 %
-\subsubsection{Temporal comparison (TC)}\label{sec:tempclass}
+\subsubsection{Temporal Comparison (TC)}\label{sec:tempclass}
 %
 Instead of looking at frames as individual entities we now look at the video as a whole. We treat a video as consisting of a sequence of \textit{good} and \textit{bad} segments. As we iterate through the frames of the video we change back and fourth between these two states. Misclassifications, which happen close to these change-of-state's are punished less than those that happens elsewhere. The rationale behind this is that it is difficult to objectively determine the exact point (frame) where a human observer will consider the quality of a video as changing from one state to the other. Likewise, we do not expect a human observer to notice very short segments of good- or bad- quality footage, if they are surrounded by a significant amount of footage of the opposite type.\\
 For this we need a more advanced \textit{penalty function} than the binary check from describd in section \ref{sec:fbfclass}.\\
@@ -230,7 +230,7 @@ This function places a series of inverted gaussian bell curves at the point of e
 %
 \emph{P(x)} always returns a ratio between 0 and 1, which tells us how severe a misclassification at position $x$ is. All correct classifications are treated just like in the FFC test case. However, if a misclassification occurs, we look at the \textit{penalty function} to see how the hard it should be punished. We add \textit{P(x)} to the \textit{false} ratio for this type of classification (positive or negative) and \textit{1 - P(X)} to the opposite type. That is, we quantify the classification as being both true and false to a varying degree determined by the \textit{penalty function}.
 %
-\subsubsection{Smoothing of the algorithm suggestions}\label{sec:classsmooth}
+\subsubsection{Smoothing of the Algorithm Suggestions}\label{sec:classsmooth}
 %
 We also investigate the effect of performing triangular smoothing on the classification results. This is done to remove outliers in the final results and should not be confused with the smoothing of the \textit{contrast}- and \textit{shift vector}- magnitude ratios in the classifiers themselves. Since the results are binary, we round them back into ones and zeros after the smoothing.\\
 As described in section \ref{sec:triangularsmoothing} the degree of smoothing is determined by a variable, $w$. We experiment with values $w=0$ and $w=12$.
@@ -292,7 +292,6 @@ Classifier configuration and configuration is used interchangeably in the follow
 Table \ref{tab:algoperf} shows performance of each algorithm configuration. The parameters of each configuration is an average over a 5-fold cross validation \textit{Parameter(s) std. dev. \%} is a measure of how we expect the configuration to generalize to other data, where a low relative standard deviation indicates high generalisability, and a high relative standard deviation indicates a low generalisability. \textit{DS} is the distance score, describe in section \ref{sec:ph1tweaking}, where a low score is achived if the algorithm configuration provides results close to the gold standard, and a high score is achived if the results was far from the gold standard. The distance score is an average over the 5-fold cross validation, and \textit{DS std. dev. \%} is hence a measure of how the performance of the configuration will generalise to other data. \textit{AUC} (Area Under the Curve), as described in \ref{sec:robustness}, is only indirectly related to the specific configuration, as it a result of all parameters configuratations we have tested. It gives an indication of how robust the algorithm performs.
 %
 \begin{table}
-  %\begin{tabular}{| l | p{2.5cm} |p{2.5cm} | p{2.5cm} | c |}\hline
   \begin{tabular}{| !l | ^p{2.5cm} | ^p{2.5cm} | ^p{2.5cm} | ^c |}\hline
     Label & Parameter(s) std. dev. \% & DS & DS std. dev. \% & AUC \\\hline
     ICSM1 & (7.7\%, 5.6\%) & 0.54 & 27.17\% & 0.51 (39.44\%) \\\hline
@@ -424,7 +423,7 @@ The smoothness degree does not seem to have any significant influence on either 
 That there is no significant difference between the performance of the SO classifier and the CCSM, and ICSM classifier is surprising since the former only makes use of the shift vector magnitude ratios for classification.\\
 \\
 Table \ref{tab:algoseq} summarizes some of the side-effects of each configuration. Of note is that the mean BSL is no more than 2 digits, they are all in the range $39-84$, for all configurations which tells us that the classifiers generally only classify short segments of footage as bad.\\
-Table \ref{tab:algoseq} also shows that, on average, 5 times more footage is classified as good, than bad. Both the mean- and longest- GSL, are much bigger than their BSL counterpart, in all configurations.\\
+Table \ref{tab:algoseq} also shows that, on average, 5 times more footage is classified as good, than bad. Both the mean- and longest- GSL, are much bigger than their BSL counterpart, in all configurations.
 %
 \subsection{Discussion}\label{sec:phase1discussion}
 %

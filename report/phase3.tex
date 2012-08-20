@@ -1,5 +1,5 @@
 %
-\chapter{Creating video-summaries}\label{chp:video_summaries}
+\chapter{Creating Video Summaries}\label{chp:video_summaries}
 %
 In the previous chapter we computed sets of labels for each frame in the dataset. All consecutive frames, which share a label is considered a segment. Each label says something about the content in a segment. By grouping the footage by label we get an overview of the different type of content we have. We now look at using these groups and labels for creating the final video summaries of the events depicted in the footage. 
 %
@@ -39,7 +39,7 @@ The list of videos are sorted by their candidate score and the most promising (t
 We perform a frame-by-frame analysis on each candidate video in order to determine what sub-part of it best fit the requirements established by the ingredient. This analysis is performed on all parts of the video, which has not already been used for the video summary we are in the process of generating. The most fitting sub-part is passed along to the final segment chooser (described in section \ref{sec:choosing_segment}).\\
 The analysis is done on two aspects of \textit{fulfilment}. First we look at how well a sub-part fulfills the label requirement established by the ingredient. Then we look at its time span requirement. These two levels of fulfilment (defined as ratios) are then finally weighed together.
 %
-\subsubsection{Label fulfilment}
+\subsubsection{Label Fulfilment}
 %
 For each video in the candidate group we analyse each frame in regards to the labels present (or not present) in it. From this we generate a graph representing how well each frame throughout the video fulfills the label requirements we have for the segment to be chosen. Let $L_{x}$ be the set of requested labels, $L_{y}$ be the set required labels, and $L_{z}$ be the set of forbidden labels. Also let $f_{l}$ and $f_{x}$ be the total set of labels, and the set of requested labels present in frame $f$, respectively. The label requirement fulfilment-ratio for each frame is then defined as:\\
 %
@@ -71,7 +71,7 @@ Effectively this means that a frame will receive a fulfilment-ratio of 0 if it d
 %
 With this fulfillment ratio across the entire span of the video we now have a tool of measure to identify the parts of it, that best fit the label requirements.
 %
-\subsubsection{Time span fulfilment}
+\subsubsection{Time Span Fulfilment}
 %
 The other aspect used to determine the score of a sub-part of a video is how well it fits within the time span we are looking to fill. A minimum- and maximum- length defines the time span, that we want the final segment to cover. Let $T_{min}$ and $T_{max}$ be the the minimum- and maximum- length, respectively, and let $l$ be the length of the sub-part in frames, where $T_min <= l <= T_max$. The time span fulfilment ratio is then defined as:\\
 %
@@ -85,7 +85,7 @@ The other aspect used to determine the score of a sub-part of a video is how wel
 %
 A sub-part of minimum length will thus have time span fulfilment ratio of zero, while one of maximum length will have a ratio of one. 
 %
-\subsubsection{The final score}
+\subsubsection{The Final Score}
 %
 The score for a sub-part is based on how well it fulfils the label- as well as the time span-requirement. A ratio, $\alpha$, determines how the two are weighed against each other. Let $R$ be a set of the label fulfilment ratios for all frames in the video, as defined in \ref{equ:fulfilment}. Also, for each possible sub-part (that does not break the minimum- and maximum- lengths defined in the time span requirement), let $v$ be the frame number where the sub-part begins, and $l$ be the length of it in frames. The score for a sub-part is then defined as:\\
 %
