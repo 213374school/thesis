@@ -67,15 +67,10 @@ This particular type of metadata is extracted from the original videos (before g
 \subsubsection{The presence of people}\label{sec:peopledata}
 %
 Detecting the presence of people will help us determine if footage was recorded from within a crowd, described in detail in section \ref{sec:incrowd}, or if the footage has focus on a specific person, described in detail in section \ref{sec:infocus}, which indicates that this person is of special interest, ex. a speaker.\\
-%
 OpenCV provides a python-implementation of an already trained Haar Cascade Classifier, as described in section \ref{sec:hcc}, manifested as a range of xml-files describing the Haar like features of a human face, both front and profile, aswell as upper body, lower body, and full body.\\
 By deploying facial detection to every frame in each video we get a good estimate of how many people are present, and also their location within each frame. This estimate is limited by the quality of the frame, ie. shaky video-clips have a reduced detection rate.\\
-%
 A possible optimization is to only analayze select frames (ex. every third frame) which we do not believe will have a significant negative impact on the detection rate as we already interpolate the detected objects from frame to frame. Further optimizations involve exploiting the ready-at-hand metadata, such as the general frame quality which severely impacts facial detection rates.\\
 A more complex optimization can be achived by exploiting the temporal data. Ie. instead of analyzing the entire frame using an expanding search window, we could utilize knowledge of where people were present in the previous frame, and then deploy the search window nearby. This would require a customized HCC which is a major increase in complexity compared to the other mentioned optimizations.
-%
-% MOVE TO RESULTS:\\
-% we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set). We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second).\\
 %
 \subsubsection{Internal movement}\label{sec:opticalflowdata}
 %
@@ -101,8 +96,6 @@ v' = v - e,
 \end{equation}
 where $e$ is the egomotion vector for the frame. The set of all $v'$ then describes the internal movement of objects within the frames.\\
 Each vector $v' \in V'$ describes the movement of one particular point in the original grid. By looking at the different directions of flow we may be able to say something about what is going on in the video. To simplify the data we divide the optical flow vectors up into nine segments as shown in figure \ref{fig:opticalflow}. We calculate the mean of the movement vectors in each group, seperately, and use these nine new vectors to describe the overall flow in different parts of the frame.
-%
-% Lauge: RISK - This model may be too simple, for good results
 %
 \begin{figure}
      \centering
@@ -132,10 +125,10 @@ We analyze the blue channel mean as a function of time, and if these values are 
 \begin{figure}[!ht]
      \centering
      \includegraphics[width=1.05\textwidth]{img/triangles.jpg}
-     \caption{}\label{fig:triangles}
+     \caption{Example of an oscillating blue channel, and the lengths we use to detect it}\label{fig:triangles}
 \end{figure}\\
-% Lauge: Mangler title
-Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other
+%
+Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other:
 \[
 \text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1, \text{std}([\|e\|,\|f\|]) < \tau_2,
 \]
@@ -146,7 +139,6 @@ The blue channel mean is smoothed using triangle smoothing as described in secti
 \subsubsection{Person in Focus classifier}\label{sec:infocus}
 %
 We compute a moving average of the people presence metadata, but excluding objects detected (partially) outside a centered bounding box. Then the frames and their respective label are smoothed as described in section \ref{sec:labelsmooth}, and nearby segments are merged as described in section \ref{sec:labelmerge}. 
-% segments shorter than 120 frames, equal to 5 seconds, are removed.
 %
 \subsubsection{In-Crowd classifier}\label{sec:incrowd}
 %
@@ -260,7 +252,7 @@ When smoothing the segments with triangular smoothing we found that a degree of 
 %
 \subsection{Classifier performance}
 %
-we also experienced a significant increase in false positives for banners and flags (which there is a presence well above normal in our training set). We are working with 480 by 640 pixel images and are able to achieve real-time facial detection (working on video with 24 frames per second).\\
+The parameter tuning and resulting performance for the various classifiers are described below.
 %
 \subsubsection{Police Blinker classifier}
 %
@@ -277,7 +269,6 @@ When computing the moving average over people presence metadata, we do it over 4
 We meassure performance based on how many of the classified segments has a specific person in focus. Segments with several people or crowds are considered incorrectly classified.\\
 Almost 21 minutes of the entire dataset is classified as containing a person in focus. Hereof we consider $\sim$ 90\% to be \textit{true positives}.
 %
-%
 \subsubsection{In-Crowd classifier}
 %
 % ANDERS: OMSKRIV TIL SMOOTHED
@@ -288,8 +279,6 @@ The values are truncated at 0.9 as they are not normalized to the range 0 to 1 a
 A fallacy in this method are cases of just two people in a frame which are easily detectable, ie. facing a steady camera with no background clutter.\\
 \\
 We consider footage recorded within a crowd, or in close proximity to several people, to be \textit{true positive} \textit{in-crowd} clips. Approximatly 14\% of the $\sim$ 31 minutes of positively classified footage fulfills this requirement. The vast majority of the \textit{false positives} are caused by persons in focus.
-%
-% Til phase 4: Due to the \textit{person in focus}-issue with in-crowd shot we attempt to do correction by forbidding the former label in the latter shots :P
 %
 \subsubsection{Overview classifier}
 %
@@ -308,7 +297,7 @@ It is difficult to exactly define what an \textit{overview} clip is. These are t
 %
 As a rule of thumb, we consider segments fulfulling these requirements \textit{true positives}. In total $\sim$ 22 minutes are classified as being . Of these $\sim$ 43\% are considered correct. When reviewing the segments we clearly see that a lot of the \textit{false positives} are caused by clips with a \textit{person in focus}. This is a clear indication that our attempt to mutually exclude the two labels is failing.
 %
-\subsection{Vertical Oscillation classifier}
+\subsubsection{Vertical Oscillation classifier}
 %
 The \textit{vertical oscillation} classifier (described in section \ref{sec:verticaloscillationclassifier}) analyses the internal movement in the frames.\\
 It has three thresholds. $\tau_1$ defines the time span over which the standard deviation in vertical movement is calculated. $\tau_2$ defines the minimum level of variance accepted as vertical oscillation. $\tau_3$ defines the number of areas in the frame in which vertical oscillation must occur.\\
@@ -316,8 +305,6 @@ The parameter tuning is done on on a small subset of the dataset (3-4 videos). F
 As with the \textit{overview} classifier, we smooth the metadata with a trinagle width of 120 frames.\\
 \\
 When analysing the performance of the \textit{vertical oscillation} classifier, segments depicting objects being moved up and down are considered \textit{true positives}. In total $\sim$ 14\% of the 8 minutes of the positively classified footage fulfills this requirement. A review show that the vast majority of \textit{false positives} are caused by unsteady camera motion, which we fail to compensate for. Groups of people walking also trigger a lot of \textit{false positives}, which suggest an over-sensitivity to vertical movement.
-%
-% Til analyse: A pre-limmenary image quality assesment might help in lowering the amount of \textit{false positives}.
 %
 \subsubsection{Day \& Night classifier}
 %
@@ -329,15 +316,19 @@ The classification is performed on 301 video-clips where $\sim$ 88\% of them con
 \subsection{Analysis}
 %
 The peformance of the different classifiers various a lot. Only the \textit{person in focus}- and the \textit{day/night}- classifiers have performances that can be considered good. Both classifiers have a true positive rate above 90\%. Of the few misclassification, that \textit{does} occur in the day/night classifier, most occur in videos recorded in the evening or the late afternoon, which are difficult to classify, even manually. The \textit{in-crowd}- and \textit{vertical oscillation}- classifiers, in particular, perform very bad.\\
-The two main reasons for misclassifications appear to be unsteady camera movement (for the vertical oscillation classifier) and the presence of a person in focus (for the in-crowd-, and overview- classifier).
+The two main reasons for misclassifications appear to be unsteady camera movement (for the vertical oscillation classifier) and the presence of a person in focus (for the in-crowd-, and overview- classifier).\\
+For the classifiers based on person detection, a lot false positives are caused by banners and flags (which there is a presence well above normal in our training set).
 %
 \subsection{Discussion}\label{sec:phase2discussion}
 %
-In hindsight we should have expected the \textit{person in focus}-issue to be a problem, not only in the overview classifier, but also in the in-crowd classifier. A lot of footage which is actually of persons in focus is also classified positively by these two classifiers. As we shall show in the next chapter we can to some degree compensate for these shortcomings when we construct the final video summaries. The details for this are described in section \ref{sec:phase4designer}.
+In hindsight we should have expected the \textit{person in focus}-issue to be a problem, not only in the overview classifier, but also in the in-crowd classifier. A lot of footage which is actually of persons in focus is also classified positively by these two classifiers. As we shall show in the next chapter we can to some degree compensate for these shortcomings when we construct the final video summaries. The details for this are described in section \ref{sec:phase4designer}.\\
+Most false positives in the vertical oscillation classifier is caused by unsteady camera movement, which it fails to account for. A pre-limmenary image quality assesment might help in lowering the amount of false positives.
 %
 \subsubsection{Risks and Limitations}
 %
-Most of our tests only analyses the true- and false- positive rates for the classfiers. A more thorough test would also look at the rates for negative classification. However, this would require us to create a gold standard for each frame in the dataset, for each label we want to test, something we simply did not have the time to do. The analysis 
+All of our tests only analyses the true- and false- positive rates for the classifiers. A more thorough test would also look at the rates for negative classification. However, this would require us to create a gold standard for each frame in the dataset, for each label we want to test, something we simply did not have the time to do. The analysis we do is performed by manually watching all segments, positively classified with a given label, and marking them as either true or false.\\
+\\
+The day/night classifier is parameter tuned on the entire dataset, which increases the chance of overfitting, significantly. The results can thus not be expected to generalise.
 \\
 The \textit{overview}- and the \textit{person in focus}- labels are defined to be mutually exclusive. In case of a overlap the latter is used. However, due to the order in which the labels are generated and post-processed, overlaps \textit{can} actually occur. Because the \textit{person in focus} labels are interpolated (as described in section \ref{sec:labelmerge}) only after the the \textit{overview} classifier have used them for its classification, the new, interpolated \textit{person in focus} labels may actually cover areas which are also labelled as overviews.\\
 \\
@@ -348,8 +339,9 @@ Y = 0.299 \times R + 0.587 \times  G + 0.114 \times B,
 \]
 %
 where $R$, $G$, and $B$ are the red-, green-, and blue- intensity of the pixel.\\
-\\
-
 %
 \section{Summary}
 %
+We have investigated different methods for labeling video footage, depending on their content. We have made use of more advanced techniques, such as Haar Cascade classifiers\cite{viola01,lienhart01,schmidt01,schmidt02} (for detecting people), and Optical Flow\cite{Bouguet2000} (for analysing internal movement in the frames), but also experimented with simpler, home-made, techniques.\\
+We have created, and tested, classifiers for detecting crowds, overview footage, the presence of police blinkers, interesting persons and high levels of internal vertical movement. We have also created classifiers for labeling day-time and night-time footage.\\
+We experience a varying degrees of performance. \textit{Day/night}- and \textit{person in focus}- classification delivers promising results. Contrary, the performance of \textit{in-crowd}- and \textit{vertical oscillation}- clasification, is very bad. The two remaining classifiers, the \textit{overview}- and \textit{police blinker}- classifiers, deliver mediocre results.
