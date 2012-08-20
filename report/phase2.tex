@@ -136,12 +136,12 @@ We analyze the blue channel mean as a function of time, and if these values are 
      \caption{}\label{fig:triangles}
 \end{figure}\\
 % Lauge: Mangler title
-Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other
+Local minima/maxima in an oscillating graph connected by straight lines will form triangular shapes as illustrated in Figure \ref{fig:triangles}, where consequtive triangles of roughly equal size indicate a steady oscillation. We investigate if the length of the vertices in each triangle deviate from each other by:
 \[
-\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1, \text{std}([\|e\|,\|f\|]) < \tau_2,
+\text{std}([\|a\|,\|b\|,\|c\|,\|d\|]) < \tau_1,~\text{std}([\|e\|,\|f\|]) < \tau_2,
 \]
 % a,b,c, og d skal defineres i tekst
-for thresholds $\tau_1$ and $\tau_"$ where std is the standard deviation. If the standard deviation of either group of vertices is below their given treshold it means that they do not form triangles that are part of an oscillation.\\
+for thresholds $\tau_1$ and $\tau_2$ where std is the standard deviation. If the standard deviation of either group of vertices is below their given treshold it means that they do not form triangles that are part of an oscillation.\\
 The blue channel mean is smoothed using triangle smoothing as described in section \ref{sec:triangularsmoothing}, as this results in softer curves on the graph. Oscillating segments are then detected, and nearby segments are merged as described in section \ref{sec:labelmerge}.
 %
 \subsubsection{Person in Focus classifier}\label{sec:infocus}
