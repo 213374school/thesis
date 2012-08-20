@@ -205,8 +205,6 @@ V(f) =
 %
 where $\tau_3$ is a threshold defining the minimum number of areas in which vertical oscillation must occur.
 %
-% RISKS: (zooming), maybe wrong method
-%
 \subsubsection{Day \& Night classifier}\label{sec:daynightclassifier}
 %
 Night footage is not only darker than footage recorded during the day, it also contains significantly less blue color, which is the reason it often has a brownish or red tint. Our \textit{day/night} classifier analyses both the \textit{blue channel} metadata (described in section \ref{sec:blue_channel}) and the \textit{brightness} metadata (described in section \ref{sec:brightnessdata}).\\
@@ -240,10 +238,6 @@ S =
 \text{night} &  \text{otherwise}
 \end{cases}
 \end{equation}
-%
-% \section{Dataset}
-% %
-% Here we should have a brief explanation of what videos are in our dataset.
 %
 \section{Findings}
 %
@@ -340,6 +334,8 @@ Y = 0.299 \times R + 0.587 \times  G + 0.114 \times B,
 \]
 %
 where $R$, $G$, and $B$ are the red-, green-, and blue- intensity of the pixel.\\
+\\
+The optical flow metadata we generate analyses the the flow of various points in the video images. We treat this flow as either a result of the camera egomotion, or the movement within the frames. However, zooming in and out also causes optical flow. Very little of the footage in our dataset contains zooming sequences, but, since we do not handle it, this is still a theoretical cause of error.
 %
 \section{Summary}
 %
